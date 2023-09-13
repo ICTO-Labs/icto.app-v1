@@ -1,23 +1,26 @@
 <script setup>
-import logo from "./assets/dfinity.svg"
 /*
  * Connect2ic provides essential utilities for IC app development
  */
+ import { RouterLink, RouterView } from 'vue-router'
+
 import { createClient } from "@connect2ic/core"
 import { defaultProviders } from "@connect2ic/core/providers"
-import { ConnectButton, ConnectDialog, Connect2ICProvider } from "@connect2ic/vue"
+import { ConnectDialog, Connect2ICProvider } from "@connect2ic/vue"
 import "@connect2ic/core/style.css"
 /*
- * Import canister definitions like this:
+ * Import backend canister definitions
  */
 import * as backend from "../.dfx/local/canisters/backend"
 /*
- * Some examples to get you started
+ * Import layout and default components
  */
-import Counter from "./components/Counter.vue"
-import Profile from "./components/Profile.vue"
-import Transfer from "./components/Transfer.vue"
-
+import Dashboard from "./components/Dashboard.vue"
+import Header from "./components/layout/Header.vue"
+import Footer from "./components/layout/Footer.vue"
+import Toolbar from "./components/layout/Toolbar.vue"
+import ScrollTop from "./components/ScrollTop.vue"
+import Modals from "./components/Modals.vue"
 const client = createClient({
   canisters: {
     backend,
@@ -32,143 +35,35 @@ const client = createClient({
 <template>
   <Connect2ICProvider :client="client">
     <div class="App">
-      <div class="auth-section">
-        <ConnectButton />
+    <ConnectDialog />
+      <!--begin::Main-->
+		  <!--begin::Root-->
+      <div class="d-flex flex-column flex-root">
+        <!--begin::Page-->
+        <div class="page d-flex flex-row flex-column-fluid">
+          <!--begin::Wrapper-->
+          <div class="wrapper d-flex flex-column flex-row-fluid" id="kt_wrapper">
+            <Header></Header>
+            <!--begin::Content-->
+            <div class="content d-flex flex-column flex-column-fluid" id="kt_content">
+              <Toolbar />
+              <!--begin::Post-->
+              <div class="post d-flex flex-column-fluid" id="kt_post">
+                <RouterView />
+              </div>
+              <!--end::Post-->
+            </div>
+            <!--end::Content-->
+            <Footer></Footer>
+          </div>
+          <!--end::Wrapper-->
+        </div>
+        <!--end::Page-->
       </div>
-      <ConnectDialog />
-      <header class="App-header">
-        <img :src="logo" class="App-logo" alt="logo" />
-        <p class="slogan">
-          Vue+TypeScript Template
-        </p>
-        <p class="twitter">by <a href="https://twitter.com/miamaruq">@miamaruq</a></p>
-      </header>
-
-      <p class="examples-title">
-        Examples
-      </p>
-      <div class="examples">
-        <Counter />
-        <Profile />
-        <Transfer />
-      </div>
+      <!--end::Root-->
+		  <Modals />
+      <ScrollTop />
+      <!--end::Main-->
     </div>
   </Connect2ICProvider>
 </template>
-
-<style>
-body {
-  margin: 0;
-  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "Roboto", "Oxygen",
-  "Ubuntu", "Cantarell", "Fira Sans", "Droid Sans", "Helvetica Neue",
-  sans-serif;
-  -webkit-font-smoothing: antialiased;
-  -moz-osx-font-smoothing: grayscale;
-  color: #424242;
-}
-
-button {
-  font-weight: 600;
-}
-
-.slogan {
-  font-size: 1.7em;
-  margin-bottom: 0;
-}
-
-.twitter {
-  font-size: 0.4em;
-}
-
-.App-logo {
-  height: 14vmin;
-  pointer-events: none;
-  transform: scale(1);
-  animation: pulse 3s infinite;
-}
-
-.App-header {
-  height: calc(100vh - 70px);
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  font-size: calc(10px + 2vmin);
-}
-
-.examples {
-  padding: 30px 100px;
-  display: grid;
-  grid-gap: 30px;
-  grid-template-columns: 1fr 1fr 1fr;
-}
-
-.examples-title {
-  font-size: 1.3em;
-  margin-bottom: 0;
-  text-align: center;
-}
-
-.example {
-  padding: 50px 50px;
-  min-height: 300px;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  /*border: 1px solid black;*/
-  /*background: #f4f4f4;*/
-  border-radius: 15px;
-}
-
-.example-disabled {
-  font-size: 1.3em;
-  color: #9e9e9e;
-}
-
-.demo-button {
-  background: #a02480;
-  padding: 0 1.3em;
-  margin-top: 1em;
-  border-radius: 60px;
-  font-size: 0.7em;
-  height: 35px;
-  outline: 0;
-  border: 0;
-  cursor: pointer;
-  color: white;
-}
-
-.demo-button:active {
-  color: white;
-  background: #979799;
-}
-
-.auth-section {
-  padding: 1em;
-  display: flex;
-  justify-content: flex-end;
-  align-items: center;
-  text-align: right;
-  position: fixed;
-  top: 0;
-  right: 0;
-}
-
-@keyframes pulse {
-  0% {
-    transform: scale(0.97);
-    opacity: 0;
-  }
-
-  70% {
-    transform: scale(1);
-    opacity: 1;
-  }
-
-  100% {
-    transform: scale(0.97);
-    opacity: 0;
-  }
-}
-</style>
