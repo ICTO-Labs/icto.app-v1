@@ -63,6 +63,7 @@ export default defineConfig({
   resolve: {
     alias: {
       // Here we tell Vite the "fake" modules that we want to define
+      "@": path.resolve("./frontend"),
       "vue": path.resolve("./node_modules/vue"),
       ...aliases,
     },
@@ -87,5 +88,10 @@ export default defineConfig({
     "process.env.NODE_ENV": JSON.stringify(
         isDev ? "development" : "production",
     ),
+  },
+  build: {
+    rollupOptions: {
+      external: 'NonExistingPath'
+    }
   },
 })

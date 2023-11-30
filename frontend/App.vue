@@ -2,40 +2,56 @@
 /*
  * Connect2ic provides essential utilities for IC app development
  */
- import { RouterLink, RouterView } from 'vue-router'
+import { RouterLink, RouterView } from 'vue-router'
 
 import { createClient } from "@connect2ic/core"
 import { defaultProviders } from "@connect2ic/core/providers"
 import { ConnectDialog, Connect2ICProvider } from "@connect2ic/vue"
+import {
+  InternetIdentity,
+  PlugWallet,
+  StoicWallet,
+  NFID
+} from "@connect2ic/core/providers"
 import "@connect2ic/core/style.css"
 /*
  * Import backend canister definitions
  */
 import * as backend from "../.dfx/local/canisters/backend"
+import * as counter from "../.dfx/local/canisters/counter"
 /*
  * Import layout and default components
  */
-import Dashboard from "./components/Dashboard.vue"
 import Header from "./components/layout/Header.vue"
 import Footer from "./components/layout/Footer.vue"
 import Toolbar from "./components/layout/Toolbar.vue"
 import ScrollTop from "./components/ScrollTop.vue"
 import Modals from "./components/Modals.vue"
-const client = createClient({
+const client = window.client = createClient({
   canisters: {
     backend,
+    counter
   },
-  providers: defaultProviders,
+  providers: [
+    new InternetIdentity(),
+    new PlugWallet(),
+    new NFID(),
+    new StoicWallet(),
+  ],
   globalProviderConfig: {
-    dev: true,//import.meta.env.DEV,
+    dev: false,//import.meta.env.DEV,
+    host: "https://icp0.io",
   },
 })
+
+console.log('client: ', client)
 </script>
 
 <template>
   <Connect2ICProvider :client="client">
     <div class="App">
-    <ConnectDialog />
+      
+      <ConnectDialog />
       <!--begin::Main-->
 		  <!--begin::Root-->
       <div class="d-flex flex-column flex-root">
@@ -49,7 +65,14 @@ const client = createClient({
               <Toolbar />
               <!--begin::Post-->
               <div class="post d-flex flex-column-fluid" id="kt_post">
+                
+              <!--begin::Container-->
+              <div id="kt_content_container" class="container-xxl">
+                <Modals />
                 <RouterView />
+							</div>
+							<!--end::Container-->
+                
               </div>
               <!--end::Post-->
             </div>
@@ -61,7 +84,6 @@ const client = createClient({
         <!--end::Page-->
       </div>
       <!--end::Root-->
-		  <Modals />
       <ScrollTop />
       <!--end::Main-->
     </div>

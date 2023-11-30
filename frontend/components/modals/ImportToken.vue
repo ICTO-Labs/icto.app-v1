@@ -1,0 +1,146 @@
+<script setup>
+    import { VueFinalModal } from 'vue-final-modal'
+    import EventBus from "@/services/EventBus";
+    import { onMounted, ref } from 'vue';
+    import _api from "@/ic/api";
+    import { decodeICRC1Metadata } from "@/utils/token";
+    import LoadingButton from "@/components/LoadingButton.vue"
+	import { showSuccess } from '@/utils/common';
+
+    const importTokenModal = ref(false);
+    const tokenStandard = ref('icrc-1');
+    const canisterId = ref('2ouva-viaaa-aaaaq-aaamq-cai');
+    const importButtonReady = ref(true);
+    const isImported = ref(false);
+    const agree = ref(false);
+    const tokenInfo = ref(null);
+    const isLoading = ref(false);
+
+    onMounted(()=>{
+        EventBus.on("showImportTokenModal", isOpen => {
+            importTokenModal.value = isOpen;
+        });
+    })
+
+    const checkCanisterId = async ()=>{
+        isImported.value = false;
+        tokenInfo.value = null;
+    }
+    const importToken = async()=>{
+        isLoading.value = true;
+        let _tokenInfo = await _api.canister(canisterId.value, tokenStandard.value).icrc1_metadata();
+        isLoading.value = false;
+        tokenInfo.value = decodeICRC1Metadata(_tokenInfo);
+        isImported.value = true;
+        console.log('tokenInfo: ', tokenInfo.value);
+    }
+
+    const confirmImport = ()=>{
+        EventBus.emit("showImportTokenModal", false);
+        showSuccess("Token imported!")
+    }
+
+</script>
+
+<template>
+    <VueFinalModal v-model="importTokenModal" :z-index-base="2000" classes="modal fade show" content-class="modal-dialog modal-lg">
+            <div class="modal-content">
+               
+                <div class="modal-header">
+                    <h5 class="modal-title">Import Token</h5>
+                    <div class="btn btn-icon btn-sm btn-active-light-danger ms-2" data-bs-dismiss="modal" aria-label="Close" @click="importTokenModal = false">
+                        <span class="svg-icon svg-icon-2x">
+                            <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none">
+                                <rect opacity="0.5" x="6" y="17.3137" width="16" height="2" rx="1" transform="rotate(-45 6 17.3137)" fill="black"></rect>
+                                <rect x="7.41422" y="6" width="16" height="2" rx="1" transform="rotate(45 7.41422 6)" fill="black"></rect>
+                            </svg>
+                        </span>
+                    </div>
+                </div>
+                <div class="modal-body">
+                    <div class="pl-10">
+                    <div class="row gy-4">
+                        <div class="col-sm-12">
+                            <div class="form-group">
+                                <label class="form-label"><span class="required">Token Standard</span></label>
+                                <div class="form-control-wrap">
+                                    <select class="form-control form-control-solid " v-model="tokenStandard">
+                                        <option value="icrc-1" selected>ICRC-1</option>
+                                        <option value="icrc-2">ICRC-2</option>
+                                        <option value="dip20">DIP20</option>
+                                    </select>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="col-sm-12">
+                            <div class="form-group">
+                                <label class="form-label"><span class="required">Canister ID</span> </label>
+                                <div class="form-control-wrap">
+                                    <input type="text" class="form-control form-control-solid" placeholder="Canister ID" required v-model="canisterId" @keyup="checkCanisterId">
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-sm-12 text-center" v-if="!isImported">
+                            <!-- <button type="submit" class="btn btn-primary btn-block" @click="importToken" :disabled="!importButtonReady || isLoading">
+                                <em class="icon ni ni-send"></em><span class="text-capitalize">Import</span>
+                            </button> -->
+                            <LoadingButton 
+                                :loading="isLoading"
+                                class="btn btn-primary btn-block"
+                                @click="importToken">Import
+                            </LoadingButton>
+                        </div>
+                        <div v-if="isImported" class="mt-10">
+                            <div class="d-flex align-items-center mb-5">
+                                <div class="me-5 position-relative">
+                                    <div class="symbol symbol-35px symbol-circle">
+                                        <span class="symbol-label bg-light-danger text-danger fw-semibold">
+                                            {{tokenInfo.symbol}}
+                                        </span>
+                                     </div>
+                                </div>
+                                <div class="fw-semibold">
+                                    <a href="#" class="fs-5 fw-bold text-gray-900 text-hover-primary">{{tokenInfo.name}} ({{tokenInfo.symbol}})</a>
+                                    <div class="text-gray-500">
+                                        {{ canisterId }}
+                                    </div>
+                                </div>
+                                <div class="badge badge-light-success ms-auto">{{tokenStandard.toLocaleUpperCase()}}</div>
+                            </div>
+                         
+                            <div class="col-sm-12">
+                            <div class="alert alert-warning alert-icon">
+                                <h4 class="mb-1 text-danger">Warning</h4>
+                                <em class="icon ni ni-alert-circle"></em> 
+                                    Anyone can create a token on Internet Computer with any name and logo, including creating fake versions of existing tokens and tokens that claim to represent projects that do not have a token.
+                                    <br />            
+                                    <span class="text-danger">These risks are always present. Please DYOR before investing!</span>
+                           </div>
+                        </div> 
+                        <div class="col-sm-12">
+                            <div class="form-check form-check-custom form-check-solid">
+                                <input class="form-check-input" type="checkbox" id="flexCheckDefault" v-model="agree"/>
+                                <label class="form-check-label" for="flexCheckDefault">
+                                    I have read the risk warning carefully and agree to take the risk myself
+                                </label>
+                            </div>
+                        </div>
+                        <div class="col-sm-12 text-center mt-5">
+                            <button type="submit" class="btn btn-primary btn-block" @click="confirmImport" :disabled="!agree">
+                                <em class="icon ni ni-send"></em><span class="text-capitalize">Confirm</span>
+                            </button>
+                        </div>
+                        </div>
+                        
+                        
+                    </div>
+
+                </div>
+                </div>
+                
+        </div>
+
+    </VueFinalModal>
+
+</template>

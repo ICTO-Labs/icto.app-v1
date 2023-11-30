@@ -1,6 +1,5 @@
 <template>
-    	<!--begin::Container-->
-        <div id="kt_content_container" class="container-xxl">
+    	
 								<!--begin::Row-->
 								<div class="row gy-5 g-xl-8">
 									<!--begin::Col-->
@@ -81,7 +80,7 @@
 																		<!--begin::Switch-->
 																		<label class="form-check form-switch form-check-custom form-check-solid">
 																			<!--begin::Input-->
-																			<input class="form-check-input w-30px h-20px" type="checkbox" value="1" checked="checked" name="notifications" />
+																			<input class="form-check-input w-30px h-20px" type="checkbox" value="1" checked name="notifications" />
 																			<!--end::Input-->
 																			<!--end::Label-->
 																			<span class="form-check-label text-muted fs-6">Recuring</span>
@@ -254,7 +253,7 @@
 																	<!--end::Options-->
 																	<!--begin::Options-->
 																	<label class="form-check form-check-sm form-check-custom form-check-solid">
-																		<input class="form-check-input" type="checkbox" value="2" checked="checked" />
+																		<input class="form-check-input" type="checkbox" value="2"/>
 																		<span class="form-check-label">Customer</span>
 																	</label>
 																	<!--end::Options-->
@@ -269,7 +268,7 @@
 																<!--end::Label-->
 																<!--begin::Switch-->
 																<div class="form-check form-switch form-switch-sm form-check-custom form-check-solid">
-																	<input class="form-check-input" type="checkbox" value="" name="notifications" checked="checked" />
+																	<input class="form-check-input" type="checkbox" value="" name="notifications" checked />
 																	<label class="form-check-label">Enabled</label>
 																</div>
 																<!--end::Switch-->
@@ -553,7 +552,7 @@
 																		<!--begin::Switch-->
 																		<label class="form-check form-switch form-check-custom form-check-solid">
 																			<!--begin::Input-->
-																			<input class="form-check-input w-30px h-20px" type="checkbox" value="1" checked="checked" name="notifications" />
+																			<input class="form-check-input w-30px h-20px" type="checkbox" value="1" name="notifications" />
 																			<!--end::Input-->
 																			<!--end::Label-->
 																			<span class="form-check-label text-muted fs-6">Recuring</span>
@@ -755,7 +754,7 @@
 																<td>
 																	<div class="d-flex align-items-center">
 																		<div class="symbol symbol-45px me-5">
-																			<img src="assets/media/avatars/150-11.jpg" alt="" />
+																			<img src="" alt="" />
 																		</div>
 																		<div class="d-flex justify-content-start flex-column">
 																			<a href="#" class="text-dark fw-bolder text-hover-primary fs-6">Ana Simmons</a>
@@ -822,7 +821,7 @@
 																<td>
 																	<div class="d-flex align-items-center">
 																		<div class="symbol symbol-45px me-5">
-																			<img src="assets/media/avatars/150-3.jpg" alt="" />
+																			<img src="" alt="" />
 																		</div>
 																		<div class="d-flex justify-content-start flex-column">
 																			<a href="#" class="text-dark fw-bolder text-hover-primary fs-6">Jessie Clarcson</a>
@@ -889,7 +888,7 @@
 																<td>
 																	<div class="d-flex align-items-center">
 																		<div class="symbol symbol-45px me-5">
-																			<img src="assets/media/avatars/150-4.jpg" alt="" />
+																			<img src="" alt="" />
 																		</div>
 																		<div class="d-flex justify-content-start flex-column">
 																			<a href="#" class="text-dark fw-bolder text-hover-primary fs-6">Lebron Wayde</a>
@@ -956,7 +955,7 @@
 																<td>
 																	<div class="d-flex align-items-center">
 																		<div class="symbol symbol-45px me-5">
-																			<img src="assets/media/avatars/150-5.jpg" alt="" />
+																			<img src="" alt="" />
 																		</div>
 																		<div class="d-flex justify-content-start flex-column">
 																			<a href="#" class="text-dark fw-bolder text-hover-primary fs-6">Natali Goodwin</a>
@@ -1023,7 +1022,7 @@
 																<td>
 																	<div class="d-flex align-items-center">
 																		<div class="symbol symbol-45px me-5">
-																			<img src="assets/media/avatars/150-6.jpg" alt="" />
+																			<img src="" alt="" />
 																		</div>
 																		<div class="d-flex justify-content-start flex-column">
 																			<a href="#" class="text-dark fw-bolder text-hover-primary fs-6">Kevin Leonard</a>
@@ -1179,7 +1178,7 @@
 																		<!--begin::Switch-->
 																		<label class="form-check form-switch form-check-custom form-check-solid">
 																			<!--begin::Input-->
-																			<input class="form-check-input w-30px h-20px" type="checkbox" value="1" checked="checked" name="notifications" />
+																			<input class="form-check-input w-30px h-20px" type="checkbox" value="1" name="notifications" />
 																			<!--end::Input-->
 																			<!--end::Label-->
 																			<span class="form-check-label text-muted fs-6">Recuring</span>
@@ -1218,7 +1217,7 @@
 															<!--begin::Symbol-->
 															<div class="symbol symbol-50px me-3">
 																<div class="symbol-label bg-light">
-																	<img src="assets/media/svg/brand-logos/plurk.svg" class="h-50" alt="" />
+																	<img src="" class="h-50" alt="" />
 																</div>
 															</div>
 															<!--end::Symbol-->
@@ -1242,7 +1241,7 @@
 															<!--begin::Symbol-->
 															<div class="symbol symbol-50px me-3">
 																<div class="symbol-label bg-light">
-																	<img src="assets/media/svg/brand-logos/figma-1.svg" class="h-50" alt="" />
+																	FIGMA
 																</div>
 															</div>
 															<!--end::Symbol-->
@@ -1266,7 +1265,7 @@
 															<!--begin::Symbol-->
 															<div class="symbol symbol-50px me-3">
 																<div class="symbol-label bg-light">
-																	<img src="assets/media/svg/brand-logos/vimeo.svg" class="h-50" alt="" />
+																	VIMEO
 																</div>
 															</div>
 															<!--end::Symbol-->
@@ -1342,7 +1341,7 @@
 																		<td>
 																			<div class="symbol symbol-45px me-2">
 																				<span class="symbol-label">
-																					<img src="assets/media/svg/brand-logos/plurk.svg" class="h-50 align-self-center" alt="" />
+																					plurk
 																				</span>
 																			</div>
 																		</td>
@@ -1371,7 +1370,7 @@
 																		<td>
 																			<div class="symbol symbol-45px me-2">
 																				<span class="symbol-label">
-																					<img src="assets/media/svg/brand-logos/telegram.svg" class="h-50 align-self-center" alt="" />
+																					telegram
 																				</span>
 																			</div>
 																		</td>
@@ -1400,7 +1399,7 @@
 																		<td>
 																			<div class="symbol symbol-45px me-2">
 																				<span class="symbol-label">
-																					<img src="assets/media/svg/brand-logos/vimeo.svg" class="h-50 align-self-center" alt="" />
+																					vimeo
 																				</span>
 																			</div>
 																		</td>
@@ -1429,7 +1428,7 @@
 																		<td>
 																			<div class="symbol symbol-45px me-2">
 																				<span class="symbol-label">
-																					<img src="assets/media/svg/brand-logos/bebo.svg" class="h-50 align-self-center" alt="" />
+																					bebo
 																				</span>
 																			</div>
 																		</td>
@@ -1458,7 +1457,7 @@
 																		<td>
 																			<div class="symbol symbol-45px me-2">
 																				<span class="symbol-label">
-																					<img src="assets/media/svg/brand-logos/kickstarter.svg" class="h-50 align-self-center" alt="" />
+																					kickstarter
 																				</span>
 																			</div>
 																		</td>
@@ -1513,7 +1512,7 @@
 																		<td>
 																			<div class="symbol symbol-45px me-2">
 																				<span class="symbol-label">
-																					<img src="assets/media/svg/brand-logos/plurk.svg" class="h-50 align-self-center" alt="" />
+																					plurk
 																				</span>
 																			</div>
 																		</td>
@@ -1542,7 +1541,7 @@
 																		<td>
 																			<div class="symbol symbol-45px me-2">
 																				<span class="symbol-label">
-																					<img src="assets/media/svg/brand-logos/telegram.svg" class="h-50 align-self-center" alt="" />
+																					telegram
 																				</span>
 																			</div>
 																		</td>
@@ -1571,7 +1570,7 @@
 																		<td>
 																			<div class="symbol symbol-45px me-2">
 																				<span class="symbol-label">
-																					<img src="assets/media/svg/brand-logos/bebo.svg" class="h-50 align-self-center" alt="" />
+																					bebo
 																				</span>
 																			</div>
 																		</td>
@@ -1626,7 +1625,7 @@
 																		<td>
 																			<div class="symbol symbol-45px me-2">
 																				<span class="symbol-label">
-																					<img src="assets/media/svg/brand-logos/kickstarter.svg" class="h-50 align-self-center" alt="" />
+																					kickstarter
 																				</span>
 																			</div>
 																		</td>
@@ -1655,7 +1654,7 @@
 																		<td>
 																			<div class="symbol symbol-45px me-2">
 																				<span class="symbol-label">
-																					<img src="assets/media/svg/brand-logos/bebo.svg" class="h-50 align-self-center" alt="" />
+																					bebo
 																				</span>
 																			</div>
 																		</td>
@@ -1684,7 +1683,7 @@
 																		<td>
 																			<div class="symbol symbol-45px me-2">
 																				<span class="symbol-label">
-																					<img src="assets/media/svg/brand-logos/vimeo.svg" class="h-50 align-self-center" alt="" />
+																					vimeo
 																				</span>
 																			</div>
 																		</td>
@@ -1713,7 +1712,7 @@
 																		<td>
 																			<div class="symbol symbol-45px me-2">
 																				<span class="symbol-label">
-																					<img src="assets/media/svg/brand-logos/telegram.svg" class="h-50 align-self-center" alt="" />
+																					telegram
 																				</span>
 																			</div>
 																		</td>
@@ -1754,7 +1753,4 @@
 									<!--end::Col-->
 								</div>
 								<!--end::Row-->
-								
-							</div>
-							<!--end::Container-->
 </template>

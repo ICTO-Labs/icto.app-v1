@@ -9,9 +9,9 @@ import ConnectButton from "../ConnectButton.vue"
 							<!--begin::Aside mobile toggle-->
 							<!--end::Aside mobile toggle-->
 							<!--begin::Logo-->
-							<div class="d-flex align-items-center flex-grow-1 flex-lg-grow-0 me-lg-15">
+							<div class="d-flex align-items-center flex-grow-1 flex-lg-grow-0">
 								<router-link to="/">
-									<img alt="Logo" src="/media/logos/logo-1.svg" class="h-20px h-lg-30px" />
+									<img alt="Logo" src="/media/logos/logo-icpay.png" class="h-20px h-lg-30px" />
 								</router-link>
 							</div>
 							<!--end::Logo-->
@@ -29,7 +29,7 @@ import ConnectButton from "../ConnectButton.vue"
                                                 </router-link>
 											</div>
 											<div class="menu-item menu-lg-down-accordion me-lg-1">
-												<router-link class="menu-link py-3" to="/payment">
+												<router-link class="menu-link py-3" to="/payments">
 													<span class="menu-title">Payments</span>
                                                 </router-link>
 											</div>

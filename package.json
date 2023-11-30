@@ -7,18 +7,30 @@
     "serve": "vite preview"
   },
   "dependencies": {
-    "@connect2ic/core": "^0.1.1",
+    "@connect2ic/core": "^0.1.6",
     "@connect2ic/vue": "^0.1.1",
-    "@dfinity/agent": "^0.11.3",
-    "@dfinity/candid": "^0.11.3",
-    "@dfinity/principal": "^0.11.3",
-    "vue": "^3.2.37",
-    "vue-router": "^4.2.4"
+    "@dfinity/agent": "^0.20.1",
+    "@dfinity/auth-client": "^0.20.1",
+    "@dfinity/candid": "^0.20.1",
+    "@dfinity/identity": "^0.20.1",
+    "@dfinity/ledger-icrc": "^2.0.0",
+    "@dfinity/principal": "^0.20.1",
+    "@dfinity/rosetta-client": "^0.6.2",
+    "crc-32": "^1.2.2",
+    "ic-stoic-identity": "^2.0.0",
+    "js-sha256": "^0.10.1",
+    "mitt": "^3.0.1",
+    "pinia": "^2.1.7",
+    "vue": "^3.3.8",
+    "vue-final-modal": "^4.4.6",
+    "vue-router": "^4.2.5",
+    "vue-sweetalert2": "^5.0.5",
+    "vue3-toastify": "^0.1.14"
   },
   "devDependencies": {
-    "@vitejs/plugin-vue": "^2.3.3",
-    "@vue/compiler-sfc": "^3.2.37",
+    "@vitejs/plugin-vue": "^4.5.0",
+    "@vue/compiler-sfc": "^3.3.8",
     "buffer": "^6.0.3",
-    "vite": "^2.9.13"
+    "vite": "^5.0.2"
   }
 }
