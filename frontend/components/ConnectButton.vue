@@ -1,13 +1,12 @@
 <script setup>
-import { onMounted } from 'vue';
+import { onMounted, ref } from 'vue';
 import { useWallet, useConnect, useDialog } from "@connect2ic/vue"
-const {wallet} = useWallet()
 import { useWalletStore } from '../stores/wallet'
-import _api from "../ic/api";
+import _api from "@/ic/api";
+import { principalToAccountId, getAccountBalance, shortPrincipal, shortAccount } from '@/utils/common';
+import Copy from "@/components/icons/Copy.vue";
 const walletStore = useWalletStore()
-import icrc1IDL from '../ic/candid/icrc1.did';
 
-const emit = defineEmits(["onConnect", "onDisconnect"])
 const props = defineProps({
   dark: {
     type: Boolean,
@@ -24,20 +23,37 @@ const isICX = !!window.icx
 
 const { open } = useDialog()
 
-const onConnect = () => {
-  emit("onConnect", {})
+const getBalance = async(address)=>{
+	let _balance = await getAccountBalance(address);
+	let _icpBalance = _balance.div(100000000).toNumber();
+	walletStore.setBalance(_icpBalance);
+	console.log('_balance:', _icpBalance)
+
 }
-
-const onDisconnect = () => {
-  emit("onDisconnect", {})
-}
-
-
-let { activeProvider, isConnected, disconnect, status, connect, principal } = useConnect({
-  // providers,
-  onConnect,
-  onDisconnect,
-})
+const {activeProvider, isConnected, principal, disconnect} = useConnect({
+        onConnect: (res) => {
+            // Signed in
+			console.log('login')
+            isConnectedWallet.value = true;
+			let _accountId = '';
+			try{
+				_accountId = principalToAccountId(res.principal, 0);
+			}catch(e){
+				console.log('ee', e)
+			}
+			console.log('_accountId: ', _accountId);
+			getBalance(_accountId);
+			walletStore.setWalletInfo(res.principal, _accountId, 0);
+            console.log("connectWallet onConnect", res)
+        },
+        onDisconnect: (res) => {
+            // Signed out
+			isConnectedWallet.value = false;
+			walletStore.$reset();
+            console.log("onDisconnect", res)
+        }
+    })
+    const isConnectedWallet = ref(isConnected.value);
 
 const logout = ()=>{
 	Swal.fire({
@@ -58,7 +74,7 @@ const logout = ()=>{
 const checkLogin = ()=>{
 	console.log('principal: ', principal.value)
 	console.log('wallet: ', wallet)
-	console.log('status.value: ', status)
+	console.log('isConnected: ', isConnected)
 
 	walletStore.setWalletInfo(principal.value, 'address', 0);
 }
@@ -80,10 +96,8 @@ const getLogin = async ()=>{
     <div class="d-flex align-items-center ms-1 ms-lg-3" id="kt_header_user_menu_toggle">
 											<!--begin::Menu wrapper-->
 											<div class="cursor-pointer symbol symbol-30px symbol-md-40px" data-kt-menu-trigger="click" data-kt-menu-attach="parent" data-kt-menu-placement="bottom-end">
-                                                <button class="btn btn-sm btn-success" @click="getLogin"><span class="fw-bolder">Get {{ walletStore.principal }}</span> </button>
-                                                <button class="btn btn-sm btn-success" @click="checkLogin"><span class="fw-bolder">Check login</span> </button>
-                                                <button v-if="!isConnected" class="btn btn-sm btn-danger" @click="() => isICX ? connect('icx') : open()">Connect</button>
-                                                <button v-if="isConnected" class="btn btn-sm btn-primary"><span class="fw-bolder">My Wallet</span> </button>
+                                                <button v-if="!isConnectedWallet" class="btn btn-sm btn-danger" @click="() => isICX ? connect('icx') : open()">Connect <i class="fas fa-chevron-circle-right"></i></button>
+                                                <button v-if="isConnectedWallet" class="btn btn-sm btn-primary"><span class="fw-bolder"><i class="fas fa-wallet"></i>My Wallet</span> </button>
                                                 
 											</div>
 											<!--begin::Menu-->
@@ -99,11 +113,25 @@ const getLogin = async ()=>{
 														<!--begin::Username-->
 														<div class="d-flex flex-column">
 															<div class="fw-bolder d-flex align-items-center fs-5" v-if="activeProvider">{{ activeProvider.meta.name }}
-															<span class="badge badge-light-success fw-bolder fs-8 px-2 py-1 ms-2">{{ activeProvider.meta.id }}</span></div>
-															<a href="#" class="fw-bold text-muted text-hover-primary fs-7" v-if="isConnected">Principal: {{ principal.value }}</a>
+															<span class="badge badge-success fw-bolder fs-8 px-2 py-1 ms-2">{{ activeProvider.meta.id.toUpperCase() }}</span></div>
 														</div>
 														<!--end::Username-->
 													</div>
+													<div class="menu-item px-5">
+														<div class="mb-1">       
+															<div class="fw-semibold text-gray-600 fs-7">Principal ID:</div> 
+															<div class="fw-bold text-gray-800 fs-6"><span data-bs-toggle="tooltip" :title="walletStore.wallet.principal">{{ shortPrincipal(walletStore.wallet.principal) }}</span> <Copy :text="walletStore.wallet.principal"></Copy></div>          
+														</div>
+														<div class="mb-1">       
+															<div class="fw-semibold text-gray-600 fs-7">Address ID:</div> 
+															<div class="fw-bold text-gray-800 fs-6"> <span data-bs-toggle="tooltip" :title="walletStore.wallet.address">{{ shortAccount(walletStore.wallet.address) }}</span> <Copy :text="walletStore.wallet.address"></Copy></div>          
+														</div>
+														<div class="mb-1">       
+															<div class="fw-semibold text-gray-600 fs-7">Balance:</div> 
+															<div class="fw-bold text-gray-800 fs-6"> {{ walletStore.wallet.balance }} <span class="badge badge-light-primary fw-bolder fs-8 px-2 py-1 ms-2">ICP</span></div>          
+														</div>
+													</div>
+													
 												</div>
 												<!--end::Menu item-->
 												<!--begin::Menu separator-->

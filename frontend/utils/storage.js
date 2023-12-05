@@ -1,3 +1,10 @@
+export const setWalletToken = (assets)=>{
+    localStorage.setItem("WALLET_TOKEN", JSON.stringify(assets))
+}
+export const getWalletToken = ()=>{
+    return JSON.parse(localStorage.getItem('WALLET_TOKEN'));
+}
+
 export const setLocaleStorage = (locale) => {
     localStorage.setItem('LANGUAGE_LOCALE', locale);
 };

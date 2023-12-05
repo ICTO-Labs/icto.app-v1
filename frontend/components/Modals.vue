@@ -1,8 +1,8 @@
 <script setup>
-	import Login from './modals/Login.vue'
+	import ContractDetails from './modals/ContractDetails.vue'
 	import ImportToken from './modals/ImportToken.vue'
 </script>
 <template>
-	<Login />
+	<ContractDetails />
 	<ImportToken />
 </template>

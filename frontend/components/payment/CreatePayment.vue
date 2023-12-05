@@ -1,26 +1,54 @@
 <script setup>
-	import {ref} from "vue";
-	import { toast } from 'vue3-toastify';
+	import {ref, computed} from "vue";
 	import {validateAddress, showError} from "@/utils/common"
-	import { useWallet, useBalance, useCanister  } from "@connect2ic/vue"
-	import EventBus from "../../services/EventBus";
-	const [assets, { refetch }] = useBalance()
-	const token = ref("ICP");
-	const tokenBalance = ref(0);
+	import {currencyFormat} from "@/utils/token"
+	import { useWalletStore } from '@/stores/wallet'
+    import LoadingLabel from "@/components/LoadingLabel.vue"
+	import EventBus from "@/services/EventBus";
+	import { useAssetStore } from "@/stores/token";
+	import { getMyBalance  } from "@/utils/token";
+	
+	const isLoading = ref(false);
+	const storeAsset = useAssetStore();
+	const walletStore = useWalletStore();
+	const token = ref({symbol: 'icp', name: 'Internet Computer', canisterId: 'ryjl3-tyaaa-aaaaa-aaaba-cai', standard: 'ledger'});
+	const tokenBalance = ref(walletStore.wallet.balance);
 	const totalAmount = ref(0);
 	const newRecipient = ref({amount:"", address: "6102c39ede652286711a1019b6e2e67c0b765241db23b3e96b9f203b6174e6a2", title: "", note: ""});
 	const recipients = ref([]);
 
-	const setSelectedToken = ()=>{
-		tokenBalance.value = assets.value.filter(obj => obj.name == token.value).map(filteredObj => filteredObj.amount)[0];
+	const contractData = ref({
+		startNow: true,
+		startDate: new Date(),
+		startTime: new Date(),
+		durationValue: 1,
+		durationTime: 2628002,
+		unlockSchedule: 86400,
+		recipients: [],
+		canView: 'both',
+		canCancel: 'neither',
+		canChange: 'neither',
+	})
+	const setSelectedToken = async ()=>{
+		resetRecipients();
+		tokenBalance.value = 0;
+		await getTokenBalance();
 	}
-	const refreshBalance = ()=> refetch();
 	const calTotalToken = ()=>{
 		totalAmount.value = recipients.value.reduce((acc,cur) => acc + cur.amount, 0);
+	}
+	const getTokenBalance = async ()=>{
+		isLoading.value = true;
+		totalAmount.value = 0;
+		let _balance = await getMyBalance(token.value.canisterId, 'icrc-1');
+		tokenBalance.value = Number(_balance)/100_000_000;
+		isLoading.value = false;
+		console.log('_balance', _balance);
 	}
 	const resetInput = ()=>{
 		newRecipient.value = {amount:"", address: "", title: "", note: ""};
 	}
+	const resetRecipients = ()=>{ recipients.value = []};
 	const removeRecipient = (idx)=>{
 		recipients.value.splice(idx, 1);
 		calTotalToken();
@@ -31,21 +59,37 @@
 			return;
 		}
 		if(newRecipient.value.amount <= 0 || newRecipient.value.amount > (tokenBalance.value-totalAmount.value)){
-			showError("Not enough "+token.value+", check remaining amount!");
+			showError("Not enough "+token.value.symbol+", check remaining amount!");
 			return;
 		}
-		recipients.value.push({address:newRecipient.value.address.trim(), amount: Number(newRecipient.value.amount), title: newRecipient.value.title??"", note:newRecipient.value.note??""})
+		recipients.value.push({address:newRecipient.value.address.trim(), amount: newRecipient.value.amount, title: newRecipient.value.title??"", note:newRecipient.value.note??""})
 		resetInput();
 		calTotalToken();
 	}
 	const importToken = ()=>{
 		EventBus.emit("showImportTokenModal", true)
 	}
+	
+	const tokenInfo = computed(()=>{
+		return token.value;
+	})
+
+	const reviewContract = ()=>{
+		if(recipients.value.length == 0){
+			showError("No recipient!")
+			return;
+		}
+		contractData.value.recipients = recipients.value;
+		contractData.value.token = token.value;
+		contractData.value.totalAmount = totalAmount.value;
+		console.log('contractData', contractData.value);
+		EventBus.emit("showContractDetailsModal", {...contractData.value, status: true})
+	}
 </script>
 <template>
 	<div class="card  mb-xl-8">
 		<div class="card-header align-items-center">
-			<label class="fs-4 fw-bold form-label mb-2 text-primary">Payment Contract</label>
+			<label class="fs-4 fw-bold form-label mb-2 text-primary">Create New Contract</label>
 		</div>
 		<div class="card-body pt-5">
 			<form class="form" id="modal-create-contract">
@@ -55,23 +99,26 @@
 						<div class="row mb-10">
 							<div class="col-md-6 fv-row">
 								<label class="d-flex align-items-center fs-6 fw-bold mb-2">
-									<span class="required">Token</span>
+									<span class="required">Token</span> 
 									<i class="fas fa-exclamation-circle ms-2 fs-7" data-bs-toggle="tooltip" title="Specify your Token"></i>
-									</label>
-								<div class="input-group flex-nowrap">
-									<select class="form-select form-control" @change="setSelectedToken" v-model="token">
-										<option :value="asset.name" v-for="asset in assets">{{ asset.name }}</option>
-									</select>
-									<span class="input-group-text">
-										<button type="button" class="btn btn-primary btn-sm" @click="importToken">Import</button>
-									</span>
-	</div>
+									<a href="#" class="badge badge-light-primary ms-5" @click="importToken">+ Import</a>
 
-								
+									</label>
+									<select class="form-select" @change="setSelectedToken" v-model="token" placeholder="Select token">
+										<option :value="{symbol: 'icp', name: 'Internet Computer', canisterId: 'ryjl3-tyaaa-aaaaa-aaaba-cai', standard: 'ledger'}" selected>Internet Computer (ICP)</option>
+										<option :value="asset" v-for="asset in storeAsset.assets"  :key="asset.canisterId">{{ asset.name }} ({{ asset.symbol }}) | {{ asset.canisterId }}</option>
+									</select>
 							</div>
 							<div class="col-md-6 fv-row">
-								<label class="fs-6 fw-bold form-label mb-2">Balance</label>
-								<input type="text" readonly class="form-control form-control-solid" :value="tokenBalance">
+								<label class="fs-6 fw-bold form-label mb-2">Balance
+									<LoadingLabel 
+										:loading="isLoading"
+										class="badge badge-light-primary ms-5"
+										@click="getTokenBalance"><i class="fas fa-arrows-rotate"></i> Refresh
+									</LoadingLabel>
+
+								</label>
+								<input type="text" readonly class="form-control form-control-solid" :value="currencyFormat(tokenBalance)">
 							</div>
 						</div>
 						<div class="row mb-10">
@@ -79,10 +126,10 @@
 								<label class="required fs-6 fw-bold form-label mb-2">Duration</label>
 								<div class="row fv-row">
 									<div class="col-4">
-										<input type="text" class="form-control" name="name" placeholder="" value="1" />
+										<input type="text" class="form-control" v-model="contractData.durationValue"/>
 									</div>
 									<div class="col-8">
-										<select name="card_expiry_year" class="form-select" data-hide-search="true" data-placeholder="Year">
+										<select name="duration" class="form-select" data-hide-search="true" data-placeholder="Month" v-model="contractData.durationTime">
 											<option value="1">Second</option>
 											<option value="60">Minute</option>
 											<option value="3600">Hour</option>
@@ -99,7 +146,7 @@
 								<label class="required fs-6 fw-bold form-label mb-2">Unlock schedule</label>
 								<div class="row fv-row">
 									<div class="col-12">
-										<select name="releaseFrequencyPeriod" class="form-select">
+										<select name="releaseFrequencyPeriod" class="form-select" v-model="contractData.unlockSchedule">
 											<option value="1">Per Second</option>
 											<option value="60">Per Minute</option>
 											<option value="3600">Hourly</option>
@@ -120,56 +167,32 @@
 			</form>
 		</div>
 	</div>
-	<div class="card mb-xl-8">
-		<div class="card-header align-items-center">
-			<label class="fs-4 fw-bold form-label mb-2 text-primary">Start Time</label>
-		</div>
-		<div class="card-body pt-10">
-			<div class="row">
-				<div class="col-md-6 fv-row">
-					<label class="required fs-6 fw-bold form-label mb-2">Start time</label>
-					<label class="form-check form-switch form-check-custom form-check-solid">
-						<input class="form-check-input" type="checkbox" value="1" checked />
-						<span class="form-check-label fw-bold text-muted">Start upon contract creation</span>
-					</label>
-				</div>
-				<div class="col-md-3 fv-row">
-					<label class=" fs-6 fw-bold form-label mb-2">Start date</label>
-					<input type="text"  class="form-control" value="10.3981">
-				</div>
-				<div class="col-md-3 fv-row">
-					<label class=" fs-6 fw-bold form-label mb-2">Start time</label>
-					<input type="text"  class="form-control" value="10.3981">
-				</div>
-			</div>
-		</div>
-	</div>
+	
 	<div class="card mb-xl-8" >
 		<div class="card-header align-items-center">
 			<label class="fs-4 fw-bold form-label mb-2 text-primary">Recipients <span class="badge badge-light-primary">{{recipients.length}}</span></label>
 			<div class="card-toolbar">
 				<div class="d-flex">
 					<div class="fw-bolder fs-2 text-primary px-10">
-						{{tokenBalance}}
-						<span class="text-muted fs-4 fw-bold">{{token}}</span>
+						{{currencyFormat(tokenBalance)}}
+						<span class="text-muted fs-4 fw-bold">{{tokenInfo.symbol.toUpperCase()}}</span>
 						<div class="fs-7 fw-normal text-muted">
 							Your balance
-							<a href="javascript:void(0)" class="text-primary" title="Reload balance" @click="refreshBalance">
-							<span class="svg-icon svg-icon-primary"><svg class="h-20px" xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none">
-<path d="M14.5 20.7259C14.6 21.2259 14.2 21.826 13.7 21.926C13.2 22.026 12.6 22.0259 12.1 22.0259C9.5 22.0259 6.9 21.0259 5 19.1259C1.4 15.5259 1.09998 9.72592 4.29998 5.82592L5.70001 7.22595C3.30001 10.3259 3.59999 14.8259 6.39999 17.7259C8.19999 19.5259 10.8 20.426 13.4 19.926C13.9 19.826 14.4 20.2259 14.5 20.7259ZM18.4 16.8259L19.8 18.2259C22.9 14.3259 22.7 8.52593 19 4.92593C16.7 2.62593 13.5 1.62594 10.3 2.12594C9.79998 2.22594 9.4 2.72595 9.5 3.22595C9.6 3.72595 10.1 4.12594 10.6 4.02594C13.1 3.62594 15.7 4.42595 17.6 6.22595C20.5 9.22595 20.7 13.7259 18.4 16.8259Z" fill="black"/>
-<path opacity="0.3" d="M2 3.62592H7C7.6 3.62592 8 4.02592 8 4.62592V9.62589L2 3.62592ZM16 14.4259V19.4259C16 20.0259 16.4 20.4259 17 20.4259H22L16 14.4259Z" fill="black"/>
-</svg></span></a>
-
+							<LoadingLabel 
+										:loading="isLoading"
+										class="badge badge-light-primary ms-5"
+										@click="getTokenBalance"><i class="fas fa-arrows-rotate"></i> Refresh
+							</LoadingLabel>
 						</div>
 					</div>
 					<div class="fw-bolder fs-2 text-success px-10">
-						{{(tokenBalance - totalAmount).toFixed(6)}}
-						<span class="text-muted fs-4 fw-bold">{{token}}</span>
+						{{currencyFormat((tokenBalance - totalAmount))}}
+						<span class="text-muted fs-4 fw-bold">{{tokenInfo.symbol.toUpperCase()}}</span>
 						<div class="fs-7 fw-normal text-muted">Remaining amount</div>
 					</div>
 					<div class="fw-bolder fs-2 text-danger px-10">
-						{{totalAmount}}
-						<span class="text-muted fs-4 fw-bold">{{token}}</span>
+						{{currencyFormat(totalAmount)}}
+						<span class="text-muted fs-4 fw-bold">{{tokenInfo.symbol.toUpperCase()}}</span>
 						<div class="fs-7 fw-normal text-muted">Will be sent</div>
 					</div>
 				</div>
@@ -182,7 +205,7 @@
 					<thead>
 					<tr class="fw-bolder text-muted bg-light">
 						<th class="ps-4 min-w-25px rounded-start">#</th>
-						<th class="w-100px text-end">Amount</th>
+						<th class="w-120px text-end">Amount</th>
 						<th class="min-w-400px required">Address</th>
 						<th class="min-w-50px">Title</th>
 						<th class="min-w-100px">Note</th>
@@ -192,7 +215,7 @@
 					<tbody>
 					<tr v-if="recipients.length == 0">
 						<td colspan="6" class="bg-white">
-							No recipient!
+							<div class="fw-bold text-danger">No recipient!</div>
 						</td>
 					</tr>
 					<tr v-else v-for="(recipient, idx) in recipients">
@@ -201,43 +224,33 @@
 						</td>
 						<td>
 							<span class="text-muted fw-bold text-muted d-block fs-7 text-end">
-								{{recipient.amount}} {{token}}
+								{{currencyFormat(recipient.amount)}} {{tokenInfo.symbol.toUpperCase()}}
 							</span>
-	<!--													<input type="number" class="form-control form-control-sm text-red" :value="recipient.amount" min="0">-->
 						</td>
 						<td>
 							<span class="text-muted fw-bold text-muted d-block fs-7">
 								{{recipient.address}}
 							</span>
-	<!--													<input type="text" class="form-control form-control-sm d-block" :value="recipient.address">-->
 						</td>
 						<td>
 							<span class="text-muted text-muted d-block fs-7">
 								{{recipient.title}}
 							</span>
-	<!--													<input type="text" class="form-control form-control-sm mb-1" :value="recipient.title">-->
 						</td>
 						<td>
 							<span class="text-muted text-muted d-block fs-7">
 								{{recipient.note}}
 							</span>
-	<!--													<input type="text" class="form-control d-block form-control-sm" :value="recipient.note">-->
 						</td>
 						<td class="text-center">
 							<button type="button" class="btn btn-icon btn-danger btn-sm" @click="removeRecipient(idx)">
-								<span class="svg-icon svg-icon-3">
-									<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none">
-										<path d="M5 9C5 8.44772 5.44772 8 6 8H18C18.5523 8 19 8.44772 19 9V18C19 19.6569 17.6569 21 16 21H8C6.34315 21 5 19.6569 5 18V9Z" fill="black"></path>
-										<path opacity="0.5" d="M5 5C5 4.44772 5.44772 4 6 4H18C18.5523 4 19 4.44772 19 5V5C19 5.55228 18.5523 6 18 6H6C5.44772 6 5 5.55228 5 5V5Z" fill="black"></path>
-										<path opacity="0.5" d="M9 4C9 3.44772 9.44772 3 10 3H14C14.5523 3 15 3.44772 15 4V4H9V4Z" fill="black"></path>
-									</svg>
-								</span>
+								<i class="fas fa-trash"></i>
 							</button>
 						</td>
 					</tr>
 					</tbody>
 					<tfoot>
-					<tr class="bg-light">
+					<tr class="bg-light ">
 						<td class="">
 							<span class="badge badge-light-success">New</span>
 						</td>
@@ -247,7 +260,7 @@
 						</td>
 						<td>
 							<label class="required fs-7 form-label mb-2">Recipient wallet address</label>
-							<input type="text" class="form-control form-control-sm d-block" v-model="newRecipient.address" placeholder="Address (Account ID)">
+							<input type="text" class="form-control form-control-sm d-block" v-model="newRecipient.address" placeholder="Address (Account ID)" ref="address">
 						</td>
 						<td>
 							<label class=" fs-7 form-label mb-2">Title (option)</label>
@@ -277,20 +290,20 @@
 	</div>
 	<div class="card mb-xl-8">
 		<div class="card-header align-items-center">
-			<label class="fs-4 fw-bold form-label mb-2 text-primary">Privacy</label>
+			<label class="fs-4 fw-bold form-label mb-2 text-primary">Settings</label>
 		</div>
 		<div class="card-body pt-10">
 			<div class="row mb-10">
 				<div class="col-md-4 fv-row">
 					<label class="required fs-6 fw-bold form-label mb-2">Who can view the contract?</label>
-					<select name="card_expiry_year" class="form-select" data-hide-search="true" data-placeholder="Year">
+					<select v-model="contractData.canView" class="form-select">
 						<option value="public">Public</option>
-						<option value="both" selected>Sender and Recipient</option>
+						<option value="both" selected>Only Sender and Recipient</option>
 					</select>
 				</div>
 				<div class="col-md-4 fv-row">
 					<label class="required fs-6 fw-bold form-label mb-2">Who can cancel contract?</label>
-					<select name="card_expiry_year" class="form-select" data-hide-search="true" data-placeholder="Year">
+					<select v-model="contractData.canCancel" class="form-select">
 						<option value="recipient">Only Recipient</option>
 						<option value="sender">Only Sender</option>
 						<option value="both">Both</option>
@@ -299,7 +312,7 @@
 				</div>
 				<div class="col-md-4 fv-row">
 					<label class="required fs-6 fw-bold form-label mb-2">Who can change recipient?</label>
-					<select name="card_expiry_year" class="form-select" data-hide-search="true" data-placeholder="Year">
+					<select v-model="contractData.canChange" class="form-select" disabled >
 						<option value="recipient">Only Recipient</option>
 						<option value="sender">Only Sender</option>
 						<option value="both">Both</option>
@@ -307,11 +320,28 @@
 					</select>
 				</div>
 			</div>
+			<div class="row">
+				<div class="col-md-4 fv-row">
+					<label class="fs-6 fw-bold form-label mb-2">Start now</label>
+					<label class="form-check form-switch form-check-custom form-check-solid">
+						<input class="form-check-input" type="checkbox" v-model="contractData.startNow"/>
+						<span class="form-check-label fw-bold text-muted">Start upon contract creation</span>
+					</label>
+				</div>
+				<div class="col-md-4 fv-row" v-if="!contractData.startNow">
+					<label class="required  fs-6 fw-bold form-label mb-2">Start Date</label>
+					<VueDatePicker v-model="contractData.startDate" :min-date="new Date()" :enable-time-picker="false" auto-apply></VueDatePicker>
+				</div>
+				<div class="col-md-4 fv-row" v-if="!contractData.startNow">
+					<label class="required  fs-6 fw-bold form-label mb-2">Start Time</label>
+					<VueDatePicker v-model="contractData.startTime" time-picker :min-date="new Date()" auto-apply></VueDatePicker>
+				</div>
+			</div>
 		</div>
 	</div>
 	<div class="d-flex flex-stack pt-0">
 		<div>
-			<button type="button" class="btn btn-lg btn-primary" data-kt-stepper-action="next">Review Contract
+			<button type="button" class="btn btn-lg btn-primary" @click="reviewContract">Review Contract
 				<span class="svg-icon svg-icon-3 ms-1 me-0">
 					<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none">
 						<rect opacity="0.5" x="18" y="13" width="13" height="2" rx="1" transform="rotate(-180 18 13)" fill="black" />

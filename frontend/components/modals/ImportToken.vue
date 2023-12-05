@@ -5,12 +5,13 @@
     import _api from "@/ic/api";
     import { decodeICRC1Metadata } from "@/utils/token";
     import LoadingButton from "@/components/LoadingButton.vue"
-	import { showSuccess } from '@/utils/common';
+	import { showSuccess, showError, clearToast, validatePrincipal } from '@/utils/common';
+    import { useAssetStore } from '@/stores/token';
+    const storeAsset = useAssetStore();
 
     const importTokenModal = ref(false);
     const tokenStandard = ref('icrc-1');
     const canisterId = ref('2ouva-viaaa-aaaaq-aaamq-cai');
-    const importButtonReady = ref(true);
     const isImported = ref(false);
     const agree = ref(false);
     const tokenInfo = ref(null);
@@ -19,25 +20,49 @@
     onMounted(()=>{
         EventBus.on("showImportTokenModal", isOpen => {
             importTokenModal.value = isOpen;
+            //reset
+            agree.value = false;
+            isImported.value = false;
+            tokenInfo.value = null;
+            // canisterId.value = '';
         });
     })
 
     const checkCanisterId = async ()=>{
         isImported.value = false;
         tokenInfo.value = null;
+        agree.value = false;
     }
     const importToken = async()=>{
         isLoading.value = true;
-        let _tokenInfo = await _api.canister(canisterId.value, tokenStandard.value).icrc1_metadata();
-        isLoading.value = false;
-        tokenInfo.value = decodeICRC1Metadata(_tokenInfo);
-        isImported.value = true;
-        console.log('tokenInfo: ', tokenInfo.value);
+        if(validatePrincipal(canisterId.value.trim())){
+            clearToast();
+            try{
+                let _tokenInfo = await _api.canister(canisterId.value, tokenStandard.value).icrc1_metadata();
+                isLoading.value = false;
+                tokenInfo.value = decodeICRC1Metadata(_tokenInfo);
+                isImported.value = true;
+                console.log('tokenInfo: ', tokenInfo.value);
+            }catch(e){
+                showError("Some thing went wrong, please try again later!")
+                console.log('Some thing went wrong', e);
+            }
+        }else{
+            showError("Invalid Canister ID")
+            isLoading.value = false;
+        }
+       
     }
 
     const confirmImport = ()=>{
-        EventBus.emit("showImportTokenModal", false);
-        showSuccess("Token imported!")
+        let _rs = storeAsset.addAsset(canisterId.value, tokenInfo.value.name, tokenInfo.value.symbol, tokenStandard.value)
+        if(_rs){
+            EventBus.emit("showImportTokenModal", false);
+            showSuccess("Token imported!")
+        }else {
+            showError("Token existed!")
+        }
+        
     }
 
 </script>
@@ -64,7 +89,7 @@
                             <div class="form-group">
                                 <label class="form-label"><span class="required">Token Standard</span></label>
                                 <div class="form-control-wrap">
-                                    <select class="form-control form-control-solid " v-model="tokenStandard">
+                                    <select class="form-select" v-model="tokenStandard">
                                         <option value="icrc-1" selected>ICRC-1</option>
                                         <option value="icrc-2">ICRC-2</option>
                                         <option value="dip20">DIP20</option>
@@ -77,7 +102,7 @@
                             <div class="form-group">
                                 <label class="form-label"><span class="required">Canister ID</span> </label>
                                 <div class="form-control-wrap">
-                                    <input type="text" class="form-control form-control-solid" placeholder="Canister ID" required v-model="canisterId" @keyup="checkCanisterId">
+                                    <input type="text" class="form-control w-100" placeholder="Canister ID" required v-model="canisterId" @keyup="checkCanisterId">
                                 </div>
                             </div>
                         </div>
@@ -92,11 +117,11 @@
                             </LoadingButton>
                         </div>
                         <div v-if="isImported" class="mt-10">
-                            <div class="d-flex align-items-center mb-5">
+                            <div class="d-flex align-items-center mb-10 alert alert-dismissible bg-light-primary d-flex flex-column flex-sm-row w-100 p-5 mb-10">
                                 <div class="me-5 position-relative">
-                                    <div class="symbol symbol-35px symbol-circle">
-                                        <span class="symbol-label bg-light-danger text-danger fw-semibold">
-                                            {{tokenInfo.symbol}}
+                                    <div class="symbol symbol-45px symbol-circle">
+                                        <span class="symbol-label bg-primary text-white fw-semibold">
+                                            {{tokenInfo.symbol.charAt(0)}}
                                         </span>
                                      </div>
                                 </div>
@@ -106,18 +131,17 @@
                                         {{ canisterId }}
                                     </div>
                                 </div>
-                                <div class="badge badge-light-success ms-auto">{{tokenStandard.toLocaleUpperCase()}}</div>
+                                <div class="badge badge-primary ms-auto">{{tokenStandard.toLocaleUpperCase()}}</div>
                             </div>
-                         
                             <div class="col-sm-12">
-                            <div class="alert alert-warning alert-icon">
-                                <h4 class="mb-1 text-danger">Warning</h4>
-                                <em class="icon ni ni-alert-circle"></em> 
-                                    Anyone can create a token on Internet Computer with any name and logo, including creating fake versions of existing tokens and tokens that claim to represent projects that do not have a token.
-                                    <br />            
-                                    <span class="text-danger">These risks are always present. Please DYOR before investing!</span>
-                           </div>
-                        </div> 
+                                <div class="alert alert-dismissible bg-light-danger border border-danger border-dashed flex-sm-row w-100 p-5 mb-10">
+                                    <h4 class="mb-1 text-danger">Warning!</h4>
+                                    <em class="icon ni ni-alert-circle"></em> 
+                                        Anyone can create a token on Internet Computer with any name and logo, including creating fake versions of existing tokens and tokens that claim to represent projects that do not have a token.
+                                        <br />            
+                                        <span class="text-danger">These risks are always present. Please DYOR before investing!</span>
+                                </div>
+                            </div> 
                         <div class="col-sm-12">
                             <div class="form-check form-check-custom form-check-solid">
                                 <input class="form-check-input" type="checkbox" id="flexCheckDefault" v-model="agree"/>

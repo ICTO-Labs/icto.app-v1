@@ -1,37 +1,26 @@
 import { defineStore } from "pinia";
-import { deleteWalletInfoStorage, getWalletInfoStorage, setWalletInfoStorage } from "../utils/storage";
+import { useStorage } from '@vueuse/core'
 
 export const useWalletStore = defineStore({
-    id: "wallet",
+    id: "walletState",
     state: () => ({
-        icp: 0,
-        principal: "",
-        address: ""
+        wallet: useStorage('loggedWallet', {principal: null, address: null, balance: 0}),
     }),
     getters: {
         getWalletInfo: (state) => {
-            state = getWalletInfoStorage();
+            state = getWalletInfo();
             return state;
         },
     },
     actions: {
-        setWalletInfo(principal, address, icpAmount) {
-            if (principal === '') {
-                this.$state = {
-                    icp: 0,
-                    principal: "",
-                    address: "",
-                };
-                deleteWalletInfoStorage();
-            } else {
-                const walletInfo = {
-                    icp: icpAmount,
-                    principal: principal,
-                    address: address
-                };
-                setWalletInfoStorage(walletInfo);
-                this.$state = walletInfo;
-            }
+        setWalletInfo(principal, address, balance) {
+            this.wallet = {principal, address, balance};
+        },
+        removeWalletInfo(){
+            this.wallet =  {principal: null, address: null, balance: 0};
+        },
+        setBalance(balance){
+            this.wallet = {...this.wallet, balance: balance}
         }
 
     }

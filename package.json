@@ -7,6 +7,7 @@
     "serve": "vite preview"
   },
   "dependencies": {
+    "@coingecko/cryptoformat": "^0.7.0",
     "@connect2ic/core": "^0.1.6",
     "@connect2ic/vue": "^0.1.1",
     "@dfinity/agent": "^0.20.1",
@@ -16,9 +17,14 @@
     "@dfinity/ledger-icrc": "^2.0.0",
     "@dfinity/principal": "^0.20.1",
     "@dfinity/rosetta-client": "^0.6.2",
+    "@vuepic/vue-datepicker": "^7.3.0",
+    "@vueuse/core": "^10.6.1",
+    "axios": "^1.6.2",
+    "bignumber.js": "^9.1.2",
     "crc-32": "^1.2.2",
     "ic-stoic-identity": "^2.0.0",
     "js-sha256": "^0.10.1",
+    "json-bigint": "^1.0.0",
     "mitt": "^3.0.1",
     "pinia": "^2.1.7",
     "vue": "^3.3.8",

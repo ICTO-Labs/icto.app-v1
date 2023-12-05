@@ -1,9 +1,6 @@
 <script setup>
-/*
- * Connect2ic provides essential utilities for IC app development
- */
 import { RouterLink, RouterView } from 'vue-router'
-
+import config from './config'
 import { createClient } from "@connect2ic/core"
 import { defaultProviders } from "@connect2ic/core/providers"
 import { ConnectDialog, Connect2ICProvider } from "@connect2ic/vue"
@@ -18,7 +15,6 @@ import "@connect2ic/core/style.css"
  * Import backend canister definitions
  */
 import * as backend from "../.dfx/local/canisters/backend"
-import * as counter from "../.dfx/local/canisters/counter"
 /*
  * Import layout and default components
  */
@@ -29,22 +25,20 @@ import ScrollTop from "./components/ScrollTop.vue"
 import Modals from "./components/Modals.vue"
 const client = window.client = createClient({
   canisters: {
-    backend,
-    counter
+    backend
   },
   providers: [
     new InternetIdentity(),
-    new PlugWallet(),
+    // new PlugWallet(),
     new NFID(),
     new StoicWallet(),
   ],
   globalProviderConfig: {
     dev: false,//import.meta.env.DEV,
-    host: "https://icp0.io",
+    host: config.IC_ENDPOINT,
   },
 })
 
-console.log('client: ', client)
 </script>
 
 <template>

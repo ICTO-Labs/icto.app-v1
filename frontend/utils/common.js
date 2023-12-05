@@ -1,34 +1,42 @@
 import { toast } from 'vue3-toastify';
 import crc32 from 'crc-32'
-import { sha224 } from 'js-sha256'
+import {Principal} from "@dfinity/principal";
+import {Buffer} from "buffer";
+import { sha224 } from '@dfinity/principal/lib/esm/utils/sha224';
+import { getCrc32 } from '@dfinity/principal/lib/esm/utils/getCrc';
+import RosettaApi from '@/services/RosettaApi';
+const rosettaApi = new RosettaApi();
 
+export const getAccountBalance = async(address)=>{
+    return await rosettaApi.getAccountBalance(address);
+}
 const isHex = (h) => {
     var regexp = /^[0-9a-fA-F]+$/;
     return regexp.test(h);
 };
+export const toHexString = (byteArray)  =>{
+    return Array.from(byteArray, function(byte) {
+        return ('0' + (byte & 0xFF).toString(16)).slice(-2);
+    }).join('')
+}
+export const validatePrincipal = (p) => {
+    try {
+        return (p === Principal.fromText(p).toText());
+    } catch (e) {
+        return false;
+    }
+}
 export const validateAddress = (a) => {
     return (isHex(a) && a.length === 64)
 }
 export const showError = (message)=>{
-    toast.error(message, {
-        position: toast.POSITION.BOTTOM_CENTER,
-    });
+    toast.error(message,);
+}
+export const clearToast = ()=>{
+    toast.clearAll();
 }
 export const showSuccess = (message)=>{
-    toast.success(message, {
-        position: toast.POSITION.BOTTOM_CENTER,
-    });
-}
-const deepCopy = (obj) => {
-    var copy = Object.create(Object.getPrototypeOf(obj))
-    var propNames = Object.getOwnPropertyNames(obj)
-
-    propNames.forEach(function (name) {
-        var desc = Object.getOwnPropertyDescriptor(obj, name)
-        Object.defineProperty(copy, name, desc)
-    })
-
-    return copy
+    toast.success(message);
 }
 const to32bits = (num) => {
     let b = new ArrayBuffer(4)
@@ -65,25 +73,49 @@ const from32bits = ba => {
     }
     return value;
 }
+export const shortAccount = (accountId) =>
+  `${accountId.slice(0, 8)}...${accountId.slice(-8)}`;
 
-export const Storage = {
-    set(key, value) {
-        if (window.localStorage) {
-            window.localStorage.setItem(key, JSON.stringify(value))
-        }
-    },
-    get(key) {
-        if (window.localStorage) {
-            return JSON.parse(window.localStorage.getItem(key))
-        }
-    },
-    remove(key) {
-        if (window.localStorage) {
-            window.localStorage.removeItem(key)
-        }
+export const shortPrincipal = (principal) => {
+  const parts = (
+    typeof principal === "string" ? principal : principal.toText()
+  ).split("-");
+  return `${parts[0]}...${parts.slice(-1)[0]}`;
+};
+function deepCopy(text) {
+    var textArea = document.createElement("textarea");
+    textArea.value = text;
+    // Avoid scrolling to bottom
+    textArea.style.top = "0";
+    textArea.style.left = "0";
+    textArea.style.position = "fixed";
+
+    document.body.appendChild(textArea);
+    textArea.focus();
+    textArea.select();
+    try {
+        var successful = document.execCommand('copy');
+        var msg = successful ? 'successful' : 'unsuccessful';
+        console.log('Fallback: Copying text command was ' + msg);
+    } catch (err) {
+        console.error('Fallback: Oops, unable to copy', err);
     }
-}
 
+    document.body.removeChild(textArea);
+}
+export const copyToClipboard = (text, item) => {
+    if (!navigator.clipboard) {
+        deepCopy(text);
+        return;
+    }
+    navigator.clipboard.writeText(text).then(function() {
+        // toast.clear();
+        // toast.info(item+' copied!');
+        console.log('Async: Copying to clipboard was successful!');
+    }, function(err) {
+        console.error('Async: Could not copy text: ', err);
+    });
+}
 export default {
     validateAddress,
     showError
