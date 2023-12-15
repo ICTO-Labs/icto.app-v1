@@ -14,7 +14,7 @@ import "@connect2ic/core/style.css"
 /*
  * Import backend canister definitions
  */
-import * as backend from "../.dfx/local/canisters/backend"
+import * as backend from "../src/declarations/backend"
 /*
  * Import layout and default components
  */
@@ -29,13 +29,13 @@ const client = window.client = createClient({
   },
   providers: [
     new InternetIdentity(),
-    // new PlugWallet(),
-    new NFID(),
-    new StoicWallet(),
+    new PlugWallet(),
+    // new NFID(),
+    // new StoicWallet(),
   ],
   globalProviderConfig: {
-    dev: false,//import.meta.env.DEV,
-    host: config.IC_ENDPOINT,
+    dev: true,//import.meta.env.DEV,
+    host: "http://localhost:8000",//config.IC_ENDPOINT,
   },
 })
 

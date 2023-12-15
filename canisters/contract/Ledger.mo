@@ -1,5 +1,5 @@
 import ICP "./types/ICP";
-import ICRC1 "./types/ICRC";
+import ICRC1 "./types/ICRC1";
 
 module {
     //IC Ledger Canister Interface

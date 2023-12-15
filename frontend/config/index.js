@@ -18,7 +18,6 @@ const NETWORK = {
 const ENV = "ic";// //development, staging, ic
 
 const config = {
-    backend_api: 'https://ico-proxy.canister.app/api/',
     APP_VERSION: '2.0.1',
     ENV: ENV,
     IC_ENDPOINT: NETWORK[ENV]['endpoint'],//https://boundary.ic0.app/
@@ -37,35 +36,14 @@ const config = {
         'rkp4c-7iaaa-aaaaa-aaaca-cai',
         'nn2xz-fiaaa-aaaap-qa6lq-cai'
     ],
-    CANISTER_IMAGE_CATEGORY: {
-        [0]: "Tokens",
-        [1]: "NFT",
-        [3]: "Tools",
-        [2]: "DAO",
-    },
-    STANDARD: (imageId) =>{
-        switch (Number(imageId)) {
-            case 1000: return "ICRC1";break;
-            case 1001: return "DIP20";break;
-            case 1002: return "NFT";break;
-        }
-    },
     E8S: 100_000_000,
     CYCLES: 1_000_000_000_000,
     FEE: 10_000,
     MIN_DEPOSIT: 10_000*10,
     IC_SCAN: NETWORK[ENV]['scan'],
-    WALLET_FULLY_SUPPORTED: ['stoic', 'nns'],
-    WALLET_CONFIG: {
-        "nns": true,
-        "stoic": true,
-        "plug": true,
-        "bitfinity": true,
-    },
-    MAX_CHUNK_SIZE: 1900000,
-    MAX_COLLECTION_FILE_SIZE: {
-        avatar: 25 * 1000,
-        banner: 150 * 1000
-    }
+    MAX_CHUNK_SIZE: 1900000
 }
+export const defaultTokens = [
+    {symbol: 'ICP', name: 'Internet Computer', canisterId: 'ryjl3-tyaaa-aaaaa-aaaba-cai', standard: 'ledger'}
+]
 export default config;

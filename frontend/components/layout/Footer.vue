@@ -5,8 +5,9 @@
 						<div class="container-fluid d-flex flex-column flex-md-row align-items-center justify-content-between">
 							<!--begin::Copyright-->
 							<div class="text-dark order-2 order-md-1">
-								<span class="text-muted fw-bold me-1">2023©</span>
-								<a href="https://icpay.app" class="text-gray-800 text-hover-primary">ICPAY.APP</a>
+								<span class="fw-bold text-gray-800 me-1 ">2023©</span>
+								<a href="https://icto.app" class="text-gray-800 text-hover-primary me-1 fw-bold">ICTO.APP</a>
+								<span class="text-muted fs-7">build: 8d788326</span>
 							</div>
 							<!--end::Copyright-->
 							<!--begin::Menu-->

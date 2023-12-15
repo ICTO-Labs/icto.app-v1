@@ -1,5 +1,5 @@
 <script setup>
-import { onMounted, ref } from 'vue';
+import { onMounted, ref, watch } from 'vue';
 import { useWallet, useConnect, useDialog } from "@connect2ic/vue"
 import { useWalletStore } from '../stores/wallet'
 import _api from "@/ic/api";
@@ -53,8 +53,16 @@ const {activeProvider, isConnected, principal, disconnect} = useConnect({
             console.log("onDisconnect", res)
         }
     })
-    const isConnectedWallet = ref(isConnected.value);
-
+const isConnectedWallet = ref(isConnected.value);
+watch()(
+	()=>{
+		if (isConnected.value == false){
+			console.log('watch isConnected', isConnected.value);
+			isConnectedWallet.value = false;
+			walletStore.$reset();
+		}
+	}
+)
 const logout = ()=>{
 	Swal.fire({
 		title: "Are you sure?",
@@ -79,15 +87,6 @@ const checkLogin = ()=>{
 	walletStore.setWalletInfo(principal.value, 'address', 0);
 }
 
-const getLogin = async ()=>{
-	let _wallet = walletStore.getWalletInfo;
-	console.log('walletStore:', _wallet)
-	let _fetch = await _api.connect(activeProvider).canister("2ouva-viaaa-aaaaq-aaamq-cai").icrc1_metadata();
-	// _fetch = await _fetch.icrc1_metadata();
-	// const _icrc = await activeProvider.value.createActor('2ouva-viaaa-aaaaq-aaamq-cai', icrc1IDL).icrc1_metadata();
-	console.log('ICRC1', _fetch);
-}
-
 </script>
 
 <template>
@@ -101,8 +100,9 @@ const getLogin = async ()=>{
                                                 
 											</div>
 											<!--begin::Menu-->
-											<div class="menu menu-sub menu-sub-dropdown menu-column menu-rounded menu-gray-800 menu-state-bg menu-state-primary fw-bold py-4 fs-6 w-275px" data-kt-menu="true" v-show="isConnected" >
+											<div class="menu menu-sub menu-sub-dropdown menu-column menu-rounded menu-gray-800 menu-state-bg menu-state-primary fw-bold py-4 fs-6 w-275px" data-kt-menu="true" >
 												<!--begin::Menu item-->
+												<div v-show="isConnectedWallet">
 												<div class="menu-item px-3">
 													<div class="menu-content d-flex align-items-center px-3">
 														<!--begin::Avatar-->
@@ -184,6 +184,7 @@ const getLogin = async ()=>{
 													</div>
 												</div>
 												<!--end::Menu item-->
+											</div>
 											</div>
 											<!--end::Menu-->
 											<!--end::Menu wrapper-->

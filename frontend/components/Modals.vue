@@ -1,8 +1,8 @@
 <script setup>
-	import ContractDetails from './modals/ContractDetails.vue'
+	import ContractPreview from './modals/ContractPreview.vue'
 	import ImportToken from './modals/ImportToken.vue'
 </script>
 <template>
-	<ContractDetails />
+	<ContractPreview />
 	<ImportToken />
 </template>

@@ -23,6 +23,7 @@
             //reset
             agree.value = false;
             isImported.value = false;
+            isLoading.value = false;
             tokenInfo.value = null;
             // canisterId.value = '';
         });
@@ -44,6 +45,7 @@
                 isImported.value = true;
                 console.log('tokenInfo: ', tokenInfo.value);
             }catch(e){
+                isLoading.value = false;
                 showError("Some thing went wrong, please try again later!")
                 console.log('Some thing went wrong', e);
             }
@@ -62,18 +64,18 @@
         }else {
             showError("Token existed!")
         }
-        
     }
 
+    const closeModal = ()=>{ importTokenModal.value = false};
 </script>
 
 <template>
-    <VueFinalModal v-model="importTokenModal" :z-index-base="2000" classes="modal fade show" content-class="modal-dialog modal-lg">
+    <VueFinalModal v-model="importTokenModal" :z-index-base="2000" classes="modal fade show" content-class="modal-dialog modal-lg modal-dialog-centered">
             <div class="modal-content">
                
                 <div class="modal-header">
                     <h5 class="modal-title">Import Token</h5>
-                    <div class="btn btn-icon btn-sm btn-active-light-danger ms-2" data-bs-dismiss="modal" aria-label="Close" @click="importTokenModal = false">
+                    <div class="btn btn-icon btn-sm btn-active-light-danger ms-2" data-bs-dismiss="modal" aria-label="Close" @click="closeModal()">
                         <span class="svg-icon svg-icon-2x">
                             <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none">
                                 <rect opacity="0.5" x="6" y="17.3137" width="16" height="2" rx="1" transform="rotate(-45 6 17.3137)" fill="black"></rect>

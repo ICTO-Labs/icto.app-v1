@@ -12,7 +12,7 @@ import Types "./Types";
 actor {
     stable var currentValue: Nat = 0;
     stable var CONTRACT_VERSION: Text = "0.1.1";
-    stable var INIT_CONTRACT_CYCLE: Nat = 300_000_000_000;
+    stable var INIT_CONTRACT_CYCLES: Nat = 300_000_000_000;
     let ic: IC.Self = actor "aaaaa-aa";
     let contracts = Buffer.Buffer<Text>(0);
     // system func timer(set : Nat64 -> ()) : async () {
@@ -47,19 +47,13 @@ actor {
     public func canister_status(canister_id: IC.canister_id): async Types.CanisterStatus{
         await ic.canister_status({canister_id = canister_id})
     };
-    public shared (msg) func createContract(contract: {tokenId: Text; receivers: [Principal]; amount: Nat; duration: Nat; recurring: Nat; startTime: Nat}): async Text{
+    public shared (msg) func createContract(contract: Types.ContractData): async Text{
+        // assert not Principal.isAnonymous(msg.caller);
         let _controllers = [Principal.fromText("lekqg-fvb6g-4kubt-oqgzu-rd5r7-muoce-kppfz-aaem3-abfaj-cxq7a-dqe")];
-        Cycles.add(INIT_CONTRACT_CYCLE);
-        let newContractCanister = await Contract.Contract({
-            initTokenId = contract.tokenId;
-            initAmount  = contract.amount;
-            initDuration = contract.duration;
-            initRecurring = contract.recurring;
-            initReceivers = contract.receivers;
-            initOwners = _controllers;
-            initVersion = CONTRACT_VERSION;
-            initStartTime = contract.startTime;//timeNow();//Convert nanosecond to second
-        });
+        Cycles.add(INIT_CONTRACT_CYCLES);
+
+        //must add VERSION to contract data
+        let newContractCanister = await Contract.Contract(contract);
         let newContractCanisterPrincipal = Principal.fromActor(newContractCanister);
         //Update settings;
         // await CA.updateCanisterSettings({

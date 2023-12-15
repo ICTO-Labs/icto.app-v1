@@ -6,6 +6,7 @@ import Int "mo:base/Int";
 import Nat "mo:base/Nat";
 import Nat32 "mo:base/Nat32";
 import Nat64 "mo:base/Nat64";
+import Float "mo:base/Float";
 import Time "mo:base/Time";
 import Iter "mo:base/Iter";
 import Principal "mo:base/Principal";
@@ -17,22 +18,39 @@ import Buffer "mo:base/Buffer";
 import Result "mo:base/Result";
 import Debug "mo:base/Debug";
 import Types "./types/Common";//Common
-import ICRC1Types "./types/ICRC";//
+import ICRC1Types "./types/ICRC1";//
 import HashMap "mo:base/HashMap";
+import Bool "mo:base/Bool";
 import Ledger "Ledger";
 
 shared ({ caller = creator }) actor class Contract({
-  initTokenId: Text;
-  initAmount: Nat;
-  initDuration: Nat;
-  initReceivers: [Principal];
-  initVersion: Text;
-  initRecurring: Nat;//Second
-  initStartTime: Nat;//From second
+  name: Text;
+  durationTime: Nat;
+  durationUnit: Nat;
+  unlockSchedule: Nat;
+  canCancel: Text;
+  canChange: Text;
+  canView: Text;
+  startNow: Bool;
+  startTime: Time.Time;
+  tokenId: Text;
+  tokenName: Text;
+  tokenStandard: Text;
+  totalAmount: Nat;//Token will be sent (sum of recipents's amount)
+  recipients: [Types.Recipient];
+  // initTokenId: Text;
+  // initAmount: Nat;
+  // initDuration: Nat;
+  // initReceivers: [Principal];
+  // initVersion: Text;
+  // initRecurring: Nat;//Second
+  // initStartTime: Nat;//From second
 }) = this {
 
+  //Version config
+  let VERSION:Text = "v1.0.0";
   //Token Config
-  let ICRC1 : Ledger.ICRC1 = actor(initTokenId);
+  let ICRC1 : Ledger.ICRC1 = actor(tokenId);
 
   //*********** DATA DEFINE **********//
   private stable var _pendingTransfers : [Types.TransferHistory] = [];
@@ -43,16 +61,27 @@ shared ({ caller = creator }) actor class Contract({
   var transferHistory  : HashMap.HashMap<Nat, Types.TransferHistory> = HashMap.fromIter(_transferHistory.vals(), 0, Nat.equal, Nat32.fromNat);
 
 
+  private stable var _users            : [(Text, Types.UserInfo)] = []; //Store user Info
+  private var users                    : HashMap.HashMap<Text, Types.UserInfo> = HashMap.fromIter(_users.vals(), 0, Text.equal, Text.hash);
 
-  var start_time = Time.now();
+
+  var contractStart = Time.now();
+
+  //Contract Config
+  private stable var _isStarted  : Bool = false;
+  var SECOND_TO_NANO = 1_000_000_000;//Conver second (s) to nano second rate
+  var TIME_DIFF = 1_000_000;//Convert from momen().unix() => Minisecond (JS) to Nanosecond (Motoko)
+  var E8S = 1_000_000;
+  var lastUnlockTimestamp = startTime;
   var start_balance = Cycles.balance() : Int;
   var count = 0;
-
+  var countFailover = 0;
+  var MAX_FAIL_OVER = 5;
   //*********** PRIVATE FUNCTIONS **********//
 
   func system_cron(): async (){
-    count += 1;
-    await transferToken();
+    // if (not _isStarted) return;
+    await scheduleUnlocking();
   };           
   func timeNow(): Nat{
         Int.abs(Time.now()/1_000_000_000)
@@ -61,15 +90,93 @@ shared ({ caller = creator }) actor class Contract({
 
   };
 
+
+//Return last unlock, if not, return startTime
+  func getUserInfo(user_id: Text, amount: Nat): Types.UserInfo {
+      switch(users.get(user_id)){
+          case (?user){
+              user;
+          };
+          case _{
+            let _userInfo = {
+                amount = amount*E8S;
+                unlockedAmount = 0;
+                lastUnlockTime = startTime;
+              };
+              users.put(user_id, _userInfo);
+              _userInfo;
+          }
+      }
+  };
+
+  func updateLastUnlock(user_id: Text, unlockedAmount: Nat): (){
+     switch(users.get(user_id)){
+        case (?user){
+          users.put(user_id, {
+            user with
+            unlockedAmount = user.unlockedAmount+unlockedAmount;
+            lastUnlockTime = Time.now()/SECOND_TO_NANO;
+          })
+        };
+        case _ {
+          ()
+        }
+     };
+  };
+  
+  func scheduleUnlocking(): async(){ //Process unlock data - Becareful!!!!
+    if(countFailover >= MAX_FAIL_OVER){
+      // system_cancel_cron();
+      Debug.print("Cron Canceled!");
+      return;
+    };
+    for(recipient in recipients.vals()) {
+        let currentTime = Time.now()/SECOND_TO_NANO;
+        Debug.print("--------------------------------------------");
+        Debug.print("start.recipient::"#debug_show(recipient, durationUnit, durationTime, unlockSchedule));
+        let unlockAmount = (recipient.amount*E8S/(durationUnit*durationTime/(unlockSchedule)));
+        let _userInfo = getUserInfo(recipient.address, recipient.amount);//Retrive last unlock
+        let lastUnlockTime = _userInfo.lastUnlockTime;//Retrive last unlock
+        let elapsedSecondsTotal = currentTime - startTime;
+        let inProgressTimeTotal = durationUnit*durationTime;
+
+        let elapsedSeconds = currentTime - lastUnlockTime;
+
+
+        Debug.print("CHECKING::"#debug_show(startTime, currentTime, elapsedSeconds, inProgressTimeTotal, lastUnlockTime, _userInfo));
+        if(elapsedSecondsTotal >= inProgressTimeTotal and _userInfo.unlockedAmount == recipient.amount*E8S){
+          Debug.print("++++++++++++++Over::"#debug_show(elapsedSeconds, inProgressTimeTotal));
+          countFailover += countFailover;
+          return;
+        };
+        if (unlockAmount > 0 and elapsedSeconds > unlockSchedule) { // 5 second
+          // Perform unlock here
+          Debug.print("Unlocking.................."#debug_show(unlockAmount));
+          lastUnlockTimestamp := Time.now()/SECOND_TO_NANO;
+          updateLastUnlock(recipient.address, unlockAmount);//Update lastest unlock time
+          _addTransferHistory({
+            to = recipient.address;
+            amount = unlockAmount;
+            time = lastUnlockTimestamp;
+            txId = ?0;
+          })
+          // console.log('OK, let unlocking...');
+        }else{
+          Debug.print("Not in time..................");
+          // console.log('Not in time', elapsedSeconds, elapsedUnits);
+        }
+      };
+  };
+
   func transferToken(): async(){
       //Check induration
-      if(Time.now()/1_000_000_000 - initStartTime < initDuration){
-        _addTransferHistory({
-            to = initReceivers[0];
-            amount = Nat64.fromNat(initAmount);
-            time = Time.now();
-            txId = 0;
-        });
+      if(Time.now()/1_000_000_000 - startTime < durationTime){
+        // _addTransferHistory({
+        //     to = Principal.fromText("lekqg-fvb6g-4kubt-oqgzu-rd5r7-muoce-kppfz-aaem3-abfaj-cxq7a-dqe");
+        //     amount = Nat64.fromNat(1);
+        //     time = Time.now();
+        //     txId = 0;
+        // });
       }else{
         // Timer.cancelTimer(cron_id);
       }
@@ -150,7 +257,7 @@ func _transfer(to: Principal) : async* Result.Result<Nat, ICRC1Types.TransferErr
         subaccount = null;
       };
       fee = null;
-      amount = initAmount;
+      amount = 1;
       memo = null;
       from_subaccount = null;
       created_at_time = ?Nat64.fromNat(Int.abs(Time.now()));
@@ -164,8 +271,9 @@ func _transfer(to: Principal) : async* Result.Result<Nat, ICRC1Types.TransferErr
     transfer_result;
   };
 
-  //*********** CRON **********//
-  let cron_id = Timer.recurringTimer(#seconds (initRecurring), system_cron);
+  //*********** CRON **********// durationUnit*durationTime
+  let cron_id = Timer.recurringTimer(#seconds (10), system_cron);
+  
   func system_cancel_cron(): () {
      Timer.cancelTimer(cron_id);
   };
@@ -175,13 +283,20 @@ func _transfer(to: Principal) : async* Result.Result<Nat, ICRC1Types.TransferErr
   };
   public query func get(): async Types.ContractData { 
     let _data:Types.ContractData = {
-      tokenId = initTokenId;
-      amount = initAmount;
-      duration = initDuration;//Payment contract ends
-      receivers= initReceivers;
-      version = initVersion;
-      recurring = initRecurring;//Unlock schedule
-      cronId = cron_id;
+        name = name;
+        durationTime = durationTime;
+        durationUnit = durationUnit;
+        unlockSchedule = unlockSchedule;
+        canCancel = canCancel;
+        canChange = canChange;
+        canView = canView;
+        startNow = startNow;
+        startTime = startTime;
+        tokenId = tokenId;
+        tokenName = tokenName;
+        tokenStandard = tokenStandard;
+        totalAmount = totalAmount;
+        recipients = recipients;
     };
     _data;
   };
@@ -198,13 +313,13 @@ func _transfer(to: Principal) : async* Result.Result<Nat, ICRC1Types.TransferErr
   };
 
   public func reset() {
-    start_time := Time.now();
+    contractStart := Time.now();
     start_balance := Cycles.balance() : Int;
     count := 0;
   };
 
   public func report() : async Text {
-    var time = (Time.now() - start_time) / 1_000_000;
+    var time = (Time.now() - contractStart) / 1_000_000;
     var heartbeat_rate = time / count;
     var balance = Cycles.balance() : Int;
     var burned = start_balance - balance;
