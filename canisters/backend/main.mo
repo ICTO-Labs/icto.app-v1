@@ -8,6 +8,7 @@ import Int "mo:base/Int";
 import Timer "mo:base/Timer";
 import IC "./IC";
 import Types "./Types";
+import ContractTypes "../contract/types/Common";//Common
 
 actor {
     stable var currentValue: Nat = 0;
@@ -47,7 +48,7 @@ actor {
     public func canister_status(canister_id: IC.canister_id): async Types.CanisterStatus{
         await ic.canister_status({canister_id = canister_id})
     };
-    public shared (msg) func createContract(contract: Types.ContractData): async Text{
+    public shared (msg) func createContract(contract: ContractTypes.ContractData): async Text{
         // assert not Principal.isAnonymous(msg.caller);
         let _controllers = [Principal.fromText("lekqg-fvb6g-4kubt-oqgzu-rd5r7-muoce-kppfz-aaem3-abfaj-cxq7a-dqe")];
         Cycles.add(INIT_CONTRACT_CYCLES);

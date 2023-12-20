@@ -32,14 +32,18 @@ export const idlFactory = ({ IDL }) => {
     'durationTime' : IDL.Nat,
     'durationUnit' : IDL.Nat,
     'tokenId' : IDL.Text,
+    'owner' : IDL.Principal,
     'tokenStandard' : IDL.Text,
     'startNow' : IDL.Bool,
     'name' : IDL.Text,
+    'description' : IDL.Text,
     'canView' : IDL.Text,
+    'tokenSymbol' : IDL.Text,
     'recipients' : IDL.Vec(Recipient),
     'totalAmount' : IDL.Nat,
     'tokenName' : IDL.Text,
     'unlockSchedule' : IDL.Nat,
+    'unlockedAmount' : IDL.Nat,
   });
   const TimerId = IDL.Nat;
   return IDL.Service({

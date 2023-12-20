@@ -1,3 +1,8 @@
+<script setup>
+import { useRoute } from 'vue-router';
+
+const router = useRoute();
+</script>
 <template>
     <!--begin::Toolbar-->
     <div class="toolbar" id="kt_toolbar">
@@ -123,7 +128,7 @@
 									</div>
 									<!--end::Wrapper-->
 									<!--begin::Button-->
-									<a href="#" class="btn btn-sm btn-primary" data-bs-toggle="modal" data-bs-target="#kt_modal_create_app" id="kt_toolbar_primary_button">Create</a>
+									<router-link to="/new-contract" class="btn btn-sm btn-primary">Create</router-link>
 									<!--end::Button-->
 								</div>
 								<!--end::Actions-->

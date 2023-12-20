@@ -1,1 +1,1 @@
-# icpay
+# ICTO

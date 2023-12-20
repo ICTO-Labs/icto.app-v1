@@ -25,6 +25,7 @@ import Ledger "Ledger";
 
 shared ({ caller = creator }) actor class Contract({
   name: Text;
+  description: Text;
   durationTime: Nat;
   durationUnit: Nat;
   unlockSchedule: Nat;
@@ -35,9 +36,12 @@ shared ({ caller = creator }) actor class Contract({
   startTime: Time.Time;
   tokenId: Text;
   tokenName: Text;
+  tokenSymbol: Text;
   tokenStandard: Text;
   totalAmount: Nat;//Token will be sent (sum of recipents's amount)
+  unlockedAmount: Nat;//unlockedAmount
   recipients: [Types.Recipient];
+  owner: Principal;//Contract owner
   // initTokenId: Text;
   // initAmount: Nat;
   // initDuration: Nat;
@@ -71,13 +75,16 @@ shared ({ caller = creator }) actor class Contract({
   private stable var _isStarted  : Bool = false;
   var SECOND_TO_NANO = 1_000_000_000;//Conver second (s) to nano second rate
   var TIME_DIFF = 1_000_000;//Convert from momen().unix() => Minisecond (JS) to Nanosecond (Motoko)
-  var E8S = 1_000_000;
+  var E8S = 100_000_000;
   var lastUnlockTimestamp = startTime;
   var start_balance = Cycles.balance() : Int;
   var count = 0;
   var countFailover = 0;
   var MAX_FAIL_OVER = 5;
   //*********** PRIVATE FUNCTIONS **********//
+
+  var _totalAmount = 0; //Initial amount
+  var _unlockedAmount = 0;//unlocked amount
 
   func system_cron(): async (){
     // if (not _isStarted) return;
@@ -86,9 +93,15 @@ shared ({ caller = creator }) actor class Contract({
   func timeNow(): Nat{
         Int.abs(Time.now()/1_000_000_000)
   };
-  func in_time(): async(){
-
+  func calTotalAmount(): (){
+    for(recipient in recipients.vals()) {
+      _totalAmount += recipient.amount*E8S;
+    }
   };
+
+  calTotalAmount();//Init cal total amount
+
+
 
 
 //Return last unlock, if not, return startTime
@@ -112,6 +125,7 @@ shared ({ caller = creator }) actor class Contract({
   func updateLastUnlock(user_id: Text, unlockedAmount: Nat): (){
      switch(users.get(user_id)){
         case (?user){
+          _unlockedAmount += unlockedAmount;//update release amount
           users.put(user_id, {
             user with
             unlockedAmount = user.unlockedAmount+unlockedAmount;
@@ -284,6 +298,7 @@ func _transfer(to: Principal) : async* Result.Result<Nat, ICRC1Types.TransferErr
   public query func get(): async Types.ContractData { 
     let _data:Types.ContractData = {
         name = name;
+        description = description;
         durationTime = durationTime;
         durationUnit = durationUnit;
         unlockSchedule = unlockSchedule;
@@ -294,9 +309,12 @@ func _transfer(to: Principal) : async* Result.Result<Nat, ICRC1Types.TransferErr
         startTime = startTime;
         tokenId = tokenId;
         tokenName = tokenName;
+        tokenSymbol = tokenSymbol;
         tokenStandard = tokenStandard;
-        totalAmount = totalAmount;
+        totalAmount = _totalAmount/E8S;
+        unlockedAmount = _unlockedAmount/E8S;
         recipients = recipients;
+        owner = owner;
     };
     _data;
   };
@@ -311,7 +329,10 @@ func _transfer(to: Principal) : async* Result.Result<Nat, ICRC1Types.TransferErr
   public query func history(): async [(Nat, Types.TransferHistory)]{
     Iter.toArray(transferHistory.entries())
   };
-
+  // get caller Principal
+  public query (msg) func whoami() : async Principal {
+      msg.caller
+  };
   public func reset() {
     contractStart := Time.now();
     start_balance := Cycles.balance() : Int;

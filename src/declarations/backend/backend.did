@@ -13,17 +13,21 @@ type ContractData =
    canCancel: text;
    canChange: text;
    canView: text;
+   description: text;
    durationTime: nat;
    durationUnit: nat;
    name: text;
+   owner: principal;
    recipients: vec Recipient;
    startNow: bool;
    startTime: Time;
    tokenId: text;
    tokenName: text;
    tokenStandard: text;
+   tokenSymbol: text;
    totalAmount: nat;
    unlockSchedule: nat;
+   unlockedAmount: nat;
  };
 type CanisterStatus = 
  record {

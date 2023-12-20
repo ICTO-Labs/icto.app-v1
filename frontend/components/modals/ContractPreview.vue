@@ -8,12 +8,14 @@
     import Copy from "@/components/icons/Copy.vue";
     import _api from "@/ic/api";
     import { currencyFormat } from "@/utils/token";
-    import { useCanister } from "@connect2ic/vue"
-    const [backend, { loading, error }] = useCanister("backend", {mode: "anonymous" })
+    import {Principal} from "@dfinity/principal";
+    import { useCreateContract } from "@/services/Contract";
     import LoadingButton from '@/components/LoadingButton.vue';
     const contractData = ref(null);
     const contractDetailsModal = ref(false);
     const isLoading = ref(false);
+    import { useWalletStore } from '@/stores/wallet'
+    const walletStore = useWalletStore()
 
     const closeModal = ()=>{
         contractDetailsModal.value = false;
@@ -37,10 +39,15 @@
             //     return {address: recipient.address, amount: recipient.amount, title: [recipient.title], note: [recipient.note]}
             // });
             let recipients = [
-                 {address: "lekqg-fvb6g-4kubt-oqgzu-rd5r7-muoce-kppfz-aaem3-abfaj-cxq7a-dqe", amount: 60, note: ["Developer"], title: ["Fern"]},
+                 {address: "lekqg-fvb6g-4kubt-oqgzu-rd5r7-muoce-kppfz-aaem3-abfaj-cxq7a-dqe", amount: 600, note: ["Senior Developer"], title: ["Fern"]},
+                 {address: "lekqg-fvb6g-4kubt-oqgzu-rd5r7-muoce-kppfz-aaem3-abfaj-cxq7a-dqe", amount: 230, note: ["Senior Developer"], title: ["John"]},
+                 {address: "lekqg-fvb6g-4kubt-oqgzu-rd5r7-muoce-kppfz-aaem3-abfaj-cxq7a-dqe", amount: 150, note: ["J.Developer"], title: ["Jasson"]},
+                 {address: "lekqg-fvb6g-4kubt-oqgzu-rd5r7-muoce-kppfz-aaem3-abfaj-cxq7a-dqe", amount: 420, note: ["Designer"], title: ["Matthew"]},
+                 {address: "lekqg-fvb6g-4kubt-oqgzu-rd5r7-muoce-kppfz-aaem3-abfaj-cxq7a-dqe", amount: 135, note: ["3D Designer"], title: ["Peter"]},
             ];
             let _data = {
                 name: contractData.value.name,
+                description: contractData.value.description,
                 durationTime: Number(contractData.value.durationTime),
                 durationUnit: Number(contractData.value.durationUnit),
                 unlockSchedule: Number(contractData.value.unlockSchedule),
@@ -52,11 +59,14 @@
                 tokenId: tokenInfo.canisterId,
                 tokenName: tokenInfo.name,
                 tokenStandard: tokenInfo.standard,
-                totalAmount: 1000,
-                recipients: recipients
+                tokenSymbol: tokenInfo.symbol,
+                totalAmount: 0,
+                unlockedAmount: 0,
+                recipients: recipients,
+                owner: Principal.fromText(walletStore.wallet.principal)
             };
             console.log('creating contract...', _data);
-            let _rs = await backend.value.createContract(_data);
+            let _rs = await useCreateContract(_data);
             isLoading.value = false;
             console.log('rs', _rs);
             if(_rs){
@@ -96,8 +106,12 @@
                         <div class="pb-5">
                             <!--begin::Wrapper-->
                             <div class="fs-6 pb-5">
+                                
                                 <div class="fw-bold">Contract Name</div>
                                 <div class="text-gray-600">{{contractData.name}}</div>
+
+                                <div class="fw-bold mt-5">Description</div>
+                                <div class="text-gray-600">{{contractData.description}}</div>
                                 
                                 <div class="d-flex flex-column flex-sm-row gap-7 gap-md-10 mt-5">
                                     <div class="flex-root d-flex flex-column">

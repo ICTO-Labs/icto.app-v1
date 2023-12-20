@@ -12,6 +12,7 @@ import VueDatePicker from '@vuepic/vue-datepicker';
 import '@vuepic/vue-datepicker/dist/main.css'
 
 import { createPinia } from 'pinia'
+import { VueQueryPlugin } from "@tanstack/vue-query";
 
 import router from './router.js'
 import App from "./App.vue"
@@ -28,8 +29,8 @@ app.use(Vue3Toasity, {
 })
 app.use(VueSweetalert2)
 window.Swal =  app.config.globalProperties.$swal
-
 app.use(pinia)
 app.use(vfm)
 app.component('VueDatePicker', VueDatePicker);
+app.use(VueQueryPlugin)
 app.mount("#root")

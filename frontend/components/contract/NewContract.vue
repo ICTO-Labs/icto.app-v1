@@ -7,6 +7,14 @@
 	import EventBus from "@/services/EventBus";
 	import { useAssetStore } from "@/stores/token";
 	import { getMyBalance  } from "@/utils/token";
+	import { useGetMyBalance } from '@/services/Token';
+
+
+	import { useAuthStore } from "@/stores/auth";
+	import { storeToRefs } from "pinia";
+	const authStore = useAuthStore();
+  	const { principal } = storeToRefs(authStore);
+
 	import VueMultiselect from 'vue-multiselect'
 	import config from '@/config'
 	const isLoading = ref(false);
@@ -25,6 +33,7 @@
 		});
 	const contractData = ref({
 		name: "Recurring payment for Developer Team",
+		description: "#1 Payment for EU Developer Team",
 		startNow: true,
 		startDate: new Date(),
 		startTime: new Date(),
@@ -50,7 +59,8 @@
 	const getTokenBalance = async ()=>{
 		isLoading.value = true;
 		totalAmount.value = 0;
-		let _balance = await getMyBalance(token.value.canisterId, 'icrc-1');
+		let _balance = await useGetMyBalance(token.value.canisterId);
+		// let _balance = await getMyBalance(token.value.canisterId, 'icrc-1');
 		tokenBalance.value = Number(_balance)/100_000_000;
 		isLoading.value = false;
 		calTotalToken();
@@ -116,6 +126,12 @@
 							<div class="col-md-12 fv-row">
 								<label class="d-flex align-items-center fs-6 fw-bold mb-2"><span class="required">Contract Name</span></label>
 								<input type="text" class="form-control" v-model="contractData.name" name="name" placeholder="Specify your contract name" required />
+							</div>
+						</div>
+						<div class="row mb-10">
+							<div class="col-md-12 fv-row">
+								<label class="d-flex align-items-center fs-6 fw-bold mb-2"><span class="required">Description</span></label>
+								<textarea class="form-control fw-normal" v-model="contractData.description" name="description" placeholder="Specify your contract name" required></textarea>
 							</div>
 						</div>
 						<div class="row mb-10">

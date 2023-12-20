@@ -43,7 +43,15 @@ const to32bits = (num) => {
     new DataView(b).setUint32(0, num)
     return Array.from(new Uint8Array(b))
   }
+export const txtToPrincipal = (p)=>{
+    try {
+        return Principal.fromText(p);
+    } catch (e) {
+        return p;
+    }
+}  
 export const principalToAccountId = (p, s) => {
+    if(!p) return p;
     const padding = Buffer("\x0Aaccount-id");
     const array = new Uint8Array([
         ...padding,
@@ -73,10 +81,12 @@ const from32bits = ba => {
     }
     return value;
 }
-export const shortAccount = (accountId) =>
-  `${accountId.slice(0, 8)}...${accountId.slice(-8)}`;
-
+export const shortAccount = (accountId)=>{
+   if(!accountId) return accountId;
+  return `${accountId.slice(0, 8)}...${accountId.slice(-8)}`;
+}
 export const shortPrincipal = (principal) => {
+    if(!principal) return principal;
   const parts = (
     typeof principal === "string" ? principal : principal.toText()
   ).split("-");

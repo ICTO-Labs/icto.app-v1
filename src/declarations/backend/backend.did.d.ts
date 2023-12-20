@@ -24,14 +24,18 @@ export interface ContractData {
   'durationTime' : bigint,
   'durationUnit' : bigint,
   'tokenId' : string,
+  'owner' : Principal,
   'tokenStandard' : string,
   'startNow' : boolean,
   'name' : string,
+  'description' : string,
   'canView' : string,
+  'tokenSymbol' : string,
   'recipients' : Array<Recipient>,
   'totalAmount' : bigint,
   'tokenName' : string,
   'unlockSchedule' : bigint,
+  'unlockedAmount' : bigint,
 }
 export interface Recipient {
   'title' : [] | [string],

@@ -11,6 +11,7 @@ module {
     public type TimerId = Nat;
     public type ContractData = {
         name: Text;
+        description: Text;
         durationTime: Nat;
         durationUnit: Nat;
         unlockSchedule: Nat;
@@ -21,9 +22,12 @@ module {
         startTime: Time.Time;
         tokenId: Text;
         tokenName: Text;
+        tokenSymbol: Text;
         tokenStandard: Text;
         totalAmount: Nat;
+        unlockedAmount: Nat;
         recipients: [Recipient];
+        owner: Principal;
     };
     public type Recipient = {
         amount: Nat;

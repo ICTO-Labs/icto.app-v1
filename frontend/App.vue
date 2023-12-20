@@ -1,50 +1,23 @@
 <script setup>
 import { RouterLink, RouterView } from 'vue-router'
 import config from './config'
-import { createClient } from "@connect2ic/core"
-import { defaultProviders } from "@connect2ic/core/providers"
-import { ConnectDialog, Connect2ICProvider } from "@connect2ic/vue"
-import {
-  InternetIdentity,
-  PlugWallet,
-  StoicWallet,
-  NFID
-} from "@connect2ic/core/providers"
-import "@connect2ic/core/style.css"
-/*
- * Import backend canister definitions
- */
-import * as backend from "../src/declarations/backend"
-/*
- * Import layout and default components
- */
+import { storeToRefs } from "pinia";
+import { useAuthStore } from "@/stores/auth";
 import Header from "./components/layout/Header.vue"
 import Footer from "./components/layout/Footer.vue"
 import Toolbar from "./components/layout/Toolbar.vue"
 import ScrollTop from "./components/ScrollTop.vue"
 import Modals from "./components/Modals.vue"
-const client = window.client = createClient({
-  canisters: {
-    backend
-  },
-  providers: [
-    new InternetIdentity(),
-    new PlugWallet(),
-    // new NFID(),
-    // new StoicWallet(),
-  ],
-  globalProviderConfig: {
-    dev: true,//import.meta.env.DEV,
-    host: "http://localhost:8000",//config.IC_ENDPOINT,
-  },
-})
 
+const authStore = useAuthStore();
+const { isReady, isAuthenticated } = storeToRefs(authStore);
+
+if (isReady.value === false) {
+  authStore.init();
+}
 </script>
 
 <template>
-  <Connect2ICProvider :client="client">
-    <div class="App">
-      
       <ConnectDialog />
       <!--begin::Main-->
 		  <!--begin::Root-->
@@ -80,6 +53,4 @@ const client = window.client = createClient({
       <!--end::Root-->
       <ScrollTop />
       <!--end::Main-->
-    </div>
-  </Connect2ICProvider>
 </template>

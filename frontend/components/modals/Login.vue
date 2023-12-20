@@ -1,8 +1,12 @@
 <script setup>
-    import { walletData } from "../../services/store";
-    import {WalletManager} from "../../services/WalletManager";
-    import config from "../../config";
-    const login = async (wallet)=>{
+    import { walletData } from "@/services/store";
+    import {WalletManager} from "@/services/WalletManager";
+    import config from "@/config";
+    import { useAuthStore } from "@/stores/auth";
+
+    const authStore = useAuthStore();
+
+    const walletLogin = async (wallet)=>{
         switch (wallet) {
             case "stoic": await WalletManager.stoicWallet()
                 break;
@@ -10,7 +14,7 @@
                 break;
             case "bitfinity": await WalletManager.bitfinityWallet()
                 break
-            case "nns": await WalletManager.nnsWallet()
+            case "nns": authStore.login()
                 break
         }
     }
@@ -18,7 +22,7 @@
 </script>
 <script>
     import { VueFinalModal } from 'vue-final-modal'
-    import EventBus from "../../services/EventBus";
+    import EventBus from "@/services/EventBus.js";
 
     export default {
         components: { VueFinalModal },
@@ -36,42 +40,46 @@
 </script>
 
 <template>
-    <VueFinalModal v-model="loginModal" :z-index-base="2000" classes="modal fade show" content-class="modal-dialog modal-lg">
+    <VueFinalModal v-model="loginModal" :z-index-base="2000" classes="modal fade show" content-class="modal-dialog modal-lg modal-dialog-centered">
             <div class="modal-content" v-if="!walletData.isLogged" >
                 <a href="#" @click.stop="loginModal=false" class="close" data-bs-dismiss="modal" aria-label="Close">
-                    <em class="icon ni ni-cross"></em>
+                    <em class="fas fa-close"></em>
                 </a>
-                <div class="modal-header">
-                    <h5 class="modal-title">Connect your wallet</h5>
+                <div class="modal-header pt-0 pb-3">
+                    <h4 class="modal-title"><i class="fas fa-wallet text-gray-700"></i> Connect your wallet </h4>
                 </div>
                 <div class="modal-body">
                         <div class="row gy-4 btn-group-login">
                             <div class="col-md-6">
-                                <a href="javascript:void(0)" @click="login('nns')" :class="`btn no-spacing btn-wider btn-secondary ${!config.WALLET_CONFIG['nns']?'disabled':''}`">
-                                    <img src="/partner/nns.png" alt="Internet Identity" class=" wallet-icon-small"> Internet Identity
-                                </a>
+                                <div class="d-flex flex-column gap-7 gap-md-10">
+                                    <a href="javascript:void(0)" @click="walletLogin('nns')" :class="`btn btn-primary ${!config.WALLET_CONFIG['nns']?'disabled':''}`">
+                                        <img src="/partner/nns.png" alt="Internet Identity" class=" wallet-icon-small"> <span class="wallet-name">Internet Identity</span>
+                                    </a>
+                                </div>
                             </div>
                             <div class="col-md-6">
-                                <a href="javascript:void(0)" @click="login('stoic')" :class="`btn no-spacing btn-wider btn-light ${!config.WALLET_CONFIG['stoic']?'disabled':''}`">
-                                    <img src="/partner/stoic.png" alt="Stoic" class="wallet-icon-small"> Stoic Wallet
-                                </a>
+                                <div class="d-flex flex-column gap-7 gap-md-10">
+                                <a href="javascript:void(0)" @click="walletLogin('plug')" :class="`btn btn-secondary ${!config.WALLET_CONFIG['plug']?'disabled':''}`">
+                                    <img src="/partner/plug.png" alt="Plug" class="wallet-icon-small"> <span class="wallet-name">Plug Wallet</span>
+                                </a></div>
                             </div>
                             <div class="col-md-6">
-                                <a href="javascript:void(0)" @click="login('plug')" :class="`btn no-spacing btn-wider btn-light ${!config.WALLET_CONFIG['plug']?'disabled':''}`">
-                                    <img src="/partner/plug.png" alt="Plug" class="wallet-icon-small"> Plug Wallet
-                                </a>
+                                <div class="d-flex flex-column gap-7 gap-md-10">
+                                <a href="javascript:void(0)" @click="walletLogin('stoic')" :class="`btn btn-secondary ${!config.WALLET_CONFIG['stoic']?'disabled':''}`">
+                                    <img src="/partner/stoic.png" alt="Stoic" class="wallet-icon-small"> <span class="wallet-name">Stoic Wallet</span>
+                                </a></div>
                             </div>
                             <div class="col-md-6">
-                                <a href="javascript:void(0)" @click="login('bitfinity')" :class="`btn no-spacing btn-wider btn-light ${!config.WALLET_CONFIG['bitfinity']?'disabled':''}`">
-                                    <img src="/partner/bitfinity.png" alt="Infinity" class="wallet-icon-small"> Bitfinity Wallet
+                                <div class="d-flex flex-column gap-7 gap-md-10">
+                                <a href="javascript:void(0)" @click="walletLogin('bitfinity')" :class="`btn btn-secondary ${!config.WALLET_CONFIG['bitfinity']?'disabled':''}`">
+                                    <img src="/partner/bitfinity.png" alt="Infinity" class="wallet-icon-small"> <span class="wallet-name">Bitfinity Wallet</span>
                                 </a>
+                            </div>
                             </div>
                         </div>
                 </div>
                 <div class="modal-footer bg-light">
-                    <ul class="btn-toolbar g-4 align-center">
-                        <li><a href="javascript:void(0)" @click="loginModal=false" class="link link-primary">Close</a></li>
-                    </ul>
+                    <a href="javascript:void(0)" @click="loginModal=false" class="link link-primary">Close</a>
                 </div>
         </div>
 
@@ -79,6 +87,11 @@
 
 </template>
 <style>
+    .wallet-name{
+        float: left;
+        vertical-align: middle;
+        line-height: 36px;
+    }
     .btn-group-login img{
         margin-right: 20px;
     }

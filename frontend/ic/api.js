@@ -74,6 +74,7 @@ class icConnect {
     }
 }
 export const contractApi = (canisterId, idl) => {
+    return;
     let _preloadedIdls = {
         'ledger' : ledgerIDL,
         'icrc-1' : icrc1IDL,
@@ -86,6 +87,7 @@ export const contractApi = (canisterId, idl) => {
         throw new Error(idl + " is not a preloaded IDL");
     }
 
+    console.log('window.client.activeProvider', window.client.activeProvider);
     let agent = new HttpAgent({
         host: "http://localhost:8000",
       });
@@ -96,6 +98,9 @@ export const contractApi = (canisterId, idl) => {
       });
     
     // Creates an actor with using the candid interface and the HttpAgent
+
+    // return new CreateActor(window.client.activeProvider, canisterId, idl);//await this.provider.value.createActor(cid, idl);
+
     return Actor.createActor(idl, {
       agent,
       canisterId,
