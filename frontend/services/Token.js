@@ -2,6 +2,11 @@ import { useQuery } from "@tanstack/vue-query";
 import Connect from "@/ic/actor/Connect";
 import { useStorage } from '@vueuse/core'
 import { txtToPrincipal } from "@/utils/common";
+import RosettaApi from '@/services/RosettaApi';
+import config from '@/config';
+import { walletStore } from "@/store";
+const rosettaApi = new RosettaApi();
+
 export const useGetMyBalance = async(tokenId) => {
     const auth = useStorage('auth', {});
     console.log(auth.value.identity);
@@ -18,4 +23,22 @@ export const useGetMyBalance = async(tokenId) => {
     //     }),
     //     keepPreviousData: true,
     //   })
+}
+
+export const useICPBalance = (address)=>{
+    let _address = address?address:walletStore.address;
+    console.log('_address', _address, walletStore.address);
+    if(_address == '') return 0;
+     return useQuery({
+        queryKey: ['icpBalance', _address],
+        queryFn: async () => {
+            try{
+                let _balance = await rosettaApi.getAccountBalance(_address);
+                return _balance.value.div(config.E8S).toNumber();
+            }catch(e){
+                throw new Error("Network Error: "+_address);
+            }
+        },
+        keepPreviousData: true,
+      })
 }

@@ -1,18 +1,23 @@
 <script setup>
 import { onMounted, ref, watch } from 'vue';
 import EventBus from "@/services/EventBus";
-import { useAuthStore } from "@/stores/auth";
+import { useAuthStore } from "@/store/auth";
+import { useICPBalance } from "@/services/Token"
+import { walletStore } from "@/store";
+import LoadingLabel from "@/components/LoadingLabel.vue"
+
+import config from "@/config";
 import { storeToRefs } from "pinia";
 import { principalToAccountId, getAccountBalance, shortPrincipal, shortAccount } from '@/utils/common';
 const authStore = useAuthStore();
-const { isReady, isAuthenticated, principal, address, balance } = storeToRefs(authStore);
-watch(isAuthenticated, async () => {
-	//Close the login dialog
-	EventBus.emit('showLoginModal', !isAuthenticated);
-	let _balance = await getAccountBalance(address.value);
-	let _icpBalance = _balance.div(100000000).toNumber();
-	authStore.setBalance(_icpBalance);
-  })
+const { isReady, isAuthenticated, principal, address } = storeToRefs(authStore);
+
+const {data: balance, refetch, isLoading} = useICPBalance();
+authStore.setBalance(balance);
+
+watch(walletStore.address, async () => {
+	refetch();
+  },{ deep: true })
 import _api from "@/ic/api";
 import Copy from "@/components/icons/Copy.vue";
 
@@ -66,7 +71,7 @@ const login = ()=>{
 							<span class="badge badge-success fw-bolder fs-8 px-2 py-1 ms-2">II</span>
 						</div>
 						<div class="d-flex fw-semibold align-items-center fs-6">
-							<span class="text-gray-600 fs-6">PID:</span>  <span class="ms-2 me-2 fw-bold text-gray-800 fs-6" data-bs-toggle="tooltip" :title="principal" v-show="principal">{{ shortPrincipal(principal) }}</span> <Copy :text="principal"></Copy>
+							<span class="text-gray-600 fs-6">PID:</span>  <span class="ms-2 me-2 fw-bold text-gray-800 fs-6" data-bs-toggle="tooltip" :title="walletStore.principal" v-show="walletStore.principal">{{ shortPrincipal(walletStore.principal) }}</span> <Copy :text="principal"></Copy>
 						</div> 
 					</div>
 					
@@ -76,15 +81,22 @@ const login = ()=>{
 				<div class="menu-item px-5">
 					<div class="mb-1">       
 						<div class="fw-semibold text-gray-600 fs-7">Principal ID:</div> 
-						<div class="fw-bold text-gray-800 fs-6"><span data-bs-toggle="tooltip" :title="principal" v-show="principal">{{ shortPrincipal(principal) }}</span> <Copy :text="principal"></Copy></div>          
+						<div class="fw-bold text-gray-800 fs-6"><span data-bs-toggle="tooltip" :title="walletStore.principal" v-show="walletStore.principal">{{ shortPrincipal(walletStore.principal) }}</span> <Copy :text="walletStore.principal"></Copy></div>          
 					</div>
 					<div class="mb-1">       
 						<div class="fw-semibold text-gray-600 fs-7">Address ID:</div> 
-						<div class="fw-bold text-gray-800 fs-6"> <span data-bs-toggle="tooltip" :title="address" v-show="address">{{ shortAccount(address) }}</span> <Copy :text="address"></Copy></div>          
+						<div class="fw-bold text-gray-800 fs-6"> <span data-bs-toggle="tooltip" :title="walletStore.address" v-show="walletStore.address">{{ shortAccount(walletStore.address) }}</span> <Copy :text="walletStore.address"></Copy></div>          
 					</div>
 					<div class="mb-1">       
-						<div class="fw-semibold text-gray-600 fs-7">Balance:</div> 
-						<div class="fw-bold text-gray-800 fs-6"> {{ balance }} <span class="badge badge-light-primary fw-bolder fs-8 px-2 py-1 ms-2">ICP</span></div>          
+						<div class="fw-semibold text-gray-600 fs-7">ICP Balance:</div> 
+						<div class="fw-bold text-gray-800 fs-6"> {{ walletStore.balance }} 
+							
+							<LoadingLabel 
+										:loading="isLoading"
+										class="badge badge-light-primary ms-5"
+										@click="refetch"><i class="fas fa-arrows-rotate"></i> Refresh
+							</LoadingLabel>
+						</div>          
 					</div>
 				</div>
 				

@@ -1,9 +1,27 @@
+import { ref } from "vue";
 import { defineStore } from "pinia";
-import { useStorage } from '@vueuse/core'
+import { useStorage, createGlobalState  } from '@vueuse/core'
 import { AuthClient } from "@dfinity/auth-client";
 import { createActor, canisterId } from "../../src/declarations/backend";
 import { principalToAccountId } from '@/utils/common.js'
 import { toRaw } from "vue";
+import { walletStore } from ".";
+
+import EventBus from "@/services/EventBus";
+
+export const useGlobalState = createGlobalState(
+  () => {
+    const identityState = {};
+     // actions
+     function setIdentity(identity) {
+      console.log('saved');
+      identityState.value = identity;
+    }
+    return { identityState, setIdentity }
+  }
+)
+
+const { identityState, setIdentity } = useGlobalState();
 const defaultOptions = {
     createOptions: {
       idleOptions: {
@@ -49,7 +67,8 @@ const defaultOptions = {
         const authClient = await AuthClient.create(defaultOptions.createOptions);
         this.authClient = authClient;
         const isAuthenticated = await authClient.isAuthenticated();
-        const identity = isAuthenticated ? authClient.getIdentity() : null;
+        const identity = isAuthenticated ? walletStore.setIdentity(authClient.getIdentity()) : null;
+        // const identity = window.identity = isAuthenticated ? authClient._identity : null;
         const backendActor = identity ? actorFromIdentity(identity) : null;
         this.isAuthenticated = isAuthenticated;
         this.identity = identity;
@@ -58,6 +77,7 @@ const defaultOptions = {
         this.backendActor = backendActor;
         this.isReady = true;
         this.connector = 'ic';
+
       },
       async login() {
         const authClient = toRaw(this.authClient);
@@ -65,15 +85,17 @@ const defaultOptions = {
           ...defaultOptions.loginOptions,
           onSuccess: async () => {
             this.isAuthenticated = await authClient.isAuthenticated();
-            this.identity = this.isAuthenticated
-              ? authClient.getIdentity()
-              : null;
+            let _identity = this.isAuthenticated ? authClient.getIdentity() : null;
+            this.identity = _identity;
+            walletStore.setIdentity(_identity);
             this.backendActor = this.identity
               ? actorFromIdentity(this.identity)
               : null;
             this.principal  = this.identity?this.identity.getPrincipal().toString():null;
             this.address = principalToAccountId(this.principal, 0);
             //save to store
+            //Close modal
+            EventBus.emit('showLoginModal', false);
           },  
         });
       },
@@ -103,6 +125,7 @@ const defaultOptions = {
         await authClient?.logout();
         this.isAuthenticated = false;
         this.identity = null;
+        walletStore.setIdentity(null);
         this.backendActor = null;
         this.principal = null;
         this.address = null;

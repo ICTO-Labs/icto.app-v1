@@ -1,12 +1,14 @@
 import { actor } from "./Actor";
 import { useStorage } from '@vueuse/core'
-const auth = useStorage('auth',);
+const auth = useStorage('auth');
 import icIDL from '@/ic/candid/ic.did';
 import cyclesIDL from '@/ic/candid/cycles.did';
 import ledgerIDL from '@/ic/candid/ledger.did';
 import nnsIDL from '@/ic/candid/nns.did';
 import icrc1IDL from '@/ic/candid/icrc1.did';
 import contractIDL from '@/ic/candid/contract.did';
+import { useGlobalState } from '@/store/auth'
+import { walletStore } from '@/store/'
 
 class CreateActor {
     _canister = false;
@@ -21,7 +23,7 @@ class CreateActor {
                 return async function() {
                     if (!target._actor) {
                         target._actor = await actor.create({
-                            identity: auth.value.identity,
+                            identity: walletStore.identity,
                             canisterId: canister,
                             idlFactory: idl,
                           });;

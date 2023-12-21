@@ -6,7 +6,7 @@
     import { decodeICRC1Metadata } from "@/utils/token";
     import LoadingButton from "@/components/LoadingButton.vue"
 	import { showSuccess, showError, clearToast, validatePrincipal } from '@/utils/common';
-    import { useAssetStore } from '@/stores/token';
+    import { useAssetStore } from '@/store/token';
     const storeAsset = useAssetStore();
 
     const importTokenModal = ref(false);

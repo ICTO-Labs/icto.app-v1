@@ -4,7 +4,6 @@
     import { useGetPaymentHistory } from "@/services/Contract";
     const props = defineProps(['contractId']);
     const { data: paymentHistory, isLoading, isError, error} = useGetPaymentHistory(props.contractId);
-    console.log('paymentHistory', paymentHistory);;
 </script>
 <template>
     <div class="card-body pt-0">

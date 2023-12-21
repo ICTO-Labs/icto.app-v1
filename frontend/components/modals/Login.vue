@@ -2,7 +2,7 @@
     import { walletData } from "@/services/store";
     import {WalletManager} from "@/services/WalletManager";
     import config from "@/config";
-    import { useAuthStore } from "@/stores/auth";
+    import { useAuthStore } from "@/store/auth";
 
     const authStore = useAuthStore();
 

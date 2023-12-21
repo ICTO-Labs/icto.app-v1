@@ -8,16 +8,12 @@
     const props = defineProps(['contractInfo', 'contractId']);
     const { data: contractInfo, error, isError, isLoading, isRefetching, refetch } = useGetContract(props.contractId);
 
-    // const contractInfo = ref(props.contractInfo);
-    console.log('props', props);
-
     const chartDetail = ref({
         label: [],
         data: []
     })
     const chartData = ref({});
     watch(contractInfo, async() =>{
-        console.log('change', contractInfo) ;
         generateChartData();
     })
     const generateChartData = ()=>{

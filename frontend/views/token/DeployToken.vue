@@ -116,7 +116,7 @@
 	<form class="form" @submit.prevent="reviewContract">
 	<div class="card  mb-xl-8">
 		<div class="card-header align-items-center">
-			<label class="fs-4 fw-bold form-label mb-2 text-primary">Create New Contract</label>
+			<label class="fs-4 fw-bold form-label mb-2 text-primary">Deploy New Token</label>
 		</div>
 		<div class="card-body pt-5 pb-2">
 				<!--begin::Step 1-->

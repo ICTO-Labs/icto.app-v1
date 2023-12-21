@@ -1,5 +1,5 @@
 import _api from "@/ic/api";
-import { useWalletStore } from '@/stores/wallet'
+import { useWalletStore } from '@/store/wallet'
 import {Principal} from "@dfinity/principal";
 import { showError } from "./common";
 
