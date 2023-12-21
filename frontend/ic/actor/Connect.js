@@ -53,6 +53,7 @@ class Connect {
     _provider = null;
 
     constructor(cid, idl) {
+        if(!cid) throw new Error("No Canister Id");
         cid = cid.trim();
         if (!idl){
             if (Object.prototype.hasOwnProperty.call(this._mapIdls, cid)) {
