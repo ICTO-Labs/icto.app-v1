@@ -11,7 +11,7 @@ import ConnectButton from "../ConnectButton.vue"
 							<!--begin::Logo-->
 							<div class="d-flex align-items-center flex-grow-1 flex-lg-grow-0">
 								<router-link to="/">
-									<img alt="Logo" src="/media/logos/logo-vertical.png" class="h-20px h-lg-30px" />
+									<img alt="Logo" src="/media/logos/logo-vertical.png" class="h-30px h-lg-30px" />
 								</router-link>
 							</div>
 							<!--end::Logo-->
@@ -24,8 +24,8 @@ import ConnectButton from "../ConnectButton.vue"
 										<!--begin::Menu-->
 										<div class="menu menu-lg-rounded menu-column menu-lg-row menu-state-bg menu-title-gray-700 menu-state-title-primary menu-state-icon-primary menu-state-bullet-primary menu-arrow-gray-400 fw-bold my-5 my-lg-0 align-items-stretch" id="#kt_header_menu" data-kt-menu="true">
 											<div class="menu-item menu-lg-down-accordion me-lg-1">
-												<router-link class="menu-link py-3" to="/deploy-token">
-													<span class="menu-title">Deploy Token</span>
+												<router-link class="menu-link py-3" to="/my-token">
+													<span class="menu-title">My Tokens</span>
                                                 </router-link>
 											</div>
 											<div class="menu-item menu-lg-down-accordion me-lg-1">

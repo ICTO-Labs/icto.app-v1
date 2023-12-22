@@ -38,6 +38,9 @@ export const clearToast = ()=>{
 export const showSuccess = (message)=>{
     toast.success(message);
 }
+export const showLoading = (message)=>{
+    toast.loading(message);
+}
 const to32bits = (num) => {
     let b = new ArrayBuffer(4)
     new DataView(b).setUint32(0, num)

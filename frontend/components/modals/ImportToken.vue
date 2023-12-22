@@ -3,14 +3,15 @@
     import EventBus from "@/services/EventBus";
     import { onMounted, ref } from 'vue';
     import _api from "@/ic/api";
-    import { decodeICRC1Metadata } from "@/utils/token";
+    import { decodeICRCMetadata } from "@/utils/token";
     import LoadingButton from "@/components/LoadingButton.vue"
 	import { showSuccess, showError, clearToast, validatePrincipal } from '@/utils/common';
     import { useAssetStore } from '@/store/token';
+    import { usetGetMetadata } from '@/services/Token';
     const storeAsset = useAssetStore();
 
     const importTokenModal = ref(false);
-    const tokenStandard = ref('icrc-1');
+    const tokenStandard = ref('icrc3');
     const canisterId = ref('2ouva-viaaa-aaaaq-aaamq-cai');
     const isImported = ref(false);
     const agree = ref(false);
@@ -38,16 +39,14 @@
         isLoading.value = true;
         if(validatePrincipal(canisterId.value.trim())){
             clearToast();
-            try{
-                let _tokenInfo = await _api.canister(canisterId.value, tokenStandard.value).icrc1_metadata();
-                isLoading.value = false;
-                tokenInfo.value = decodeICRC1Metadata(_tokenInfo);
+            let _tokenInfo = await usetGetMetadata(canisterId.value, tokenStandard.value);
+            isLoading.value = false;
+            if("err" in _tokenInfo){
+                console.log('tokenInfo: ', _tokenInfo);
+                showError('Canister not found or did not match the token standard: '+tokenStandard.value.toUpperCase());
+            }else{
+                tokenInfo.value = decodeICRCMetadata(_tokenInfo, tokenStandard.value);
                 isImported.value = true;
-                console.log('tokenInfo: ', tokenInfo.value);
-            }catch(e){
-                isLoading.value = false;
-                showError("Some thing went wrong, please try again later!")
-                console.log('Some thing went wrong', e);
             }
         }else{
             showError("Invalid Canister ID")
@@ -92,9 +91,9 @@
                                 <label class="form-label"><span class="required">Token Standard</span></label>
                                 <div class="form-control-wrap">
                                     <select class="form-select" v-model="tokenStandard">
-                                        <option value="icrc-1" selected>ICRC-1</option>
-                                        <option value="icrc-2">ICRC-2</option>
-                                        <option value="dip20">DIP20</option>
+                                        <option value="icrc3" selected>ICRC-3</option>
+                                        <option value="icrc2">ICRC-2</option>
+                                        <option value="icrc1">ICRC-1</option>
                                     </select>
                                 </div>
                             </div>

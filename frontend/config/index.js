@@ -1,6 +1,8 @@
 const NETWORK = {
     "dev": {
         canister_id: "bkyz2-fmaaa-aaaaa-qaaaq-cai",
+        deployer_id: "ajuq4-ruaaa-aaaaa-qaaga-cai",
+        backend_id: "bkyz2-fmaaa-aaaaa-qaaaq-cai",
         host: "http://127.0.0.1:8000",
         scan: "http://127.0.0.1:8000/?canisterId=bd3sg-teaaa-aaaaa-qaaba-cai&id="
     },
@@ -22,6 +24,8 @@ const config = {
     ENV: ENV,
     HOST: NETWORK[ENV]['host'],//https://boundary.ic0.app/
     CANISTER_MANAGER_ID: NETWORK[ENV]['canister_id'],
+    DEPLOYER_CANISTER_ID: NETWORK[ENV]['deployer_id'],
+    BACKEND_CANISTER_ID: NETWORK[ENV]['backend_id'],
     CANIC_CANISTER_ID: "mxftc-eyaaa-aaaap-qanga-cai",
     CANISTER_CYCLE_MINTING: "rkp4c-7iaaa-aaaaa-aaaca-cai",
     CANISTER_IC_MANAGEMENT: "aaaaa-aa",

@@ -3,16 +3,16 @@ import { useWalletStore } from '@/store/wallet'
 import {Principal} from "@dfinity/principal";
 import { showError } from "./common";
 
-export const decodeICRC1Metadata = (metadata)=>{
+export const decodeICRCMetadata = (metadata, standard)=>{
     return metadata.reduce((acc, next) => {
         switch (next[0]) {
-          case 'icrc1:name':
+          case standard+':name':
             return Object.assign(acc, { name: next[1].Text })
-          case 'icrc1:symbol':
+          case standard+':symbol':
             return Object.assign(acc, { symbol: next[1].Text })
-          case 'icrc1:decimals':
+          case standard+':decimals':
             return Object.assign(acc, { decimals: Number(next[1].Nat) })
-          case 'icrc1:fee':
+          case standard+':fee':
             return Object.assign(acc, { fee: (next[1].Nat).toString() })
           default:
             return Object.assign(acc, { [next[0]]: next[1] })

@@ -1,0 +1,50 @@
+type headerField = 
+ record {
+   text;
+   text;
+ };
+type Token = 
+ record {
+   canister: text;
+   cover: text;
+   description: text;
+   name: text;
+   symbol: text;
+ };
+type Result = 
+ variant {
+   err: text;
+   ok;
+ };
+type HttpResponse = 
+ record {
+   body: blob;
+   headers: vec headerField;
+   status_code: nat16;
+ };
+type HttpRequest = 
+ record {
+   body: blob;
+   headers: vec headerField;
+   method: text;
+   url: text;
+ };
+service : {
+  addAdmin: (text) -> ();
+  createTokenCanister: (text, text, text, nat, text, nat8, nat) -> (text);
+  cycleBalance: () -> (nat) query;
+  getAllAdmins: () -> (vec text) query;
+  getAllTokens: () -> (vec record {
+                             text;
+                             text;
+                           }) query;
+  getOwner: (text) -> (opt text) query;
+  getTokenDetails: (text) -> (opt Token) query;
+  getTokens: (nat) -> (vec Token) query;
+  getTotalTokens: () -> (nat) query;
+  getUserTokens: (text, nat) -> (vec Token) query;
+  getUserTotalTokens: (text) -> (nat) query;
+  http_request: (HttpRequest) -> (HttpResponse) query;
+  removeAdmin: (text) -> ();
+  updateTokenCover: (text, text) -> (Result);
+}

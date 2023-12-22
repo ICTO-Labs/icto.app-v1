@@ -3,7 +3,7 @@ import Page404 from './components/layout/404.vue'
 import DashboardVue from './components/Dashboard.vue'
 import Payments from './components/contract/Payments.vue'
 import NewContract from './views/contract/NewContract.vue'
-import DeployToken from './views/token/DeployToken.vue'
+import MyToken from './views/token/MyToken.vue'
 import ContractDetail from './views/contract/ContractDetail.vue'
 const router = createRouter({
   history: createWebHistory(import.meta.env.BASE_URL),
@@ -24,9 +24,9 @@ const router = createRouter({
       component: NewContract
     },
     {
-      path: '/deploy-token',
-      name: 'deploy-token',
-      component: DeployToken
+      path: '/my-token',
+      name: 'my-token',
+      component: MyToken
     },
     {
       path: '/contract/:contractId',

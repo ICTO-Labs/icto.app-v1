@@ -59,12 +59,9 @@
 	const getTokenBalance = async ()=>{
 		isLoading.value = true;
 		totalAmount.value = 0;
-		let _balance = await useGetMyBalance(token.value.canisterId);
-		// let _balance = await getMyBalance(token.value.canisterId, 'icrc-1');
-		tokenBalance.value = Number(_balance)/100_000_000;
+		tokenBalance.value = await useGetMyBalance(token.value.canisterId);
 		isLoading.value = false;
 		calTotalToken();
-		console.log('_balance', _balance);
 	}
 	const resetInput = ()=>{
 		newRecipient.value = {amount:"", address: "", title: "", note: ""};
@@ -147,7 +144,7 @@
 										<img class="option__image" :src="`https://${config.CANISTER_STORAGE_ID}.raw.icp0.io/${option.canisterId}.png`">
 										<span class="option__desc">
 											<span class="option__title">{{ option.name }} ({{ option.symbol }} ) · {{ option.canisterId }} 
-												<span class="badge badge-light-primary ms-auto">ICRC-1</span>
+												<span class="badge badge-light-primary ms-auto">{{ option.standard?option.standard.toUpperCase():'' }}</span>
 											</span>
 										</span>
 									</template>
@@ -155,7 +152,7 @@
 										<img class="option__image" :src="`https://${config.CANISTER_STORAGE_ID}.raw.icp0.io/${option.canisterId}.png`" alt="Select Token">
 										<span class="option__desc">
 											<span class="option__title">{{ option.name }} ({{ option.symbol }} ) · {{ option.canisterId }} 
-												<div class="badge badge-light-primary ms-auto">ICRC-1</div></span>
+												<div class="badge badge-light-primary ms-auto">{{ option.standard?option.standard.toUpperCase():'' }}</div></span>
 										</span>
 									</template>
 								</VueMultiselect>

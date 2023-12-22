@@ -193,7 +193,7 @@ actor Deployer {
     };
 
     private func create_canister(_owner : Principal, init : Types.TokenInitArgs) : async (Text) {
-        Cycles.add(1000000000000);
+        Cycles.add(1_000_000_000_000);
         let canister = await ICRC3.Token(init);
         let _ = await updateCanister(canister, _owner);
         let canister_id = Principal.fromActor(canister);
