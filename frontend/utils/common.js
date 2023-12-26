@@ -4,6 +4,8 @@ import {Principal} from "@dfinity/principal";
 import {Buffer} from "buffer";
 import { sha224 } from '@dfinity/principal/lib/esm/utils/sha224';
 import { getCrc32 } from '@dfinity/principal/lib/esm/utils/getCrc';
+import EventBus from "@/services/EventBus";
+
 import RosettaApi from '@/services/RosettaApi';
 const rosettaApi = new RosettaApi();
 
@@ -14,6 +16,9 @@ const isHex = (h) => {
     var regexp = /^[0-9a-fA-F]+$/;
     return regexp.test(h);
 };
+export const showModal = (key, data)=>{
+    EventBus.emit(key, data);
+}
 export const toHexString = (byteArray)  =>{
     return Array.from(byteArray, function(byte) {
         return ('0' + (byte & 0xFF).toString(16)).slice(-2);

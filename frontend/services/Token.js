@@ -5,9 +5,12 @@ import { txtToPrincipal } from "@/utils/common";
 import RosettaApi from '@/services/RosettaApi';
 import config from '@/config';
 import { walletStore } from "@/store";
-import { showError } from "../utils/common";
+import { showError, showSuccess } from "../utils/common";
 const rosettaApi = new RosettaApi();
 export const useGetMyBalance = async(tokenId) => {
+    if(!walletStore.principal) 
+        showError('Please login first');
+        return 0;
     try{
         let _balance = await Connect.canister(tokenId, 'icrc1').icrc1_balance_of({
             owner: txtToPrincipal(walletStore.principal),
@@ -29,6 +32,35 @@ export const usetGetMetadata = async(tokenId, standard)=>{
         return await Connect.canister(tokenId, standard).icrc1_metadata();
     }catch(e){
         throw e;
+    }
+}
+
+export const useMintToken = async(tokenId, to, amount)=>{
+    const _p = txtToPrincipal(to);
+    const _amount = amount*config.E8S;
+    try{
+        let _payload = {
+            from_subaccount: [],
+            to: {
+                owner: _p,
+                subaccount: [],
+            },
+            amount: _amount,
+            fee: [],
+            memo: [],
+            created_at_time: [],
+        }
+        console.log('_payload', _payload);;
+        let response =  await Connect.canister(tokenId, 'icrc1').icrc1_transfer(_payload);
+        console.log('response', response);
+        if ("Err" in response) {
+            showError("Some error occured! Please try again"+JSON.stringify(response.Err));
+        } else {
+            showSuccess("Token Minted!");
+            return true;
+        }
+    }catch(e){
+        showError(e);
     }
 }
 

@@ -1,15 +1,23 @@
 <script setup>
 	import {ref} from "vue";
 	import { useGetUserTokens } from '@/services/Token';
-	import { showLoading, showSuccess } from '@/utils/common';
+	import { showModal, showLoading, showSuccess } from '@/utils/common';
 	import Copy from '@/components/icons/Copy.vue'
 	const { data: myToken, isLoading, isError, error, isRefetching, refetch} = useGetUserTokens(0);
+	const deployToken = ()=>{
+		showModal("showDeployTokenModal", true);
+	}
+	const mintToken = (token)=>{
+		const newObj = {...token};
+		newObj.status = true;
+		showModal("showManageTokenModal", newObj);
+	}
 </script>
 <template>
 	<div class="card card-xl-stretch mb-5 mb-xl-10">
 	<div class="card-header border-0 pt-5">
 		<h3 class="card-title align-items-start flex-column">
-			<span class="card-label fw-bolder fs-3 mb-1">My Tokens <span class="badge badge-light-primary">{{ myToken.length }}</span></span>
+			<span class="card-label fw-bolder fs-3 mb-1">My Tokens <span class="badge badge-light-primary">{{ myToken?myToken.length:0 }}</span></span>
 			<span class="text-muted mt-1 fw-bold fs-7" v-if="isLoading">Loading...</span>
 			<span class="text-muted mt-1 fw-bold fs-7" v-if="isError">{{ error }}</span>
 		</h3>
@@ -17,6 +25,7 @@
 			<ul class="nav">
 				<li class="nav-item">
 					<a href="#" class="btn btn-sm btn-bg-light btn-active-dark me-3" @click="refetch()" :disabled="isRefetching">{{isRefetching?'Loading...':'Refresh'}}</a>
+					<a href="#" class="btn btn-sm btn-primary btn-active-dark me-3" @click="deployToken()" >Deploy Token</a>
 				</li>
 				
 			</ul>
@@ -62,6 +71,7 @@
 								</span>
 								<!--end::Svg Icon-->
 							</router-link>
+							<a href="#" class="btn btn-sm btn-icon" @click="mintToken(token)"><em class="fas fa-send"></em> Mint</a>
 						</td>
 					</tr>
 				</tbody>

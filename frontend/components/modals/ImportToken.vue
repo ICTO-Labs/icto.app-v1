@@ -69,7 +69,7 @@
 </script>
 
 <template>
-    <VueFinalModal v-model="importTokenModal" :z-index-base="2000" classes="modal fade show" content-class="modal-dialog modal-lg modal-dialog-centered">
+    <VueFinalModal v-model="importTokenModal" :z-index-base="2000" classes="modal fade show" content-class="modal-dialog modal-lg">
             <div class="modal-content">
                
                 <div class="modal-header">

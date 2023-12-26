@@ -37,6 +37,7 @@ actor Deployer {
     private stable var _logos : Trie.Trie<Text, Text> = Trie.empty(); //mapping of token_canister_id -> base64
     private stable var _owners : Trie.Trie<Text, Text> = Trie.empty(); //mapping  token_canister_id -> owner principal id
     private stable var _admins : [Text] = [];
+    private stable var _initCycles: Nat = 300_000_000_000;//1T 1_000_000_000_000, 0.3T
 
     //Types
     //
@@ -154,6 +155,11 @@ actor Deployer {
         return false;
     };
 
+    //Update Initial cycles for new token canister
+    public shared ({ caller }) func updateInitCycles(i : Nat) : async () {
+        assert (_isAdmin(Principal.toText(caller)));
+        _initCycles := i;
+    };
     public shared ({ caller }) func addAdmin(p : Text) : async () {
         assert (_isAdmin(Principal.toText(caller)));
         var b : Buffer.Buffer<Text> = Buffer.Buffer<Text>(0);
@@ -193,7 +199,7 @@ actor Deployer {
     };
 
     private func create_canister(_owner : Principal, init : Types.TokenInitArgs) : async (Text) {
-        Cycles.add(1_000_000_000_000);
+        Cycles.add(_initCycles);
         let canister = await ICRC3.Token(init);
         let _ = await updateCanister(canister, _owner);
         let canister_id = Principal.fromActor(canister);
