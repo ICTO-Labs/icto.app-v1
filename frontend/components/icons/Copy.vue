@@ -29,6 +29,7 @@
 <style>
     .copy{
         cursor: pointer;
+        font-size: 12px;
     }
     .copy:hover{
         color: #009ef7;

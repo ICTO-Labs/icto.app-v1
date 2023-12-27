@@ -41,17 +41,18 @@
             clearToast();
             let _tokenInfo = await usetGetMetadata(canisterId.value, tokenStandard.value);
             isLoading.value = false;
-            if("err" in _tokenInfo){
-                console.log('tokenInfo: ', _tokenInfo);
-                showError('Canister not found or did not match the token standard: '+tokenStandard.value.toUpperCase());
+            if(!_tokenInfo || _tokenInfo.standard != tokenStandard.value){
+                isLoading.value = false;
+                // showError('Canister not found or did not match the token standard: '+tokenStandard.value.toUpperCase());
             }else{
-                tokenInfo.value = decodeICRCMetadata(_tokenInfo, tokenStandard.value);
+                tokenInfo.value = _tokenInfo;
                 isImported.value = true;
             }
         }else{
             showError("Invalid Canister ID")
             isLoading.value = false;
         }
+        isLoading.value = false;
        
     }
 
@@ -132,7 +133,7 @@
                                         {{ canisterId }}
                                     </div>
                                 </div>
-                                <div class="badge badge-primary ms-auto">{{tokenStandard.toLocaleUpperCase()}}</div>
+                                <div class="badge badge-primary ms-auto">{{tokenInfo.standard.toLocaleUpperCase()}}</div>
                             </div>
                             <div class="col-sm-12">
                                 <div class="alert alert-dismissible bg-light-danger border border-danger border-dashed flex-sm-row w-100 p-5 mb-10">

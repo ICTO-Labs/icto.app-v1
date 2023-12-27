@@ -31,11 +31,21 @@ export const validatePrincipal = (p) => {
         return false;
     }
 }
+const isPrincipal = (p)=>{
+    return !!p && p._isPrincipal;
+}
+const principalToText = (p)=>{
+    if(isPrincipal(p)){
+        return p.toText();
+    }else{
+        return p;
+    }
+}
 export const validateAddress = (a) => {
     return (isHex(a) && a.length === 64)
 }
-export const showError = (message)=>{
-    toast.error(message,);
+export const showError = (message, toastId='')=>{
+    toast.error(message, {toastId});
 }
 export const clearToast = ()=>{
     toast.clearAll();
@@ -60,10 +70,11 @@ export const txtToPrincipal = (p)=>{
 }  
 export const principalToAccountId = (p, s) => {
     if(!p) return p;
+    let _p = principalToText(p);
     const padding = Buffer("\x0Aaccount-id");
     const array = new Uint8Array([
         ...padding,
-        ...Principal.fromText(p).toUint8Array(),
+        ...Principal.fromText(_p).toUint8Array(),
         ...getSubAccountArray(s)
     ]);
     const hash = sha224(array);

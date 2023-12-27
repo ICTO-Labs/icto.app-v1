@@ -16,14 +16,19 @@ import { VueQueryPlugin } from "@tanstack/vue-query";
 
 import router from './router.js'
 import App from "./App.vue"
+
+import ClickToCopy from '@/components/ClickToCopy.vue';
+import Copy from '@/components/icons/Copy.vue'
+
 const app = createApp(App)
 const vfm = createVfm()
 const pinia = createPinia()
 
 app.use(router)
 app.use(Vue3Toasity, {
-    multiple: false,
-    position: toast.POSITION.BOTTOM_RIGHT,
+    multiple: true,
+    limit: 2,
+    position: toast.POSITION.BOTTOM_LEFT,
     hideProgressBar: true,
     theme: 'colored'
 })
@@ -31,6 +36,8 @@ app.use(VueSweetalert2)
 window.Swal =  app.config.globalProperties.$swal
 app.use(pinia)
 app.use(vfm)
+app.component('ClickToCopy', ClickToCopy);
+app.component('Copy', Copy);
 app.component('VueDatePicker', VueDatePicker);
 app.use(VueQueryPlugin)
 app.mount("#root")

@@ -52,7 +52,7 @@
 							</div>
 						</td>
 						<td>
-							<router-link :to="`/my-token/${token.canister}`" class="text-dark fw-bold text-hover-primary mb-1 fs-6">{{ token.name }}</router-link>
+							<router-link :to="`/token/${token.canister}`" class="text-dark fw-bold text-hover-primary mb-1 fs-6">{{ token.name }}</router-link>
 							<span class="text-muted fw-bold d-block">{{ token.description }}</span>
 						</td>
 						<td class="text-dark fs-6 fw-bold">{{ token.symbol }}</td>
@@ -61,7 +61,7 @@
 							<span class="badge badge-primary">ICRC3</span>
 						</td>
 						<td class="">
-							<router-link :to="`/my-token/${token.canister}`" class="btn btn-sm btn-icon btn-bg-light btn-active-color-primary">
+							<router-link :to="`/token/${token.canister}`" class="btn btn-sm btn-icon btn-bg-light btn-active-color-primary">
 								<!--begin::Svg Icon | path: icons/duotune/arrows/arr064.svg-->
 								<span class="svg-icon svg-icon-2">
 									<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none">

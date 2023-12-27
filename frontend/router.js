@@ -4,6 +4,7 @@ import DashboardVue from './components/Dashboard.vue'
 import Payments from './components/contract/Payments.vue'
 import NewContract from './views/contract/NewContract.vue'
 import MyToken from './views/token/MyToken.vue'
+import TokenDetail from './views/token/TokenDetail.vue'
 import ContractDetail from './views/contract/ContractDetail.vue'
 const router = createRouter({
   history: createWebHistory(import.meta.env.BASE_URL),
@@ -27,6 +28,11 @@ const router = createRouter({
       path: '/my-token',
       name: 'my-token',
       component: MyToken
+    },
+    {
+      path: '/token/:tokenId',
+      name: 'token-detail',
+      component: TokenDetail
     },
     {
       path: '/contract/:contractId',
