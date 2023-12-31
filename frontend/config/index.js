@@ -4,6 +4,7 @@ const NETWORK = {
         deployer_id: "ajuq4-ruaaa-aaaaa-qaaga-cai",
         backend_id: "bkyz2-fmaaa-aaaaa-qaaaq-cai",
         host: "http://127.0.0.1:8000",
+        identityProvider: "http://127.0.0.1:8000/?canisterId=a3shf-5eaaa-aaaaa-qaafa-cai#authorize",
         scan: "http://127.0.0.1:8000/?canisterId=bd3sg-teaaa-aaaaa-qaaba-cai&id="
     },
     "staging": {
@@ -14,7 +15,8 @@ const NETWORK = {
     "ic": {
         canister_id: "can63-sqaaa-aaaap-qbjaq-cai",
         host: "https://icp0.io",
-        scan: "https://dashboard.internetcomputer.org/canister/"
+        scan: "https://dashboard.internetcomputer.org/canister/",
+        identityProvider: "https://identity.ic0.app/#authorize"
     }
 }
 const ENV = "dev";// //dev, staging, ic
@@ -22,6 +24,7 @@ const ENV = "dev";// //dev, staging, ic
 const config = {
     APP_VERSION: '2.0.1',
     ENV: ENV,
+    IDENTITY_PROVIDER: NETWORK[ENV]['identityProvider'],
     HOST: NETWORK[ENV]['host'],//https://boundary.ic0.app/
     CANISTER_MANAGER_ID: NETWORK[ENV]['canister_id'],
     DEPLOYER_CANISTER_ID: NETWORK[ENV]['deployer_id'],

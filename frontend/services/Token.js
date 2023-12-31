@@ -8,24 +8,62 @@ import { walletStore } from "@/store";
 import { showError, showSuccess, principalToAccountId, txtToPrincipal } from "@/utils/common";
 const rosettaApi = new RosettaApi();
 export const useGetMyBalance = async(tokenId) => {
-    if(!walletStore.principal) 
+    if(!walletStore.principal){ 
         showError('Please login first');
         return 0;
-    try{
-        let _balance = await Connect.canister(tokenId, 'icrc1').icrc1_balance_of({
-            owner: txtToPrincipal(walletStore.principal),
-            subaccount: []
-        });
-        if("err" in _balance){
-            showError(_balance.err);
-            return 0;
-        }else{
+    }else{
+        try{
+            let _balance = await Connect.canister(tokenId, 'icrc1').icrc1_balance_of({
+                owner: txtToPrincipal(walletStore.principal),
+                subaccount: []
+            });
             return Number(_balance)/config.E8S
+        }catch(e){
+            return 0;
         }
-    }catch(e){
-        console.log('object', e);
-        return 0;
     }
+}
+export const useTransferFrom = async(tokenId, payload, standard="icrc2")=>{
+    console.log('payload', payload);
+    const _amount = BigInt(parseInt(payload.amount) * config.E8S);
+    const _fee = BigInt(parseInt(0));
+    const _from = txtToPrincipal(payload.from);
+    const _to = txtToPrincipal(payload.to);
+    const response = await Connect.canister(tokenId, standard).icrc2_transfer_from({
+            spender_subaccount: [],
+            from: {
+                owner: _from,
+                subaccount: [],
+            },
+            to: {
+                owner: _to,
+                subaccount: [],
+            },
+            amount: _amount,
+            fee: [_fee],
+            memo: [],
+            created_at_time: [],
+        })
+    console.log('useTransferFrom', response);    
+}
+export const useTokenApprove = async(tokenId, payload, standard="icrc2")=>{
+    const _amount = BigInt(parseInt(payload.amount) * config.E8S);
+    const _fee = BigInt(parseInt(0));
+    const _spender = txtToPrincipal(payload.spender);
+    const response =  await Connect.canister(tokenId, standard).icrc2_approve({
+        from_subaccount: [],
+        spender: {
+            owner: _spender,
+            subaccount: [],
+        },
+        amount: _amount,
+        expires_at: [],
+        expected_allowance: [],
+        memo: [],
+        fee: [_fee],
+        created_at_time: []
+    });
+    console.log(response);
 }
 export const useGetTransactions = (tokenId, standard, start, end)=>{
     return useQuery({

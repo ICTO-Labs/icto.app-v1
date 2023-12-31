@@ -6,14 +6,8 @@
     import LoadingLabel from "@/components/LoadingLabel.vue"
 	import EventBus from "@/services/EventBus";
 	import { useAssetStore } from "@/store/token";
-	import { getMyBalance  } from "@/utils/token";
 	import { useGetMyBalance } from '@/services/Token';
 
-
-	import { useAuthStore } from "@/store/auth";
-	import { storeToRefs } from "pinia";
-	const authStore = useAuthStore();
-  	const { principal } = storeToRefs(authStore);
 
 	import VueMultiselect from 'vue-multiselect'
 	import config from '@/config'
@@ -23,7 +17,7 @@
 	const token = ref({symbol: 'ICP', name: 'Internet Computer', canisterId: 'ryjl3-tyaaa-aaaaa-aaaba-cai', standard: 'ledger'});
 	const tokenBalance = ref(walletStore.wallet.balance);
 	const totalAmount = ref(0);
-	const newRecipient = ref({amount:"4", address: "lekqg-fvb6g-4kubt-oqgzu-rd5r7-muoce-kppfz-aaem3-abfaj-cxq7a-dqe", title: "Jason Nguyen", note: "Developer"});
+	const newRecipient = ref({amount:4, address: "lekqg-fvb6g-4kubt-oqgzu-rd5r7-muoce-kppfz-aaem3-abfaj-cxq7a-dqe", title: "Jason Nguyen", note: "Developer"});
 	const recipients = ref([]);
 	const props = defineProps({
 		options: {
@@ -54,7 +48,7 @@
 		await getTokenBalance();
 	}
 	const calTotalToken = ()=>{
-		totalAmount.value = recipients.value.reduce((acc,cur) => acc + cur.amount, 0);
+		totalAmount.value = recipients.value.reduce((acc,cur) => acc + Number(cur.amount), 0);
 	}
 	const getTokenBalance = async ()=>{
 		isLoading.value = true;
@@ -64,7 +58,7 @@
 		calTotalToken();
 	}
 	const resetInput = ()=>{
-		newRecipient.value = {amount:"", address: "", title: "", note: ""};
+		newRecipient.value = {amount:0, address: "", title: "", note: ""};
 	}
 	const resetRecipients = ()=>{ recipients.value = []};
 	const removeRecipient = (idx)=>{
@@ -85,12 +79,15 @@
 			showError("Not enough "+token.value.symbol+", check remaining amount!");
 			return;
 		}
-		recipients.value.push({address:newRecipient.value.address.trim(), amount: newRecipient.value.amount, title: newRecipient.value.title??"", note:newRecipient.value.note??""})
+		recipients.value.push({address:newRecipient.value.address.trim(), amount: Number(newRecipient.value.amount), title: newRecipient.value.title??"", note:newRecipient.value.note??""})
 		resetInput();
 		calTotalToken();
 	}
 	const importToken = ()=>{
 		EventBus.emit("showImportTokenModal", true)
+	}
+	const deployToken = ()=>{
+		EventBus.emit("showDeployTokenModal", true)
 	}
 	
 	const tokenInfo = computed(()=>{
@@ -137,6 +134,7 @@
 									<span class="required">Token</span> 
 									<i class="fas fa-exclamation-circle ms-2 fs-7" data-bs-toggle="tooltip" title="Specify your Token"></i>
 									<a href="#" class="badge badge-light-primary ms-5" @click="importToken">+ Import</a>
+									<a href="#" class="badge badge-light-danger ms-5" @click="deployToken">+ Deploy New Token</a>
 								</label>
 
 								<VueMultiselect v-model="token" :options="storeAsset.assets" track-by="name" @update:model-value="setSelectedToken" :option-height="40" :custom-label="customLabel" :allow-empty="false" placeholder="Select Token..." selectLabel="" deselectLabel="">
@@ -265,10 +263,10 @@
 			<div class="table-responsive border-bottom mb-5 border table-rounded ">
 				<table class="table align-middle gs-0 table-row-dashed fs-6 gy-2 mb-0 table-hover">
 					<thead>
-					<tr class="fw-bold fs-6 text-gray-800 border-bottom border-gray-200 bg-light">
-						<th class="ps-4 min-w-25px ">#</th>
-						<th class="w-120px text-end">Amount</th>
-						<th class="min-w-400px required">Principal ID/Account ID</th>
+					<tr class="fw-bolder fs-7 text-gray-800 border-bottom border-gray-200 bg-light">
+						<th class="ps-4 w-25px ">#</th>
+						<th class="w-100px text-end">Amount</th>
+						<th class="min-w-400px">Principal ID/Account ID</th>
 						<th class="min-w-50px">Title</th>
 						<th class="min-w-100px">Note</th>
 						<th class="w-100px text-end"></th>
@@ -285,12 +283,12 @@
 							{{idx+1}}.
 						</td>
 						<td>
-							<span class="text-muted fw-bold text-gray-600 d-block fs-7 text-end">
+							<span class="text-muted fw-bold text-gray-800 d-block fs-7 text-end">
 								{{currencyFormat(recipient.amount)}} {{tokenInfo.symbol.toUpperCase()}}
 							</span>
 						</td>
 						<td>
-							<span class="text-muted fw-bold text-gray-600 d-block fs-7">
+							<span class="text-muted fw-bold text-gray-800 d-block fs-7">
 								{{recipient.address}}
 							</span>
 						</td>
@@ -312,7 +310,7 @@
 					</tr>
 					</tbody>
 					<tfoot>
-					<tr class="bg-light ">
+					<tr class="bg-light fw-bolder">
 						<td class="">
 							<span class="badge badge-light-success">New</span>
 						</td>
@@ -377,7 +375,7 @@
 					</select>
 				</div>
 			</div>
-			<div class="row">
+			<div class="row mb-10">
 				<div class="col-md-4 fv-row">
 					<label class="fs-6 fw-bold form-label mb-2">Start now</label>
 					<label class="form-check form-switch form-check-custom form-check-solid">
@@ -394,20 +392,19 @@
 					<VueDatePicker v-model="contractData.startTime" time-picker :min-date="new Date()" auto-apply></VueDatePicker>
 				</div> -->
 			</div>
+			<div class="d-flex flex-column pe-0">
+				<button type="submit" class="btn btn-lg btn-primary btn-block">Preview Contract
+					<span class="svg-icon svg-icon-3 ms-1 me-0">
+						<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none">
+							<rect opacity="0.5" x="18" y="13" width="13" height="2" rx="1" transform="rotate(-180 18 13)" fill="black" />
+							<path d="M15.4343 12.5657L11.25 16.75C10.8358 17.1642 10.8358 17.8358 11.25 18.25C11.6642 18.6642 12.3358 18.6642 12.75 18.25L18.2929 12.7071C18.6834 12.3166 18.6834 11.6834 18.2929 11.2929L12.75 5.75C12.3358 5.33579 11.6642 5.33579 11.25 5.75C10.8358 6.16421 10.8358 6.83579 11.25 7.25L15.4343 11.4343C15.7467 11.7467 15.7467 12.2533 15.4343 12.5657Z" fill="black" />
+						</svg>
+					</span>
+				</button>
+			</div>
 		</div>
 	</div>
-	<div class="d-flex flex-stack pt-0">
-		<div>
-			<button type="submit" class="btn btn-lg btn-primary">Review Contract
-				<span class="svg-icon svg-icon-3 ms-1 me-0">
-					<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none">
-						<rect opacity="0.5" x="18" y="13" width="13" height="2" rx="1" transform="rotate(-180 18 13)" fill="black" />
-						<path d="M15.4343 12.5657L11.25 16.75C10.8358 17.1642 10.8358 17.8358 11.25 18.25C11.6642 18.6642 12.3358 18.6642 12.75 18.25L18.2929 12.7071C18.6834 12.3166 18.6834 11.6834 18.2929 11.2929L12.75 5.75C12.3358 5.33579 11.6642 5.33579 11.25 5.75C10.8358 6.16421 10.8358 6.83579 11.25 7.25L15.4343 11.4343C15.7467 11.7467 15.7467 12.2533 15.4343 12.5657Z" fill="black" />
-					</svg>
-				</span>
-			</button>
-		</div>
-	</div>
+	
 </form>
 
 </template>

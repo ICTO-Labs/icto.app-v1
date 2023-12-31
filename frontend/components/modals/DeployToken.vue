@@ -1,11 +1,13 @@
 <script setup>
 	import {ref, onMounted} from "vue";
 	import { useCreateToken } from '@/services/Token';
-	import { showLoading, showSuccess } from '@/utils/common';
+	import { showError, showSuccess } from '@/utils/common';
 	const deployTokenModal = ref(false);
     import { VueFinalModal } from 'vue-final-modal'
     import EventBus from "@/services/EventBus";
+    import LoadingButton from "@/components/LoadingButton.vue";
 
+    const isLoading = ref(false);
 	const newToken = ref({
 		name: "Test Token",
 		symbol: "TEST",
@@ -22,32 +24,32 @@
     })
 
 	const deployToken = async()=>{
-		showLoading("Deploying Token...");
+        isLoading.value = true;
 		let canister_id = await useCreateToken(newToken.value);
-		if(canister_id) showSuccess("Token deployed successfully..."+canister_id)
+        isLoading.value = false;
+
+		if(typeof(canister_id) =='string') showSuccess("Token deployed successfully! Your token ID: "+canister_id, true);
+        else{
+            showError(canister_id.err, true);
+        }
 		console.log(canister_id);
 	}
     const closeModal = ()=>{ deployTokenModal.value = false};
 
 </script>
 <template>
-	 <VueFinalModal v-model="deployTokenModal" :z-index-base="2000" classes="modal fade show" content-class="modal-dialog modal-lg">
+	 <VueFinalModal v-model="deployTokenModal" :z-index-base="1" classes="modal fade show" content-class="modal-dialog modal-lg" data-bs-focus="false" no-enforce-focus >
             <div class="modal-content">
                
-                <div class="modal-header">
+                <div class="modal-header  pt-5 pb-3">
                     <h5 class="modal-title">Deploy New Token</h5>
-                    <div class="btn btn-icon btn-sm btn-active-light-danger ms-2" data-bs-dismiss="modal" aria-label="Close" @click="closeModal()">
-                        <span class="svg-icon svg-icon-2x">
-                            <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none">
-                                <rect opacity="0.5" x="6" y="17.3137" width="16" height="2" rx="1" transform="rotate(-45 6 17.3137)" fill="black"></rect>
-                                <rect x="7.41422" y="6" width="16" height="2" rx="1" transform="rotate(45 7.41422 6)" fill="black"></rect>
-                            </svg>
-                        </span>
+                    <div class="btn btn-icon btn-sm btn-bg-light btn-active-light-danger ms-2" data-bs-dismiss="modal" aria-label="Close" @click="closeModal()">
+                        <i class="fas fa-times"></i>
                     </div>
                 </div>
                 <div class="">
                     <form class="form" @submit.prevent="deployToken">
-                    <div class="card mb-xl-8">
+                    <div class="card mb-xl-1">
                         <div class="card-body">
                                 <div class="current" data-kt-stepper-element="content">
                                     <div class="w-100">
@@ -106,18 +108,13 @@
                                                     </div>
                                                 </div>
                                             </div>
-                                            
                                         </div>
-                                        <div class="row">
-                                            <div class="col-md-6 fv-row">
-                                                <label class="fs-6 fw-bold form-label mb-2"></label>
-                                                <div class="row fv-row">
-                                                    <div class="col-12">
-                                                        <button type="submit" class="btn btn-sm btn-lg btn-danger btn-block">Deploy Token <i class="fas fa-upload"></i></button>
-                                                    </div>
-                                                </div>
-                                            </div>
-                                            
+                                        <div class="d-flex flex-column gap-7 gap-md-10">
+                                            <LoadingButton 
+                                            :loading="isLoading"
+                                            class="btn btn-danger btn-block"
+                                            type="submit">Confirm Deploy <i class="fas fa-angle-double-up"></i>
+                                            </LoadingButton>
                                         </div>
                                     </div>
                                 </div>

@@ -403,3 +403,6 @@ fieldset[disabled] .multiselect {
     height: 24px;
     padding-right: 5px;
   }
+  .Vue-Toastification__toast-body{
+    font-size: 14px !important;
+  }

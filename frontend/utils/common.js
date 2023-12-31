@@ -1,5 +1,6 @@
-import { toast } from 'vue3-toastify';
-import crc32 from 'crc-32'
+import { useToast } from 'vue-toastification'
+const toast = useToast()
+
 import {Principal} from "@dfinity/principal";
 import {Buffer} from "buffer";
 import { sha224 } from '@dfinity/principal/lib/esm/utils/sha224';
@@ -44,17 +45,39 @@ const principalToText = (p)=>{
 export const validateAddress = (a) => {
     return (isHex(a) && a.length === 64)
 }
-export const showError = (message, toastId='')=>{
-    toast.error(message, {toastId});
+export const showError = (message, useSwal=false)=>{
+    if(useSwal){
+        Swal.fire({
+            icon: 'error',
+            title: 'Error!',
+            text: message
+        })
+    }else{
+        toast.error(message);
+    }
+    
 }
 export const clearToast = ()=>{
     toast.clearAll();
 }
-export const showSuccess = (message)=>{
-    toast.success(message);
+export const showSuccess = (message, useSwal=false)=>{
+    if(useSwal){
+        Swal.fire({
+            icon: 'success',
+            title: 'Successful!',
+            text: message
+        })
+    }else{
+        toast.success(message);
+    }
 }
 export const showLoading = (message)=>{
-    toast.loading(message);
+    Swal.fire({
+        html: '<div class="spinner-grow spinner-grow-sm" role="status"></div> '+message,
+        allowEscapeKey: false,
+        allowOutsideClick: false,
+        showConfirmButton: false
+    });
 }
 const to32bits = (num) => {
     let b = new ArrayBuffer(4)

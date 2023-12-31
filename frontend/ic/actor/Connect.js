@@ -22,11 +22,18 @@ class CreateActor {
             get : (target, name) => {
                 return async function() {
                     if (!target._actor) {
-                        target._actor = await actor.create({
-                            identity: walletStore.identity,
-                            canisterId: canister,
-                            idlFactory: idl,
-                          });
+                        if(walletStore.connector == "plug"){
+                            target._actor = await window.ic[walletStore.connector].createActor({
+                                canisterId: target._canister,
+                                interfaceFactory: target._idl,
+                            });
+                        }else{
+                            target._actor = await actor.create({
+                                identity: walletStore.identity,
+                                canisterId: canister,
+                                idlFactory: idl,
+                              });
+                        }
                     }
                     return await target._actor[name](...arguments);
                 }

@@ -294,9 +294,10 @@ actor Deployer {
         return Trie.size(_tokens);
     };
 
-    //Updates
+    //Create Token Canister
     //
     public shared (msg) func createTokenCanister(_name : Text, _symbol : Text, _desc : Text, _amt : Nat, logo_encoding : Text, _decimals : Nat8, tx_fee : Nat) : async (Text) {
+        assert not Principal.isAnonymous(msg.caller);//reject anonymous
         let pre_mint_account = {
             owner = msg.caller;
             subaccount = null;

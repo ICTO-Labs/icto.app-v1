@@ -1,14 +1,15 @@
 import { useQuery } from "@tanstack/vue-query";
 import Connect from "@/ic/actor/Connect";
 import { useStorage } from '@vueuse/core'
+import config from "../config";
 const auth = useStorage('auth');
 
 export const useCreateContract = async (data)=>{
-    return auth.value.backendActor.createContract(data);
+    return await Connect.canister(config.BACKEND_CANISTER_ID, 'backend').createContract(data);
 }
 
 export const useCancelContract = async (contractId)=>{
-    return await Connect.canister(contractId, 'contract').whoami();
+    return await Connect.canister(config.BACKEND_CANISTER_ID, 'contract').whoami();
 }
 export const useGetContract = (contractId) => {
     return useQuery({

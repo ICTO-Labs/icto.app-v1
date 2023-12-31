@@ -6,7 +6,9 @@
   import CountUp from 'vue-countup-v3'
   import "vue3-circle-progress/dist/circle-progress.css";
   import CircleProgress from "vue3-circle-progress";
-  import config from "@/config"
+  import config from "@/config";
+  import { SCHEDULE } from "@/config/constants";
+  import { currencyFormat } from "@/utils/token"
   import IndicativeChart from '@/components/contract/IndicativeChart.vue';
   import PaymentHistory from '@/components/contract/PaymentHistory.vue';
   const route = useRoute();
@@ -33,7 +35,8 @@
           <!--begin::Details-->
           <div class="d-flex flex-wrap flex-sm-nowrap mb-6">
             <div class="d-flex flex-center flex-shrink-0 bg-light rounded w-100px h-100px w-lg-150px h-lg-150px me-7 mb-4">
-              <img class="mw-50px mw-lg-75px" :src="`https://${config.CANISTER_STORAGE_ID}.raw.icp0.io/${contractInfo?.tokenId}.png`" alt="image">
+              <img class="mw-50px mw-lg-75px" :src="`https://psh4l-7qaaa-aaaap-qasia-cai.raw.icp0.io/6ytv5-fqaaa-aaaap-qblcq-cai.png`" alt="image">
+              <!-- <img class="mw-50px mw-lg-75px" :src="`https://${config.CANISTER_STORAGE_ID}.raw.icp0.io/${contractInfo?.tokenId}.png`" alt="image"> -->
             </div>
             <!--begin::Wrapper-->
             <div class="flex-grow-1">
@@ -44,30 +47,32 @@
                   <!--begin::Status-->
                   <div class="d-flex align-items-center mb-1">
                     <span class="text-primary fs-2 fw-bold me-3">{{contractInfo?.name}}</span>
-                    <span class="badge badge-light-success me-auto">Outgoing...</span>
+                    <span class="badge badge-light-danger me-auto" v-if="contractInfo && contractInfo.totalAmount==contractInfo.unlockedAmount">Ended</span>
+                    <span class="badge badge-light-success me-auto" v-else>Outgoing...</span>
                   </div>
                   <div class="d-flex flex-wrap fw-bold fs-6 mb-4 pe-2">
-                    <span href="#" class="d-flex align-items-center text-gray-400 text-hover-primary me-5 mb-2">
+                    <span href="#" class="d-flex align-items-center text-gray-800 text-hover-primary me-5 mb-2">
                       {{contractInfo?.tokenSymbol}} ({{contractInfo?.tokenName}}) </span>
-                    <span class="d-flex align-items-center text-gray-400 text-hover-primary me-5 mb-2">
+                    <span class="d-flex align-items-center text-gray-800 text-hover-primary me-5 mb-2">
                       <span class="menu-bullet d-flex align-items-center me-2">
-                        <span class="bullet bg-success"></span>
-                      </span> {{contractInfo?.tokenId}}
+                        <span class="bullet bg-gray-300 me-3"></span>
+                      </span> <span class="me-2">{{contractInfo?.tokenId}}</span> <Copy :text="contractInfo?.tokenId"></Copy>
                     </span>
                     <span href="#" class="d-flex align-items-center text-gray-400 text-hover-primary mb-2">
-                      <span class="badge badge-light-primary ms-auto">{{contractInfo?.tokenStandard}}</span>
+                      <span class="badge badge-light-primary ms-auto">{{contractInfo?.tokenStandard.toUpperCase()}}</span>
                     </span>
                   </div>
                   
                 </div>
                 <div class="d-flex mb-4">
-                  <a href="#" class="btn btn-sm btn-bg-light btn-active-color-primary me-3" @click="loadContract()" :disabled="isRefetching">{{isRefetching?'Refreshing...':'Refresh'}}</a>
-                  <a href="#" class="btn btn-sm btn-danger me-3"  @click="cancelContract()">Cancel</a>
+                  <button type="button" class="btn btn-sm btn-light-primary me-3" @click="loadContract()" :disabled="isRefetching">{{isRefetching?'Refreshing...':'Refresh '}} <i class="fas fa-sync"></i></button>
+                  <button type="button" class="btn btn-sm btn-light-danger" @click="cancelContract()">Cancel <i class="fas fa-ban"></i></button>
+
                 </div>
                 <!--end::Actions-->
               </div>
               <!--end::Head-->
-              <div class="d-flex flex-wrap fw-semibold mb-4 fs-5 text-gray-500">
+              <div class="d-flex flex-wrap fw-semibold mb-4 fs-5 text-gray-600">
                     {{ contractInfo?.description }}
                     <!-- <span v-if="isLoading">Loading...</span>
                     <span v-if="isRefetching">isRefetching...</span>
@@ -96,6 +101,14 @@
                   <div class="fw-semibold fs-6 text-gray-500">End Date (UTC)</div>
                 </div>
                 <div class="border border-gray-300 border-dashed rounded min-w-125px py-3 px-4 me-6 mb-3">
+                  <div class="d-flex align-items-center">
+                    <div class="fs-4 fw-bold counted" v-if="contractInfo">
+                      {{ SCHEDULE[Number(contractInfo.unlockSchedule)] }}
+                    </div>
+                  </div>
+                  <div class="fw-semibold fs-6 text-gray-500">Unlock Schedule</div>
+                </div>
+                <div class="border border-gray-300 border-dashed rounded min-w-125px py-3 px-4 me-6 mb-3">
                   <div class="d-flex align-items-center ">
                     <div class="fs-4 fw-bold counted">
                       <count-up :end-val="Number(contractInfo.totalAmount)" v-if="contractInfo && contractInfo.totalAmount"></count-up>
@@ -106,19 +119,10 @@
                 <div class="border border-gray-300 border-dashed rounded min-w-125px py-3 px-4 me-6 mb-3">
                   <div class="d-flex align-items-center">
                     <div class="fs-4 fw-bold counted">
-                      <count-up :end-val="Number(contractInfo.unlockSchedule)" v-if="contractInfo && contractInfo.unlockSchedule"></count-up>
+                      <count-up :end-val="Number(contractInfo.unlockedAmount?contractInfo.unlockedAmount:0)" v-if="contractInfo"></count-up>
                     </div>
                   </div>
-                  <div class="fw-semibold fs-6 text-gray-500">Unlock Schedule</div>
-                </div>
-                
-                <div class="border border-gray-300 border-dashed rounded min-w-125px py-3 px-4 me-6 mb-3">
-                  <div class="d-flex align-items-center">
-                    <div class="fs-4 fw-bold counted">
-                      <count-up :end-val="Number(contractInfo.unlockedAmount)" v-if="contractInfo && contractInfo.unlockedAmount"></count-up>
-                    </div>
-                  </div>
-                  <div class="fw-semibold fs-6 text-gray-500">Unlocked Amount</div>
+                  <div class="fw-bold fs-6 text-gray-500">Unlocked Amount</div>
                 </div>
                 <div class="border border-gray-300 border-dashed rounded min-w-125px py-3 px-4 me-6 mb-3">
                   <div class="d-flex align-items-center">
@@ -160,7 +164,7 @@
                     <!--begin::Card title-->
                     <div class="card-title flex-column">
                       <h3 class="fw-bold mb-1">Contract Summary</h3>
-                      <div class="fs-6 fw-semibold text-gray-500">24 Overdue Tasks</div>
+                      <div class="fs-6 fw-semibold text-gray-500"></div>
                     </div>
                     <!--end::Card title-->
                     <!--begin::Card toolbar-->
@@ -186,17 +190,17 @@
                         <div class="d-flex fs-6 fw-semibold align-items-center mb-3">
                           <div class="bullet bg-success me-3"></div>
                           <div class="text-gray-500">Total Amount</div>
-                          <div class="ms-auto fw-bold text-gray-700">{{ Number(contractInfo?.totalAmount) }}</div>
+                          <div class="ms-auto fw-bold text-gray-700">{{ currencyFormat(Number(contractInfo?.totalAmount)) }}</div>
                         </div>
                         <div class="d-flex fs-6 fw-semibold align-items-center mb-3">
                           <div class="bullet bg-primary me-3"></div>
                           <div class="text-gray-500">Unlocked</div>
-                          <div class="ms-auto fw-bold text-gray-700">{{ Number(contractInfo?.unlockedAmount) }}</div>
+                          <div class="ms-auto fw-bold text-gray-700">{{ currencyFormat(Number(contractInfo?.unlockedAmount)) }}</div>
                         </div>
                         <div class="d-flex fs-6 fw-semibold align-items-center mb-3">
                           <div class="bullet bg-gray-300 me-3"></div>
                           <div class="text-gray-500">Remaining</div>
-                          <div class="ms-auto fw-bold text-gray-700">{{ Number(contractInfo?.totalAmount) - Number(contractInfo?.unlockedAmount) }}</div>
+                          <div class="ms-auto fw-bold text-gray-700">{{ currencyFormat(Number(contractInfo?.totalAmount) - Number(contractInfo?.unlockedAmount)) }}</div>
                         </div>
                         <div class="d-flex fs-6 fw-semibold align-items-center">
                           <div class="bullet bg-danger me-3"></div>
@@ -256,7 +260,7 @@
                 <!--begin::Card title-->
                 <div class="card-title flex-column">
                   <h3 class="fw-bold mb-1">Recipients</h3>
-                  <div class="fs-6 text-gray-500">Total $260,300 spent so far</div>
+                  <div class="fs-6 text-gray-500">Total <span v-if="contractInfo">{{ Number(contractInfo.unlockedAmount?contractInfo.unlockedAmount:0) }} {{ contractInfo.tokenSymbol }}</span> unlocked so far</div>
                 </div>
                 <!--begin::Card title-->
               </div>
@@ -277,7 +281,7 @@
                             <th class="min-w-90px sorting" rowspan="1" colspan="1">Remaining</th>
                           </tr>
                         </thead>
-                        <tbody class="fs-6">
+                        <tbody class="fs-7">
                           <tr class="odd" v-for="recipient in contractInfo?.recipients">
                             <td>
                               <!--begin::User-->
@@ -286,17 +290,17 @@
                                 <div class="d-flex flex-column justify-content-center">
                                   <span class="fs-6 text-primary">
                                     {{ recipient.title[0] }}
-                                    <span class="badge badge-light-info">{{ recipient.note[0] }}</span>
+                                    <span class="fw-normal badge badge-light-info" v-if="recipient.note && recipient.note[0] != ''">{{ recipient.note[0] }}</span>
                                   </span>
-                                  <div class="fw-semibold text-gray-500">{{ recipient.address }}</div>
+                                  <div class="fw-bold text-gray-800">{{ recipient.address }}</div>
                                 </div>
                                 <!--end::Info-->
                               </div>
                               <!--end::User-->
                             </td>
-                            <td>{{ recipient.amount }}</td>
-                            <td> 30 </td>
-                            <td> 10 </td>
+                            <td> <span class="fs-6 text-primary">{{ recipient.amount }}</span></td>
+                            <td> <span class="fs-6 text-success">0</span> </td>
+                            <td> <span class="fs-6 text-danger">{{ recipient.amount }}</span> </td>
                           </tr>
                         </tbody>
                       </table>

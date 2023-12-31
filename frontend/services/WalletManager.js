@@ -1,25 +1,42 @@
 import {AuthClient} from "@dfinity/auth-client";
 import EventBus from "./EventBus";
-import { toast } from 'vue3-toastify';
+import { principalToAccountId } from "@/utils/common";
+import { walletStore } from "@/store";
+import config from "@/config";
+import { showSuccess } from "@/utils/common";
 
+const loginSuccessAction = () =>{
+    showSuccess("Login successful!")
+    EventBus.emit("showLoginModal", false)
+}
+const defaultOptions = {
+    createOptions: {
+      idleOptions: {
+        disableIdle: true,
+      },
+    },
+    loginOptions: {
+      identityProvider: config.IDENTITY_PROVIDER
+    },
+  };
 class walletManager {
     checkLoginStatus(){
-        var is_connected = localStorage.getItem("_w_connected");
+        var isLogged = localStorage.getItem("isLogged");
+        console.log('isLogged', isLogged);
         const logout = () => {
             localStorage.removeItem("_w_connected");
             StoicIdentity.disconnect();
-            walletData.setIdentity(false);
-            walletData.setAccount([]);
-            walletData.setBalance(0);
-            walletData.setLoginState(false);
-            walletData.setCurrentAccount({});
+            walletStore.setIdentity(false);
+            walletStore.setAccount([]);
+            walletStore.setBalance(0);
+            walletStore.setLoginState(false);
+            walletStore.setCurrentAccount({});
         };
-        if (is_connected) {
-            switch (is_connected) {
+        if (isLogged) {
+            switch (walletStore.connector) {
                 case "plug":
                     (async () => {
                         const connected = await window?.ic?.plug.isConnected();
-                        console.log('connected: ', connected);
                         if (connected) {
                             if (!window.ic["plug"].agent) {
                                 console.log('create agent')
@@ -33,15 +50,15 @@ class walletManager {
                                 type: "plug",
                                 getPrincipal : () => pid
                             }
-                            walletData.setIdentity(id);
-                            walletData.setAccount([
+                            walletStore.setIdentity(id);
+                            walletStore.setAccount([
                                 {
                                     name: "Plug Wallet",
-                                    address: principalToAccountIdentifier(id.getPrincipal().toText(), 0),
+                                    address: principalToAccountId(id.getPrincipal().toText(), 0),
                                 },
                             ]);
-                            walletData.setCurrentAccount({ name: "Plug Wallet", address: principalToAccountIdentifier(id.getPrincipal().toText(), 0)});
-                            await walletData.loginAction('plug');
+                            walletStore.setCurrentAccount({ name: "Plug Wallet", address: principalToAccountId(id.getPrincipal().toText(), 0)});
+                            walletStore.setLoginState('plug');
                         }else {
                             console.log("Plug not connected");
                             await this.plugWallet()
@@ -65,41 +82,36 @@ class walletManager {
                                 type: "bitfinity",
                                 getPrincipal : () => pid
                             }
-                            walletData.setIdentity(id);
-                            walletData.setAccount([
+                            walletStore.setIdentity(id);
+                            walletStore.setAccount([
                                 {
                                     name: "Bitfinity Wallet",
-                                    address: principalToAccountIdentifier(id.getPrincipal().toText(), 0),
+                                    address: principalToAccountId(id.getPrincipal().toText(), 0),
                                 },
                             ]);
-                            walletData.setCurrentAccount({ name: "Bitfinity Wallet", address: principalToAccountIdentifier(id.getPrincipal().toText(), 0)});
-                            walletData.loginAction('bitfinity');
+                            walletStore.setCurrentAccount({ name: "Bitfinity Wallet", address: principalToAccountId(id.getPrincipal().toText(), 0)});
+                            walletStore.loginAction('bitfinity');
                         }else {
                             console.log("Infinity wallet not connected");
                             // logout();
                         }
                     })();
                     break;
-                case "nns":
+                case "ii":
                     (async () => {
-                        const authClient = await AuthClient.create({
-                            idleOptions: {
-                                disableIdle: true, // set to true to disable idle timeout
-                            }
-                        });
+                        console.log('check ii');
+                        const authClient = await AuthClient.create(defaultOptions.createOptions);
                         const identity = authClient.getIdentity();
-                        console.log('_principal: ', identity._principal);
-                        console.log('connected: ', identity);
                         if (identity) {
-                            walletData.setIdentity(identity);
-                            walletData.setAccount([
+                            walletStore.setIdentity(identity);
+                            walletStore.setAccount([
                                 {
                                     name: "Internet Identity",
-                                    address: principalToAccountIdentifier(identity.getPrincipal().toString(), 0),
+                                    address: principalToAccountId(identity.getPrincipal().toString(), 0),
                                 },
                             ]);
-                            walletData.setCurrentAccount({ name: "Internet Identity", address: principalToAccountIdentifier(identity.getPrincipal().toString(), 0)});
-                            walletData.loginAction('nns');
+                            walletStore.setCurrentAccount({ name: "Internet Identity", address: principalToAccountId(identity.getPrincipal().toString(), 0)});
+                            walletStore.setLoginState('ii');
                         }else {
                             console.log("Internet Identity not connected");
                             // logout();
@@ -112,14 +124,14 @@ class walletManager {
         }
     };
     logoutAction(){
-        localStorage.removeItem("_w_connected");
+        localStorage.removeItem("isLogged");
         StoicIdentity.disconnect();
-        walletData.setIdentity(false);
-        walletData.setAccount([]);
-        walletData.setBalance(0);
-        walletData.setLoginState(false);
-        walletData.setCurrentAccount({});
-        walletData.logoutAction();
+        walletStore.setIdentity(false);
+        walletStore.setAccount([]);
+        walletStore.setBalance(0);
+        walletStore.setLoginState(false);
+        walletStore.setCurrentAccount({});
+        walletStore.logoutAction();
     };
     connectLoading(){
         window.Swal.fire({
@@ -143,7 +155,7 @@ class walletManager {
         this.connectLoading();
         const whitelist = config.CANISTER_WHITE_LIST;
         // Host
-        const host = config.IC_ENDPOINT;
+        const host = config.HOST;
         // Make the request
 
         try {
@@ -164,12 +176,13 @@ class walletManager {
                 }
                 const _current_account = {
                     name: "Plug Wallet",
-                    address: principalToAccountIdentifier(id.getPrincipal().toText(), 0),
+                    address: principalToAccountId(id.getPrincipal().toText(), 0),
                 };
-                walletData.setIdentity(id);
-                walletData.setAccount([_current_account]);
-                walletData.setCurrentAccount(_current_account);
-                await walletData.loginAction('plug');
+                walletStore.setIdentity(id);
+                walletStore.setAccount([_current_account]);
+                walletStore.setCurrentAccount(_current_account);
+                // await walletStore.loginAction('plug');
+                walletStore.setLoginState('plug');
                 loginSuccessAction();
             }
         }catch (e) {
@@ -207,12 +220,12 @@ class walletManager {
                 }
                 const _current_account = {
                     name: "Bitfinity Wallet",
-                    address: principalToAccountIdentifier(id.getPrincipal().toText(), 0),
+                    address: principalToAccountId(id.getPrincipal().toText(), 0),
                 };
-                walletData.setIdentity(id);
-                walletData.setAccount([_current_account]);
-                walletData.setCurrentAccount(_current_account);
-                walletData.loginAction('bitfinity');
+                walletStore.setIdentity(id);
+                walletStore.setAccount([_current_account]);
+                walletStore.setCurrentAccount(_current_account);
+                walletStore.loginAction('bitfinity');
                 loginSuccessAction();
             }
 
@@ -221,10 +234,11 @@ class walletManager {
             console.log(e);
         }
     };
-    async nnsWallet(){
+    async iiWallet(){
         this.connectLoading();
         const auth  = await AuthClient.create();
         auth.login({
+            ...defaultOptions.loginOptions,
             maxTimeToLive: 7 * 24 * 60 * 60 * 1000 * 1000 * 1000,
             disableDefaultIdleCallback: true,
             onSuccess: async () => {
@@ -232,12 +246,13 @@ class walletManager {
                 let pid = await auth.getIdentity();
                 const _current_account = {
                     name: "Internet Identity",
-                    address: principalToAccountIdentifier(pid.getPrincipal().toString(), 0),
+                    address: principalToAccountId(pid.getPrincipal().toString(), 0),
                 };
-                walletData.setIdentity(pid);
-                walletData.setAccount([_current_account]);
-                walletData.setCurrentAccount(_current_account);
-                walletData.loginAction('nns');
+                walletStore.setIdentity(pid);
+                walletStore.setAccount([_current_account]);
+                walletStore.setCurrentAccount(_current_account);
+                walletStore.setLoginState('ii');
+
                 loginSuccessAction();
             },
             onError: ()=>{
@@ -247,7 +262,7 @@ class walletManager {
         });
     }
     async notLogin(){
-        if(!walletData.isLogged){
+        if(!walletStore.isLogged){
             EventBus.emit("showLoginModal", true);
             return true;
         }else{ return false}
@@ -263,13 +278,13 @@ class walletManager {
                 localStorage.removeItem("_w_connected");
                 localStorage.removeItem("_account_index");
                 StoicIdentity.disconnect();
-                walletData.setIdentity(null);
-                walletData.setAccount([]);
-                walletData.setBalance(0);
-                walletData.setLoginState(false);
-                walletData.setCurrentAccount({});
-                // walletData.setCanicLockedBalance(0);
-                walletData.logoutAction();
+                walletStore.setIdentity(null);
+                walletStore.setAccount([]);
+                walletStore.setBalance(0);
+                walletStore.setLoginState(false);
+                walletStore.setCurrentAccount({});
+                // walletStore.setCanicLockedBalance(0);
+                walletStore.logoutAction();
             }
         })
     }
@@ -279,6 +294,4 @@ class walletManager {
 }
 
 export const WalletManager = new walletManager();
-export default {
-    WalletManager
-}
+export default WalletManager;

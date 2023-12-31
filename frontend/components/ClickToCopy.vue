@@ -18,7 +18,7 @@
 
 </script>
 <template>
-    <div @click="copyToClipboard" title="Click to Copy" class="clickToCopy">
+    <div @click="copyToClipboard" title="Click to Copy" class="clickToCopy text-hover-primary">
       <slot></slot>
     </div>
 </template>

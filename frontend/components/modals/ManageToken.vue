@@ -61,13 +61,13 @@
 <template>
     <VueFinalModal v-model="manageTokenModal" :z-index-base="2000" classes="modal fade show" content-class="modal-dialog modal-lg ">
         <div class="modal-content">
-            <a href="#" @click.stop="closeModal" class="close" data-bs-dismiss="modal" aria-label="Close">
-                <em class="icon ni ni-cross"></em>
-            </a>
             <div class="modal-header">
                 <h5 class="modal-title"><span class="text-capitalize">Mint </span> {{ tokenInfo.name }} (<span class="text-blue">{{ tokenInfo.symbol }}</span>) </h5>
+                <div class="btn btn-icon btn-sm btn-bg-light btn-active-light-danger ms-2" data-bs-dismiss="modal" aria-label="Close" @click="closeModal()">
+                    <i class="fas fa-times"></i>
+                </div>
             </div>
-            <div class="modal-body pt-3 pb-0">
+            <div class="modal-body pt-3 pb-5">
                 <div class="pl-10 pb-3">
                     <div class="row gy-4">
                         <div class="col-sm-8">
@@ -98,11 +98,6 @@
                     </div>
 
                 </div>
-            </div>
-            <div class="modal-footer bg-light">
-                <ul class="btn-toolbar g-4 align-center">
-                    <li><a href="javascript:void(0)" @click="closeModal" class="link link-primary">Close</a></li>
-                </ul>
             </div>
         </div>
     </VueFinalModal>

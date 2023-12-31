@@ -1,20 +1,14 @@
 <script setup>
 import { RouterLink, RouterView } from 'vue-router'
-import config from './config'
-import { storeToRefs } from "pinia";
-import { useAuthStore } from "@/store/auth";
 import Header from "./components/layout/Header.vue"
 import Footer from "./components/layout/Footer.vue"
 import Toolbar from "./components/layout/Toolbar.vue"
 import ScrollTop from "./components/ScrollTop.vue"
 import Modals from "./components/Modals.vue"
 
-const authStore = useAuthStore();
-const { isReady, isAuthenticated } = storeToRefs(authStore);
+import WalletManager from "@/services/WalletManager";
 
-if (isReady.value === false) {
-  authStore.init();
-}
+WalletManager.checkLoginStatus();
 </script>
 
 <template>

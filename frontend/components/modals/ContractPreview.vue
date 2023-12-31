@@ -3,24 +3,27 @@
     import EventBus from "@/services/EventBus";
     import { DURATION, SCHEDULE} from "@/config/constants"
     import { onMounted, ref } from 'vue';
-    import { showSuccess} from "@/utils/common"
+    import { showLoading } from "@/utils/common"
     import moment from 'moment';
     import Copy from "@/components/icons/Copy.vue";
     import _api from "@/ic/api";
     import { currencyFormat } from "@/utils/token";
     import {Principal} from "@dfinity/principal";
     import { useCreateContract } from "@/services/Contract";
+    import { useTokenApprove, useTransferFrom } from "@/services/Token";
     import LoadingButton from '@/components/LoadingButton.vue';
     const contractData = ref(null);
     const contractDetailsModal = ref(false);
     const isLoading = ref(false);
-    import { useWalletStore } from '@/store/wallet'
-    const walletStore = useWalletStore()
+    import { walletStore } from '@/store/'
+import config from '../../config';
 
     const closeModal = ()=>{
         contractDetailsModal.value = false;
     }
-
+    const calTotalAmount = (recipients)=>{
+		return recipients.reduce((acc,cur) => acc + Number(cur.amount), 0);
+	}
     const createContract = async()=>{
         Swal.fire({
 		title: "Are you sure?",
@@ -35,16 +38,18 @@
             isLoading.value = true;
             console.log('contractData.value: ', contractData.value.token);
             let tokenInfo = await contractData.value.token;
-            // let recipients = contractData.value.recipients.map(recipient=>{
-            //     return {address: recipient.address, amount: recipient.amount, title: [recipient.title], note: [recipient.note]}
-            // });
-            let recipients = [
-                 {address: "lekqg-fvb6g-4kubt-oqgzu-rd5r7-muoce-kppfz-aaem3-abfaj-cxq7a-dqe", amount: 600, note: ["Senior Developer"], title: ["Fern"]},
-                 {address: "lekqg-fvb6g-4kubt-oqgzu-rd5r7-muoce-kppfz-aaem3-abfaj-cxq7a-dqe", amount: 230, note: ["Senior Developer"], title: ["John"]},
-                 {address: "lekqg-fvb6g-4kubt-oqgzu-rd5r7-muoce-kppfz-aaem3-abfaj-cxq7a-dqe", amount: 150, note: ["J.Developer"], title: ["Jasson"]},
-                 {address: "lekqg-fvb6g-4kubt-oqgzu-rd5r7-muoce-kppfz-aaem3-abfaj-cxq7a-dqe", amount: 420, note: ["Designer"], title: ["Matthew"]},
-                 {address: "lekqg-fvb6g-4kubt-oqgzu-rd5r7-muoce-kppfz-aaem3-abfaj-cxq7a-dqe", amount: 135, note: ["3D Designer"], title: ["Peter"]},
-            ];
+            let _totalAmount = 0;
+            let recipients = contractData.value.recipients.map(recipient=>{
+                _totalAmount += Number(recipient.amount);
+                return {address: recipient.address, amount: Number(recipient.amount), title: [""+recipient.title+""], note: [""+recipient.note+""]}
+            });
+            // let recipients = [
+            //      {address: "udh45-qy6i6-si637-5wxbo-huuba-estc4-esa7g-yo6wj-lo4pb-37fsh-aqe", amount: 600, note: ["Senior Developer"], title: ["Kenny"]},
+            //      {address: "gqowl-5o7x3-4c22f-aaytt-37ma3-gkxe4-jox3l-fzjwe-rirfz-fw2kn-tae", amount: 230, note: ["Senior Developer"], title: ["John"]},
+            //      {address: "v57dj-hev4p-lsvdl-dckvv-zdcvg-ln2sb-tfqba-nzb4g-iddrv-4rsq3-mae", amount: 150, note: ["J.Developer"], title: ["Jasson"]},
+            //      {address: "kouzf-7czpb-er7e4-iwral-6assg-b3qqw-hargn-uhonr-iyegx-gxs4w-oqe", amount: 420, note: ["Designer"], title: ["Matthew"]},
+            //      {address: "nivbr-btueu-rgdah-w4pcd-wqtmb-fr4ny-hp3ie-a7e6p-4ndto-ajwhj-fqe", amount: 135, note: ["3D Designer"], title: ["Peter"]},
+            // ];
             let _data = {
                 name: contractData.value.name,
                 description: contractData.value.description,
@@ -60,17 +65,35 @@
                 tokenName: tokenInfo.name,
                 tokenStandard: tokenInfo.standard,
                 tokenSymbol: tokenInfo.symbol,
-                totalAmount: 0,
+                totalAmount: _totalAmount,
                 unlockedAmount: 0,
                 recipients: recipients,
-                owner: Principal.fromText(walletStore.wallet.principal)
+                owner: Principal.fromText(walletStore.principal)
             };
             console.log('creating contract...', _data);
+            //Step 1. Approved
+
+            let _approve = await useTokenApprove(tokenInfo.canisterId, {spender: config.BACKEND_CANISTER_ID, amount: _totalAmount});
+            let _transfer = await useTransferFrom(tokenInfo.canisterId, {from: walletStore.principal, to: config.BACKEND_CANISTER_ID, amount: _totalAmount});
+            return;
+            // showLoading("Deploying your contract data");
             let _rs = await useCreateContract(_data);
             isLoading.value = false;
             console.log('rs', _rs);
-            if(_rs){
-                showSuccess("Contract has been created successfully. Canister ID: "+_rs);
+            if(_rs && typeof(_rs) == 'string'){
+                // showSuccess("Contract has been created successfully. View contract: "+_rs);
+                EventBus.on("showContractDetailsModal", {status: false});//Close the preview
+                Swal.fire({
+                            icon: 'success',
+                            title: 'Success',
+                            html: '<p>Your contract has been created successfully.</p><p>View contract: <a href="/contract/'+_rs+'">'+_rs+'</a></p>',
+                        })
+            }else{
+                Swal.fire({
+                            icon: 'error',
+                            title: 'Oops...',
+                            text: (typeof(_rs) == 'object' && ("err" in _rs))?_rs.err:'Something went wrong, please try again!',
+                        })
             }
         
 		}
@@ -90,15 +113,10 @@
       overlay-transition="vfm-fade">
             <div class="modal-content absolute inset-0 h-full overflow-auto">
                
-                <div class="modal-header">
+                <div class="modal-header pt-5 pb-3">
                     <h4 class="modal-title">{{ contractData.name }}</h4>
-                    <div class="btn btn-icon btn-sm btn-active-light-danger ms-2" data-bs-dismiss="modal" aria-label="Close" @click="closeModal()">
-                        <span class="svg-icon svg-icon-2x">
-                            <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none">
-                                <rect opacity="0.5" x="6" y="17.3137" width="16" height="2" rx="1" transform="rotate(-45 6 17.3137)" fill="black"></rect>
-                                <rect x="7.41422" y="6" width="16" height="2" rx="1" transform="rotate(45 7.41422 6)" fill="black"></rect>
-                            </svg>
-                        </span>
+                    <div class="btn btn-icon btn-sm btn-bg-light btn-active-light-danger ms-2" data-bs-dismiss="modal" aria-label="Close" @click="closeModal()">
+                        <i class="fas fa-times"></i>
                     </div>
                 </div>
                 <div class="modal-body">
@@ -116,11 +134,11 @@
                                 <div class="d-flex flex-column flex-sm-row gap-7 gap-md-10 mt-5">
                                     <div class="flex-root d-flex flex-column">
                                         <span class="fw-bold">Token Name</span>
-                                        <span class="fs-6 text-gray-600">{{contractData.token.name}} ({{contractData.token.symbol}})</span>
+                                        <span class="fs-6 text-gray-600 text-hover-primary">{{contractData.token.name}} ({{contractData.token.symbol}})</span>
                                     </div>
                                     <div class="flex-root d-flex flex-column">
-                                        <span class="fw-bold">Canister ID</span>
-                                        <span class="fs-6 text-gray-600">{{contractData.token.canisterId}} <Copy :text="contractData.token.canisterId"></Copy></span>
+                                        <span class="fw-bold">Token ID</span>
+                                        <span class="fs-6 text-gray-600 text-hover-primary">{{contractData.token.canisterId}} <Copy :text="contractData.token.canisterId"></Copy></span>
                                     </div>
                                 </div>
 
@@ -194,7 +212,7 @@
                                                 </tr>
                                                 <tr class="bg-light">
                                                     <td class="text-end fw-bold">Creation Fee:</td>
-                                                    <td class="text-end fw-bold text-danger">3</td>
+                                                    <td class="text-end fw-bold text-danger">0</td>
                                                     <td>$ICP</td>
                                                 </tr>
                                             </tbody>
@@ -223,11 +241,6 @@
                             </div>
                             
                         </div>
-                    </div>
-                </div>
-                <div class="modal-footer bg-light">
-                    <div class="btn-toolbar g-4 align-center">
-                        <a href="javascript:void(0)" @click="closeModal()" class="link link-primary">Close</a>
                     </div>
                 </div>
         </div>

@@ -6,7 +6,7 @@ import { createActor, canisterId } from "../../src/declarations/backend";
 import { principalToAccountId } from '@/utils/common.js'
 import { toRaw } from "vue";
 import { walletStore } from ".";
-
+import WalletManager from "@/services/WalletManager";
 import EventBus from "@/services/EventBus";
 
 export const useGlobalState = createGlobalState(

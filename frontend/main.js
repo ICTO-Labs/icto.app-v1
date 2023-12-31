@@ -1,7 +1,11 @@
 import { createApp } from "vue"
-import Vue3Toasity from 'vue3-toastify'
-import { toast } from 'vue3-toastify';
-import 'vue3-toastify/dist/index.css'
+// import Vue3Toasity from 'vue3-toastify'
+// import { toast } from 'vue3-toastify';
+// import 'vue3-toastify/dist/index.css'
+
+import Toast, { POSITION } from "vue-toastification";
+import "vue-toastification/dist/index.css";
+
 import VueSweetalert2 from 'vue-sweetalert2'
 import 'sweetalert2/dist/sweetalert2.min.css'
 
@@ -13,6 +17,7 @@ import '@vuepic/vue-datepicker/dist/main.css'
 
 import { createPinia } from 'pinia'
 import { VueQueryPlugin } from "@tanstack/vue-query";
+import VueApexCharts from "vue3-apexcharts";
 
 import router from './router.js'
 import App from "./App.vue"
@@ -25,10 +30,11 @@ const vfm = createVfm()
 const pinia = createPinia()
 
 app.use(router)
-app.use(Vue3Toasity, {
+app.use(Toast, {
+    shareAppContext: true,
     multiple: true,
-    limit: 2,
-    position: toast.POSITION.BOTTOM_LEFT,
+    maxToasts: 3,
+    position: POSITION.BOTTOM_LEFT,
     hideProgressBar: true,
     theme: 'colored'
 })
@@ -36,6 +42,7 @@ app.use(VueSweetalert2)
 window.Swal =  app.config.globalProperties.$swal
 app.use(pinia)
 app.use(vfm)
+app.use(VueApexCharts);
 app.component('ClickToCopy', ClickToCopy);
 app.component('Copy', Copy);
 app.component('VueDatePicker', VueDatePicker);

@@ -1,10 +1,7 @@
 <script setup>
     import { walletData } from "@/services/store";
-    import {WalletManager} from "@/services/WalletManager";
+    import WalletManager from "@/services/WalletManager";
     import config from "@/config";
-    import { useAuthStore } from "@/store/auth";
-
-    const authStore = useAuthStore();
 
     const walletLogin = async (wallet)=>{
         switch (wallet) {
@@ -14,7 +11,7 @@
                 break;
             case "bitfinity": await WalletManager.bitfinityWallet()
                 break
-            case "nns": authStore.login()
+            case "ii": await WalletManager.iiWallet()
                 break
         }
     }
@@ -40,20 +37,20 @@
 </script>
 
 <template>
-    <VueFinalModal v-model="loginModal" :z-index-base="2000" classes="modal fade show" content-class="modal-dialog modal-lg modal-dialog-centered">
+    <VueFinalModal v-model="loginModal" :z-index-base="2000" classes="modal fade show" content-class="modal-dialog modal-lg">
             <div class="modal-content" v-if="!walletData.isLogged" >
-                <a href="#" @click.stop="loginModal=false" class="close" data-bs-dismiss="modal" aria-label="Close">
-                    <em class="fas fa-close"></em>
-                </a>
-                <div class="modal-header pt-0 pb-3">
+                <div class="modal-header pt-5 pb-3">
                     <h4 class="modal-title"><i class="fas fa-wallet text-gray-700"></i> Connect your wallet </h4>
+                    <div class="btn btn-icon btn-sm btn-bg-light btn-active-light-danger ms-2" data-bs-dismiss="modal" aria-label="Close" @click="loginModal=false">
+                        <i class="fas fa-times"></i>
+                    </div>
                 </div>
                 <div class="modal-body">
                         <div class="row gy-4 btn-group-login">
                             <div class="col-md-6">
                                 <div class="d-flex flex-column gap-7 gap-md-10">
-                                    <a href="javascript:void(0)" @click="walletLogin('nns')" :class="`btn btn-primary ${!config.WALLET_CONFIG['nns']?'disabled':''}`">
-                                        <img src="/partner/nns.png" alt="Internet Identity" class=" wallet-icon-small"> <span class="wallet-name">Internet Identity</span>
+                                    <a href="javascript:void(0)" @click="walletLogin('ii')" :class="`btn btn-primary ${!config.WALLET_CONFIG['nns']?'disabled':''}`">
+                                        <img src="/partner/ii.png" alt="Internet Identity" class=" wallet-icon-small"> <span class="wallet-name">Internet Identity</span>
                                     </a>
                                 </div>
                             </div>
@@ -77,9 +74,6 @@
                             </div>
                             </div>
                         </div>
-                </div>
-                <div class="modal-footer bg-light">
-                    <a href="javascript:void(0)" @click="loginModal=false" class="link link-primary">Close</a>
                 </div>
         </div>
 

@@ -2,6 +2,7 @@
 	import {onMounted, ref} from "vue";
 	import { useGetTokenSupply, useGetTokenOwner, usetGetMetadata, useGetTransactions } from '@/services/Token';
 	import { showModal, shortPrincipal, shortAccount } from '@/utils/common';
+	import TokenChart from "@/components/token/TokenChart.vue";
 	import {useRoute} from 'vue-router';
 	import config from "@/config";
 	import moment from "moment";
@@ -24,7 +25,12 @@
 			tokenInfo.value = _tokenInfo;
 		}
 	}
-	
+	const mintToken = (token)=>{
+		const newObj = {...token};
+		newObj.status = true;
+		showModal("showManageTokenModal", newObj);
+	}
+
 	onMounted(()=>{
 		getTokenInfo();
 	})
@@ -60,7 +66,8 @@
 						<!--begin::Details-->
 						<div class="d-flex align-items-center" v-if="tokenInfo">
 							<div class="symbol symbol-50px symbol-circle me-3">
-								<span class="symbol-label fs-2x fw-bold text-primary bg-light-primary">{{ tokenInfo?tokenInfo.symbol.charAt(0):'IC' }}</span>
+								<img src="https://psh4l-7qaaa-aaaap-qasia-cai.raw.icp0.io/6ytv5-fqaaa-aaaap-qblcq-cai.png" />
+								<!-- <span class="symbol-label fs-2x fw-bold text-primary bg-light-primary">{{ tokenInfo?tokenInfo.symbol.charAt(0):'IC' }}</span> -->
 							</div>
 							<!--begin::Info-->
 							<div class="d-flex flex-column">
@@ -78,9 +85,9 @@
 					<div class="separator separator-dashed mb-7"></div>
 					<div class="mb-7">
 						<!--begin::Title-->
-						<h5 class="mb-4">Token/Canister ID</h5>
+						<h5 class="mb-4">Token ID</h5>
 						<div class="mb-0">
-							<span class="fw-normal fs-7 text-gray-600">{{ tokenId }}</span> <Copy :text="tokenId"></Copy>
+							<span class="fw-bold fs-7 text-primary">{{ tokenId }}</span> <Copy :text="tokenId"></Copy>
 						</div>
 						<!--end::Details-->
 					</div>
@@ -116,31 +123,49 @@
 							</tr>
 							<!--end::Row-->
 						</tbody></table>
-						<!--end::Details-->
+					</div>
+					<div class="separator separator-dashed mb-7"></div>
+					<div class="mb-0">
+						<!--begin::Title-->
+						<h5 class="mb-4">Token Canister</h5>
+						<table class="table fs-6 fw-bold gs-0 gy-2 gx-2">
+							<!--begin::Row-->
+							<tbody><tr class="">
+								<td class="text-gray-400">Cycles:</td>
+								<td class="text-gray-800">3T</td>
+							</tr>
+							<tr class="">
+								<td class="text-gray-400">Memory Size:</td>
+								<td>
+									<span v-if="tokenInfo">102 MB</span>
+								</td>
+							</tr>
+						
+						</tbody></table>
 					</div>
 				</div>
 				<!--end::Card body-->
 			</div>
 			<!--end::Card-->
 		</div>
-		<!--end::Sidebar-->
-		<!--begin::Content-->
 		<div class="flex-lg-row-fluid order-2 order-lg-2 mb-lg-0">
-			<!--begin::Card-->
 			<div class="card card-flush pt-3 mb-10 mb-xl-10">
 				<div class="card-header">
 					<div class="card-title">
 						<h2 class="fw-bolder">Token overview</h2>
 					</div>
+					<div class="card-toolbar">
+						<button type="button" class="btn btn-sm btn-primary me-2" @click="mintToken(tokenInfo)">Swap <i class="fas fa-exchange-alt"></i></button>
+						<button type="button" class="btn btn-sm btn-light-primary me-2" @click="mintToken(tokenInfo)">Mint <i class="fas fa-paper-plane"></i></button>
+						<button type="button" class="btn btn-sm btn-light-danger" @click="mintToken(tokenInfo)">Burn <i class="fas fa-burn"></i></button>
+					</div>
 				</div>
 				<div class="card-body pt-0">
-					<!--begin::Section-->
 					<div class="mb-0">
 						<div class="d-flex flex-wrap py-5">
 							<div class="flex-equal me-5 table-responsive">
 								<table class="table fs-6 fw-bold gs-0 gy-2 gx-2 m-0">
 									<tbody>
-										
 										<tr>
 											<td class="text-gray-400 min-w-175px w-175px">Owner:</td>
 											<td class="text-gray-800 min-w-200px">
@@ -153,31 +178,24 @@
 										</tr>
 										<tr>
 											<td class="text-gray-400">Controller(s):</td>
-											<td class="text-gray-800" v-if="tokenOwner">{{ tokenOwner.principal }}  <Copy :text="tokenOwner.principal"></Copy></td>
+											<td class="text-gray-800 text-hover-primary" v-if="tokenOwner">mcccp-fqaaa-aaaap-qanfq-cai  <Copy :text="tokenOwner.principal"></Copy></td>
 										</tr>
 										<tr><td colspan="2">
 											<div class="separator separator-dashed mb-7"></div>
 										</td></tr>
 										<tr>
 											<td class="text-gray-400">Price:</td>
-											<td class="text-success">$0.002</td>
+											<td class="text-success">$6,593</td>
 										</tr>
 										<tr>
 											<td class="text-gray-400">Market Cap:</td>
-											<td class="text-success">$32,209</td>
+											<td class="text-success">$10,324,638</td>
 										</tr>
-										
-										<tr>
-											<td class="text-gray-400 min-w-175px w-175px"></td>
-											<td class="text-gray-800 min-w-200px">
-												<button class="btn btn-sm btn-primary me-2">Mint/Transfer</button>
-												<button class="btn btn-sm btn-danger">Burn</button>
-											</td>
-										</tr>
-									<!--end::Row-->
 								</tbody></table>
 							</div>
 						</div>
+
+						<TokenChart />
 						<!--end::Row-->
 					</div>
 				</div>

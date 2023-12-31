@@ -4,10 +4,12 @@ const isLogged = localStorage.getItem('isLogged');
 const connector = localStorage.getItem('connector');
 const _identity = null
 export const walletStore = reactive({
-    isLogged: isLogged?isLogged:false,
-    connector: connector?connector:'ic',
+    isLogged: isLogged?isLogged:null,
+    connector: connector?connector:null,
     identity: _identity?_identity:null,
     isAuthenticated: false, 
+    account: null,
+    accounts: null,
     principal: '', 
     _principal: '', 
     address: '', 
@@ -29,5 +31,29 @@ export const walletStore = reactive({
     },
     setBalance(balance){
         this.balance = balance;
+    },
+    setAccount(accounts){
+        this.accounts = accounts;
+    },
+    setCurrentAccount(account){
+        this.account = account;
+    },
+    setLoginState(status){
+        this.isLogged = status?true:false;
+        this.connector = status;
+        localStorage.setItem("connector", status);
+        localStorage.setItem("isLogged", this.isLogged);
+    },
+    logout(){
+        this.isLogged = null;
+        this.connector = null;
+        localStorage.removeItem("isLogged");
+        localStorage.removeItem("connector");
+        this.setIdentity(false);
+        this.setAccount([]);
+        this.setBalance(0);
+        this.setLoginState(null);
+        this.setCurrentAccount({});
+
     }
 })

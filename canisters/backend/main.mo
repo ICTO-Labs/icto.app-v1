@@ -6,8 +6,10 @@ import Cycles "mo:base/ExperimentalCycles";
 import Time "mo:base/Time";
 import Int "mo:base/Int";
 import Timer "mo:base/Timer";
+import Text "mo:base/Text";
 import IC "./IC";
 import Types "./Types";
+import Actor "./Actor";
 import ContractTypes "../contract/types/Common";//Common
 
 actor {
@@ -44,6 +46,10 @@ actor {
     };
     public shared (msg) func whoami() : async Principal {
         msg.caller
+    };
+    public shared (msg) func transfer_from(canisterId: Text, payload: Actor.TransferFromArg) : async Actor.TransferFromResult {
+        let ICRC : Actor.ICRC = actor(canisterId);
+        await ICRC.icrc2_transfer_from(payload)
     };
     public func canister_status(canister_id: IC.canister_id): async Types.CanisterStatus{
         await ic.canister_status({canister_id = canister_id})
