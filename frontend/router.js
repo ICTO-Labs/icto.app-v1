@@ -1,7 +1,7 @@
 import { createRouter, createWebHistory } from 'vue-router'
 import Page404 from './components/layout/404.vue'
-import DashboardVue from './components/Dashboard.vue'
-import Payments from './components/contract/Payments.vue'
+import Dashboard from './views/Dashboard.vue'
+import Contract from './views/contract/Contract.vue'
 import NewContract from './views/contract/NewContract.vue'
 import MyToken from './views/token/MyToken.vue'
 import TokenDetail from './views/token/TokenDetail.vue'
@@ -13,13 +13,19 @@ const router = createRouter({
       path: '/',
       name: 'home',
       meta: {title: 'Home'},
-      component: DashboardVue
+      component: Dashboard
     },
     {
-      path: '/contract',
-      title: 'Contract',
+      path: '/payments',
+      meta: {title: 'Payments'},
       name: 'contract',
-      component: Payments
+      component: Contract,
+    },
+    {
+      path: '/vesting',
+      meta: {title: 'Vesting'},
+      name: 'vesting',
+      component: Contract,
     },
     {
       path: '/new-contract',
@@ -41,12 +47,16 @@ const router = createRouter({
     },
     {
       path: '/contract/:contractId',
-      meta: {title: 'Contract Detail Detail'},
+      meta: {title: 'Contract Details', navs: [{title: 'Payments', to: '/payments'}]},
       name: 'contract-detail',
       component: ContractDetail
     },
     { path: '/:pathMatch(.*)*', name: 'not-found',  meta: {title: 'Not Found'}, component: Page404},
   ]
 })
+const DEFAULT_TITLE = " | ICTO";
 
+router.afterEach((to, from) => {
+  document.title = to.meta.title + DEFAULT_TITLE;
+});
 export default router

@@ -61,6 +61,7 @@ import config from '../../config';
                 canView: contractData.value.canView,
                 startNow: contractData.value.startNow,
                 startTime: moment(contractData.value.startTime).unix(),
+                created: moment().unix(),
                 tokenId: tokenInfo.canisterId,
                 tokenName: tokenInfo.name,
                 tokenStandard: tokenInfo.standard,
@@ -73,9 +74,9 @@ import config from '../../config';
             console.log('creating contract...', _data);
             //Step 1. Approved
 
-            let _approve = await useTokenApprove(tokenInfo.canisterId, {spender: config.BACKEND_CANISTER_ID, amount: _totalAmount});
-            let _transfer = await useTransferFrom(tokenInfo.canisterId, {from: walletStore.principal, to: config.BACKEND_CANISTER_ID, amount: _totalAmount});
-            return;
+            // let _approve = await useTokenApprove(tokenInfo.canisterId, {spender: config.BACKEND_CANISTER_ID, amount: _totalAmount});
+            // let _transfer = await useTransferFrom(tokenInfo.canisterId, {from: walletStore.principal, to: config.BACKEND_CANISTER_ID, amount: _totalAmount});
+            // return;
             // showLoading("Deploying your contract data");
             let _rs = await useCreateContract(_data);
             isLoading.value = false;

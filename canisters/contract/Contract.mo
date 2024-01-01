@@ -34,6 +34,7 @@ shared ({ caller = creator }) actor class Contract({
   canView: Text;
   startNow: Bool;
   startTime: Time.Time;
+  created: Time.Time;
   tokenId: Text;
   tokenName: Text;
   tokenSymbol: Text;
@@ -67,7 +68,6 @@ shared ({ caller = creator }) actor class Contract({
 
   private stable var _users            : [(Text, Types.UserInfo)] = []; //Store user Info
   private var users                    : HashMap.HashMap<Text, Types.UserInfo> = HashMap.fromIter(_users.vals(), 0, Text.equal, Text.hash);
-
 
   var contractStart = Time.now();
 
@@ -307,6 +307,7 @@ func _transfer(to: Principal) : async* Result.Result<Nat, ICRC1Types.TransferErr
         canView = canView;
         startNow = startNow;
         startTime = startTime;
+        created = created;
         tokenId = tokenId;
         tokenName = tokenName;
         tokenSymbol = tokenSymbol;

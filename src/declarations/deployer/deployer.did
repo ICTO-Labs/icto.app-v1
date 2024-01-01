@@ -46,5 +46,6 @@ service : {
   getUserTotalTokens: (text) -> (nat) query;
   http_request: (HttpRequest) -> (HttpResponse) query;
   removeAdmin: (text) -> ();
+  updateInitCycles: (nat) -> ();
   updateTokenCover: (text, text) -> (Result);
 }

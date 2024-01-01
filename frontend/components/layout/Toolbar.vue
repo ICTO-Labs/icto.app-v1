@@ -23,9 +23,9 @@ const router = useRoute();
 					</li>
 					<!--end::Item-->
 					<!--begin::Item-->
-					<!-- <li class="breadcrumb-item">
-						<span class="bullet bg-gray-200 w-5px h-2px"></span>
-					</li> -->
+					<li class="breadcrumb-item text-muted" v-for="nav in router.meta.navs">
+						<router-link :to="nav.to" class="text-muted text-hover-primary" :title="nav.title">{{ nav.title }}</router-link>
+					</li>
 					<!--end::Item-->
 					<!--begin::Item-->
 					<li class="breadcrumb-item text-dark">{{ router.meta.title }}</li>
@@ -36,7 +36,7 @@ const router = useRoute();
 			<!--end::Page title-->
 			<!--begin::Actions-->
 			<div class="d-flex align-items-center py-1">
-				<router-link to="/new-contract" class="btn btn-sm btn-primary" v-if="router.name != 'new-contract'">New Contract</router-link>
+				<router-link to="/new-contract" class="btn btn-sm btn-light-danger">New Contract</router-link>
 			</div>
 			<!--end::Actions-->
 		</div>

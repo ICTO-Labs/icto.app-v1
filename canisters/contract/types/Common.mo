@@ -20,6 +20,7 @@ module {
         canView: Text;
         startNow: Bool;
         startTime: Time.Time;
+        created: Time.Time;
         tokenId: Text;
         tokenName: Text;
         tokenSymbol: Text;

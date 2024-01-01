@@ -1,6 +1,47 @@
 type canister_id = principal;
+type TxIndex = nat;
+type TransferFromResult = 
+ variant {
+   err: TransferFromError;
+   ok: TxIndex;
+ };
+type TransferFromError = 
+ variant {
+   BadBurn: record {min_burn_amount: nat;};
+   BadFee: record {expected_fee: nat;};
+   CreatedInFuture: record {ledger_time: nat64;};
+   Duplicate: record {duplicate_of: nat;};
+   GenericError: record {
+                   error_code: nat;
+                   message: text;
+                 };
+   InsufficientAllowance: record {allowance: nat;};
+   InsufficientFunds: record {balance: nat;};
+   TemporarilyUnavailable;
+   TooOld;
+ };
+type TransferFromArg = 
+ record {
+   amount: Tokens;
+   created_at_time: opt Timestamp;
+   fee: opt Tokens;
+   from: Account;
+   memo: opt Memo;
+   spender_subaccount: opt Subaccount;
+   to: Account;
+ };
+type Tokens = nat;
+type Timestamp = nat64;
 type TimerId = nat;
 type Time = int;
+type Subaccount = blob;
+type Recipient__1 = 
+ record {
+   address: text;
+   amount: nat;
+   note: opt text;
+   title: opt text;
+ };
 type Recipient = 
  record {
    address: text;
@@ -8,17 +49,19 @@ type Recipient =
    note: opt text;
    title: opt text;
  };
-type ContractData = 
+type Memo = blob;
+type ContractData__1 = 
  record {
    canCancel: text;
    canChange: text;
    canView: text;
+   created: Time;
    description: text;
    durationTime: nat;
    durationUnit: nat;
    name: text;
    owner: principal;
-   recipients: vec Recipient;
+   recipients: vec Recipient__1;
    startNow: bool;
    startTime: Time;
    tokenId: text;
@@ -28,6 +71,24 @@ type ContractData =
    totalAmount: nat;
    unlockSchedule: nat;
    unlockedAmount: nat;
+ };
+type ContractData = 
+ record {
+   canCancel: text;
+   canChange: text;
+   canView: text;
+   created: Time;
+   durationTime: nat;
+   durationUnit: nat;
+   name: text;
+   recipients: vec Recipient;
+   startNow: bool;
+   startTime: Time;
+   tokenId: text;
+   tokenName: text;
+   tokenStandard: text;
+   totalAmount: nat;
+   unlockSchedule: nat;
  };
 type CanisterStatus = 
  record {
@@ -49,14 +110,21 @@ type CanisterSettings =
    freezing_threshold: nat;
    memory_allocation: nat;
  };
+type Account = 
+ record {
+   owner: principal;
+   subaccount: opt Subaccount;
+ };
 service : {
   cancel: () -> ();
   cancelContract: (principal) -> ();
   canister_status: (canister_id) -> (CanisterStatus);
-  createContract: (ContractData) -> (text);
+  createContract: (ContractData__1) -> (text);
+  getContracts: (nat) -> (vec ContractData) query;
   getValue: () -> (nat) query;
   get_cron_id: () -> (TimerId) query;
   increment: () -> ();
   listContract: () -> (vec text) query;
+  transfer_from: (text, TransferFromArg) -> (TransferFromResult);
   whoami: () -> (principal);
 }

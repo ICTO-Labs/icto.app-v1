@@ -11,6 +11,7 @@ import IC "./IC";
 import Types "./Types";
 import Actor "./Actor";
 import ContractTypes "../contract/types/Common";//Common
+import Trie "mo:base/Trie";
 
 actor {
     stable var currentValue: Nat = 0;
@@ -18,10 +19,18 @@ actor {
     stable var INIT_CONTRACT_CYCLES: Nat = 300_000_000_000;
     let ic: IC.Self = actor "aaaaa-aa";
     let contracts = Buffer.Buffer<Text>(0);
+    private stable var _contracts : Trie.Trie<Text, Types.ContractData> = Trie.empty(); //mapping of contract_anister_id -> Contract details
+
     // system func timer(set : Nat64 -> ()) : async () {
     //     set(fromIntWrap(Time.now()) + 60_000_000_000); // 10 seconds from now
     //     await increment();
     // };
+    private func keyT(x : Text) : Trie.Key<Text> {
+        return { hash = Text.hash(x); key = x };
+    };
+    private func key(x : Nat32) : Trie.Key<Nat32> {
+        return { hash = x; key = x };
+    };
     func updateValue(): async(){
         currentValue += 1;
     };
@@ -72,10 +81,38 @@ actor {
         //     freezing_threshold = ?2592000;
         // }
         // });
-        contracts.add(Principal.toText(newContractCanisterPrincipal));
-        Principal.toText(newContractCanisterPrincipal);
-    };
 
+        let _contractCanisterId = Principal.toText(newContractCanisterPrincipal);
+        contracts.add(Principal.toText(newContractCanisterPrincipal));
+        //Add to contracts Trie
+        _contracts := Trie.put(
+            _contracts,
+            keyT(_contractCanisterId),
+            Text.equal,
+            contract
+        ).0;
+
+        _contractCanisterId;
+    };
+    public query func getContracts(_page : Nat) : async ([Types.ContractData]) {
+        var lower : Nat = _page * 9;
+        var upper : Nat = lower + 9;
+        var b : Buffer.Buffer<Types.ContractData> = Buffer.Buffer<Types.ContractData>(0);
+        for ((i, v) in Trie.iter(_contracts)) {
+            b.add(v);
+        };
+        let arr = Buffer.toArray(b);
+        b := Buffer.Buffer<Types.ContractData>(0);
+        let size = arr.size();
+        if (upper > size) {
+            upper := size;
+        };
+        while (lower < upper) {
+            b.add(arr[lower]);
+            lower := lower + 1;
+        };
+        return Buffer.toArray(b);
+    };
     public query func listContract(): async [Text] {
         contracts.toArray();
     };

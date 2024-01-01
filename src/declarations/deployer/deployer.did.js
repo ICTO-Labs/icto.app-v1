@@ -45,6 +45,7 @@ export const idlFactory = ({ IDL }) => {
     'getUserTotalTokens' : IDL.Func([IDL.Text], [IDL.Nat], ['query']),
     'http_request' : IDL.Func([HttpRequest], [HttpResponse], ['query']),
     'removeAdmin' : IDL.Func([IDL.Text], [], []),
+    'updateInitCycles' : IDL.Func([IDL.Nat], [], []),
     'updateTokenCover' : IDL.Func([IDL.Text, IDL.Text], [Result], []),
   });
 };

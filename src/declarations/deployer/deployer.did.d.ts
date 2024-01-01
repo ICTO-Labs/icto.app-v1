@@ -39,5 +39,6 @@ export interface _SERVICE {
   'getUserTotalTokens' : ActorMethod<[string], bigint>,
   'http_request' : ActorMethod<[HttpRequest], HttpResponse>,
   'removeAdmin' : ActorMethod<[string], undefined>,
+  'updateInitCycles' : ActorMethod<[bigint], undefined>,
   'updateTokenCover' : ActorMethod<[string, string], Result>,
 }
