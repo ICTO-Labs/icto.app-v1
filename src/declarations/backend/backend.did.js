@@ -63,11 +63,14 @@ export const idlFactory = ({ IDL }) => {
     'tokenStandard' : IDL.Text,
     'startNow' : IDL.Bool,
     'name' : IDL.Text,
+    'createdBy' : IDL.Text,
+    'description' : IDL.Text,
     'canView' : IDL.Text,
     'recipients' : IDL.Vec(Recipient),
     'totalAmount' : IDL.Nat,
     'tokenName' : IDL.Text,
     'unlockSchedule' : IDL.Nat,
+    'contractId' : IDL.Text,
   });
   const TimerId = IDL.Nat;
   const Subaccount = IDL.Vec(IDL.Nat8);

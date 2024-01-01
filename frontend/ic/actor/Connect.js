@@ -23,7 +23,7 @@ class CreateActor {
                 return async function() {
                     if (!target._actor) {
                         if(walletStore.connector == "plug"){
-                            target._actor = await window.ic[walletStore.connector].createActor({
+                            target._actor = await window.ic.plug.createActor({
                                 canisterId: target._canister,
                                 interfaceFactory: target._idl,
                             });
@@ -66,7 +66,6 @@ class Connect {
     _provider = null;
 
     constructor(cid, idl) {
-        console.log(cid, idl);
         if(!cid) throw new Error("No Canister Id");
         if (!idl){
             if (Object.prototype.hasOwnProperty.call(this._mapIdls, cid)) {

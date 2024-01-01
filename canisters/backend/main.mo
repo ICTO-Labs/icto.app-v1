@@ -69,11 +69,11 @@ actor {
         Cycles.add(INIT_CONTRACT_CYCLES);
 
         //must add VERSION to contract data
-        let newContractCanister = await Contract.Contract(contract);
-        let newContractCanisterPrincipal = Principal.fromActor(newContractCanister);
+        let newContractId = await Contract.Contract(contract);
+        let newContractPrincipal = Principal.fromActor(newContractId);
         //Update settings;
         // await CA.updateCanisterSettings({
-        // canisterId = newUserCanisterPrincipal;
+        // canisterId = newContractPrincipal;
         // settings = {
         //     controllers = controllers;
         //     compute_allocation = ?0;
@@ -82,17 +82,22 @@ actor {
         // }
         // });
 
-        let _contractCanisterId = Principal.toText(newContractCanisterPrincipal);
-        contracts.add(Principal.toText(newContractCanisterPrincipal));
+        let _contractId = Principal.toText(newContractPrincipal);
+        // contracts.add(Principal.toText(newContractCanisterPrincipal));
         //Add to contracts Trie
+        let _newData: Types.ContractData = {
+            contract with
+            contractId = _contractId;
+            createdBy = Principal.toText(msg.caller);
+        };
         _contracts := Trie.put(
             _contracts,
-            keyT(_contractCanisterId),
+            keyT(_contractId),
             Text.equal,
-            contract
+            _newData
         ).0;
 
-        _contractCanisterId;
+        _contractId;
     };
     public query func getContracts(_page : Nat) : async ([Types.ContractData]) {
         var lower : Nat = _page * 9;

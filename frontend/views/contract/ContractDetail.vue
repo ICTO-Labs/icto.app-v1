@@ -35,7 +35,7 @@
           <!--begin::Details-->
           <div class="d-flex flex-wrap flex-sm-nowrap mb-6">
             <div class="d-flex flex-center flex-shrink-0 bg-light rounded w-100px h-100px w-lg-150px h-lg-150px me-7 mb-4">
-              <img class="mw-50px mw-lg-75px" :src="`https://psh4l-7qaaa-aaaap-qasia-cai.raw.icp0.io/6ytv5-fqaaa-aaaap-qblcq-cai.png`" alt="image">
+              <img class="mw-50px mw-lg-125px" :src="`https://psh4l-7qaaa-aaaap-qasia-cai.raw.icp0.io/6ytv5-fqaaa-aaaap-qblcq-cai.png`" alt="image">
               <!-- <img class="mw-50px mw-lg-75px" :src="`https://${config.CANISTER_STORAGE_ID}.raw.icp0.io/${contractInfo?.tokenId}.png`" alt="image"> -->
             </div>
             <!--begin::Wrapper-->

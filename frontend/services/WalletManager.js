@@ -39,17 +39,20 @@ class walletManager {
                         const connected = await window?.ic?.plug.isConnected();
                         if (connected) {
                             if (!window.ic["plug"].agent) {
-                                console.log('create agent')
+                                console.log('check plug login')
+                                // window.ic["plug"].agent = await window.ic.plug.sessionManager.sessionData.agent;
                                 await window.ic["plug"].createAgent({
                                     whitelist: config.CANISTER_WHITE_LIST,
                                     host: config.IC_ENDPOINT
                                 });
                             }
-                            var pid = await window.ic.plug.agent.getPrincipal();//await window.ic["plug"].getPrincipal();
+                            
+                            var pid = await window.ic.plug.sessionManager.sessionData.agent.getPrincipal();//await window.ic["plug"].getPrincipal();
                             var id = {
                                 type: "plug",
                                 getPrincipal : () => pid
                             }
+                            console.log('p', id.getPrincipal().toText());
                             walletStore.setIdentity(id);
                             walletStore.setAccount([
                                 {
@@ -165,8 +168,8 @@ class walletManager {
             });
             const connectionState = result ? "allowed" : "denied";
             console.log(`The Connection was ${connectionState}!`);
+            window.Swal.close();
             if(result){
-                window.Swal.close();
                 // Get the user principal id
                 const pid = await window.ic.plug.agent.getPrincipal();//await window.ic.plug.getPrincipal();
                 // const id = await window.ic.plug.agent._identity;

@@ -32,11 +32,14 @@ export interface ContractData {
   'tokenStandard' : string,
   'startNow' : boolean,
   'name' : string,
+  'createdBy' : string,
+  'description' : string,
   'canView' : string,
   'recipients' : Array<Recipient>,
   'totalAmount' : bigint,
   'tokenName' : string,
   'unlockSchedule' : bigint,
+  'contractId' : string,
 }
 export interface ContractData__1 {
   'startTime' : Time,

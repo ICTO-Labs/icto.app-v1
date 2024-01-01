@@ -77,7 +77,10 @@ type ContractData =
    canCancel: text;
    canChange: text;
    canView: text;
+   contractId: text;
    created: Time;
+   createdBy: text;
+   description: text;
    durationTime: nat;
    durationUnit: nat;
    name: text;
