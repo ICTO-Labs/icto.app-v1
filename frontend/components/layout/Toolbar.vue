@@ -36,7 +36,7 @@ const router = useRoute();
 			<!--end::Page title-->
 			<!--begin::Actions-->
 			<div class="d-flex align-items-center py-1">
-				<router-link to="/new-contract" class="btn btn-sm btn-light-danger">New Contract</router-link>
+				<router-link to="/new-contract" class="btn btn-sm btn-danger">New Contract</router-link>
 			</div>
 			<!--end::Actions-->
 		</div>

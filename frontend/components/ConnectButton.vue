@@ -36,8 +36,8 @@ const login = ()=>{
     <div class="d-flex align-items-center ms-1 ms-lg-3" id="kt_header_user_menu_toggle">
 		<!--begin::Menu wrapper-->
 		<div class="cursor-pointer symbol symbol-30px symbol-md-40px" data-kt-menu-trigger="click" data-kt-menu-attach="parent" data-kt-menu-placement="bottom-end">
-			<button v-if="!walletStore.isLogged " class="btn btn-sm btn-danger" @click="login()">Connect <i class="fas fa-chevron-circle-right"></i></button>
-			<button v-if="walletStore.isLogged " class="btn btn-sm btn-primary"><span class="fw-bolder"><i class="fas fa-wallet"></i>My Wallet</span> </button>
+			<button v-if="!walletStore.isLogged || walletStore.isLogged === false" class="btn btn-sm btn-danger" @click="login()">Connect <i class="fas fa-chevron-circle-right"></i></button>
+			<button v-if="walletStore.isLogged || walletStore.isLogged == 'true'" class="btn btn-sm btn-primary"><span class="fw-bolder"><i class="fas fa-wallet"></i>My Wallet</span> </button>
 			
 		</div>
 		<!--begin::Menu-->

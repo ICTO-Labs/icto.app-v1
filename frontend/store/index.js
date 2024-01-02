@@ -39,16 +39,21 @@ export const walletStore = reactive({
         this.account = account;
     },
     setLoginState(status){
-        this.isLogged = status?true:false;
-        this.connector = status;
-        localStorage.setItem("connector", status);
-        localStorage.setItem("isLogged", this.isLogged);
+        if(typeof status =='string'){
+            this.isLogged = true;
+            this.connector = status;
+            localStorage.setItem("connector", status);
+            localStorage.setItem("isLogged", true);
+        }else{
+            this.isLogged = false;
+            this.connector = null;
+        }
     },
     logout(){
-        this.isLogged = null;
-        this.connector = null;
         localStorage.removeItem("isLogged");
         localStorage.removeItem("connector");
+        this.isLogged = false;
+        this.connector = null;
         this.setIdentity(false);
         this.setAccount([]);
         this.setBalance(0);
