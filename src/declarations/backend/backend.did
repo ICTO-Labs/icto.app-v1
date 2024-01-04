@@ -123,11 +123,12 @@ service : {
   cancelContract: (principal) -> ();
   canister_status: (canister_id) -> (CanisterStatus);
   createContract: (ContractData__1) -> (text);
-  getContracts: (nat) -> (vec ContractData) query;
+  getContracts: (nat) -> (vec ContractData);
+  getMyContracts: (nat) -> (vec text);
+  getUserContracts: (text) -> (vec text) query;
   getValue: () -> (nat) query;
   get_cron_id: () -> (TimerId) query;
   increment: () -> ();
-  listContract: () -> (vec text) query;
   transfer_from: (text, TransferFromArg) -> (TransferFromResult);
   whoami: () -> (principal);
 }

@@ -1,6 +1,7 @@
 import Contract "../contract/Contract";
 import Principal "mo:base/Principal";
 import Array "mo:base/Array";
+import HashMap "mo:base/HashMap";
 import Buffer "mo:base/Buffer";
 import Cycles "mo:base/ExperimentalCycles";
 import Time "mo:base/Time";
@@ -19,7 +20,46 @@ actor {
     stable var INIT_CONTRACT_CYCLES: Nat = 300_000_000_000;
     let ic: IC.Self = actor "aaaaa-aa";
     let contracts = Buffer.Buffer<Text>(0);
-    private stable var _contracts : Trie.Trie<Text, Types.ContractData> = Trie.empty(); //mapping of contract_anister_id -> Contract details
+    private stable var _contracts : Trie.Trie<Text, Types.ContractData> = Trie.empty(); //mapping of contract_canister_id -> Contract details
+    private stable var _owners : Trie.Trie<Text, Text> = Trie.empty(); //mapping  contract_canister_id -> owner/recipient principal id
+
+    private var userContracts : [(Text, Buffer.Buffer<Text>)] = [];
+
+    private let _userContracts: HashMap.HashMap<Text, Buffer.Buffer<Text>> =  HashMap.fromIter<Text, Buffer.Buffer<Text>>(userContracts.vals(), 10, Text.equal, Text.hash);
+
+    private func _addUserContract(principalId: Text, contractId: Text): () {
+        var buffer = _getUserContractsByPrincipal(principalId);
+        if(Buffer.contains<Text>(buffer, contractId, Text.equal) == false){
+            buffer.add(contractId);
+        };
+        _userContracts.put(principalId, buffer);
+
+    };
+    private func _removeUserContract(principalId : Text, contractId : Text) {
+        var buffer = _getUserContractsByPrincipal(principalId);
+
+        buffer.filterEntries(func(_, entry) {
+            return entry != contractId; 
+        });
+        _userContracts.put(principalId, buffer);
+    };
+
+    public query func getUserContracts(principalId: Text): async [Text] {
+        let _ucontracts = _getUserContractsByPrincipal(principalId);
+        Buffer.toArray(_ucontracts);
+    };
+
+    private func _getUserContractsByPrincipal(principalId: Text): Buffer.Buffer<Text> {
+        switch (_userContracts.get(principalId)) {
+            case (?contracts) {
+                return contracts;
+            };
+            case (_) {
+                return Buffer.Buffer<Text>(0);
+            };
+        };
+    };
+
 
     // system func timer(set : Nat64 -> ()) : async () {
     //     set(fromIntWrap(Time.now()) + 60_000_000_000); // 10 seconds from now
@@ -90,6 +130,13 @@ actor {
             contractId = _contractId;
             createdBy = Principal.toText(msg.caller);
         };
+        //Map created contract
+        _addUserContract(Principal.toText(msg.caller), _contractId);
+        //Map recipients
+        for(recipient in contract.recipients.vals()) {
+            _addUserContract(recipient.address, _contractId);
+        };
+        
         _contracts := Trie.put(
             _contracts,
             keyT(_contractId),
@@ -99,7 +146,25 @@ actor {
 
         _contractId;
     };
-    public query func getContracts(_page : Nat) : async ([Types.ContractData]) {
+    public shared(msg) func getMyContracts(_page: Nat): async([Text]){
+        var lower : Nat = _page * 9;
+        var upper : Nat = lower + 9;
+        var b : Buffer.Buffer<Text> = Buffer.Buffer<Text>(0);
+        var _caller = Principal.toText(msg.caller);
+        let _contracts = _getUserContractsByPrincipal(_caller);
+        let arr = Buffer.toArray(_contracts);
+        b := Buffer.Buffer<Text>(0);
+        let size = arr.size();
+        if (upper > size) {
+            upper := size;
+        };
+        while (lower < upper) {
+            b.add(arr[lower]);
+            lower := lower + 1;
+        };
+        return Buffer.toArray(b);
+    };
+    public shared (msg) func getContracts(_page : Nat) : async ([Types.ContractData]) {
         var lower : Nat = _page * 9;
         var upper : Nat = lower + 9;
         var b : Buffer.Buffer<Types.ContractData> = Buffer.Buffer<Types.ContractData>(0);
@@ -117,9 +182,6 @@ actor {
             lower := lower + 1;
         };
         return Buffer.toArray(b);
-    };
-    public query func listContract(): async [Text] {
-        contracts.toArray();
     };
 
     public func cancelContract(canister_id: Principal) : async (){

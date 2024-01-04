@@ -122,7 +122,7 @@ const login = ()=>{
 			<!--end::Menu item-->
 			<!--begin::Menu item-->
 			<div class="menu-item px-5">
-				<a href="#" class="menu-link px-5 text-danger"  @click="() => logout()">Logout</a>
+				<a href="#" class="menu-link px-5 text-danger" @click="() => logout()">Disconnect</a>
 			</div>
 			<!--end::Menu item-->
 			<!--begin::Menu separator-->

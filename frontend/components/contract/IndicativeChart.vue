@@ -27,10 +27,10 @@
         //Generate data
         let _startCount = 0;
         let _maxLoop = 100;//Limit the loop!
-        for (let i = startTime; i <= startTime+(durationUnit*durationTime); i +=unlockSchedule) {
+        for (let i = startTime; i <= startTime+(durationUnit*durationTime)+unlockSchedule; i +=unlockSchedule) {
             _startCount++
             if(_startCount >= _maxLoop) break;
-            chartDetail.value.label.push(moment.unix(i).format('H:mm MMM, YY'));
+            chartDetail.value.label.push(moment.unix(i).utc().format('H:mm MMM D, YY'));
             chartDetail.value.data.push(unlockAmount*(_startCount-1))
         }
         chartData.value = {

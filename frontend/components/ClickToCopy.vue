@@ -11,7 +11,7 @@
             async copyToClipboard(){
                 // const textToCopy = this.$el.textContent;
                 copyToClipboard(this.text, this.item);
-                showSuccess("Copied", 'd')
+                showSuccess("Copied")
             }
         }
     };

@@ -35,7 +35,14 @@ class CreateActor {
                               });
                         }
                     }
-                    return await target._actor[name](...arguments);
+                    try{
+                        return await target._actor[name](...arguments);
+                    }catch(e){
+                        console.log('target._actor',target._actor);
+                        console.log('name',name);
+                        console.log('e', e, );
+                    }
+                    
                 }
             }
         });

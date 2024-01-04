@@ -3,17 +3,21 @@ import Connect from "@/ic/actor/Connect";
 import config from "../config";
 
 export const useCreateContract = async (data)=>{
-    return await Connect.canister(config.BACKEND_CANISTER_ID, 'backend').createContract(data);
+    try{
+        return await Connect.canister(config.BACKEND_CANISTER_ID, 'backend').createContract(data);
+    }catch(e){
+        return {err: e}
+    }
+    
 }
-export const useListContract = (page=0)=>{
+export const useGetMyContracts = (page=0)=>{
     return useQuery({
-        queryKey: ['listContracts', page],
-        queryFn: async () => await Connect.canister(config.BACKEND_CANISTER_ID, 'backend').getContracts(page),
+        queryKey: ['myContracts', page],
+        queryFn: async () => await Connect.canister(config.BACKEND_CANISTER_ID, 'backend').getMyContracts(page),
         keepPreviousData: true,
-        retry: 0,
+        retry: 3,
         refetchInterval: 0
       })
-    // return await Connect.canister(config.BACKEND_CANISTER_ID, 'backend').getContracts(page);
 }
 export const useCancelContract = async (contractId)=>{
     return await Connect.canister(config.BACKEND_CANISTER_ID, 'contract').whoami();

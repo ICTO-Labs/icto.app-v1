@@ -16,7 +16,7 @@
     const contractDetailsModal = ref(false);
     const isLoading = ref(false);
     import { walletStore } from '@/store/'
-import config from '../../config';
+    import config from '../../config';
 
     const closeModal = ()=>{
         contractDetailsModal.value = false;
@@ -195,13 +195,13 @@ import config from '../../config';
                                                     <td class="text-end text-gray-800 fw-bold">{{ (recipient.amount) }}</td>
                                                     <td>
                                                         <div class="mb-1">       
-															<div class="fw-bold text-gray-600 fs-7" v-if="recipient.title">{{ recipient.title }}</div> 
+															<div class="fw-bold text-gray-800 fs-7" v-if="recipient.title">
+                                                                {{ recipient.title }}
+                                                                <span class="fw-normal badge badge-light-info" v-if="recipient.note && recipient.note != ''">{{ recipient.note }}</span>
+                                                            </div> 
 															<div class="fw-bold text-gray-600 fs-7" v-else>Recipient #{{ idx+1 }}</div> 
 															<div class="text-gray-800 fs-7">
-                                                                {{ recipient.address }}    
-                                                            </div>
-															<div class="text-gray-600 fs-8">
-                                                                {{ recipient.note }}    
+                                                                <ClickToCopy :text="recipient.address">{{ recipient.address }}</ClickToCopy>   
                                                             </div>
 														</div>
                                                     </td>

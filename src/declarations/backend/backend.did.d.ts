@@ -110,10 +110,11 @@ export interface _SERVICE {
   'canister_status' : ActorMethod<[canister_id], CanisterStatus>,
   'createContract' : ActorMethod<[ContractData__1], string>,
   'getContracts' : ActorMethod<[bigint], Array<ContractData>>,
+  'getMyContracts' : ActorMethod<[bigint], Array<string>>,
+  'getUserContracts' : ActorMethod<[string], Array<string>>,
   'getValue' : ActorMethod<[], bigint>,
   'get_cron_id' : ActorMethod<[], TimerId>,
   'increment' : ActorMethod<[], undefined>,
-  'listContract' : ActorMethod<[], Array<string>>,
   'transfer_from' : ActorMethod<[string, TransferFromArg], TransferFromResult>,
   'whoami' : ActorMethod<[], Principal>,
 }

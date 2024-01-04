@@ -65,13 +65,16 @@
 		recipients.value.splice(idx, 1);
 		calTotalToken();
 	}
+	const findRecipientIdx = (address)=>{
+		return recipients.value.findIndex(x => x.address == address);
+	}
 	const addRecipient = ()=>{
 		let _to = newRecipient.value.address.trim();
 		if(token.value.standard  == 'ledger' && !validateAddress(_to)){
 			showError("Please use a valid Account ID!");
 			return;
 		}
-		if(token.value.standard  == 'icrc-1' && !validatePrincipal(_to)){
+		if(token.value.standard  != 'ledger' && !validatePrincipal(_to)){
 			showError("Please use a valid Principal ID!");
 			return;
 		}
@@ -79,7 +82,13 @@
 			showError("Not enough "+token.value.symbol+", check remaining amount!");
 			return;
 		}
-		recipients.value.push({address:newRecipient.value.address.trim(), amount: Number(newRecipient.value.amount), title: newRecipient.value.title??"", note:newRecipient.value.note??""})
+		let idx = findRecipientIdx(_to);
+		if(idx > -1){//Update amount if existed
+			recipients.value[idx].amount += Number(newRecipient.value.amount);
+		}else{
+			recipients.value.push({address:_to, amount: Number(newRecipient.value.amount), title: newRecipient.value.title??"", note:newRecipient.value.note??""})
+		}
+
 		resetInput();
 		calTotalToken();
 	}
@@ -289,16 +298,16 @@
 						</td>
 						<td>
 							<span class="text-muted fw-bold text-gray-800 d-block fs-7">
-								{{recipient.address}}
+								<ClickToCopy :text="recipient.address">{{recipient.address}}</ClickToCopy>
 							</span>
 						</td>
 						<td>
-							<span class="text-muted text-muted d-block fs-7">
+							<span class="fw-bold text-gray-800 d-block fs-7">
 								{{recipient.title}}
 							</span>
 						</td>
 						<td>
-							<span class="text-muted text-muted d-block fs-7">
+							<span class="fw-bold text-gray-800 d-block fs-7">
 								{{recipient.note}}
 							</span>
 						</td>
