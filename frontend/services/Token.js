@@ -4,7 +4,7 @@ import { useStorage } from '@vueuse/core'
 import { decodeICRCMetadata, decodeTransaction } from "@/utils/token";
 import RosettaApi from '@/services/RosettaApi';
 import config from '@/config';
-import { walletStore } from "@/store";
+import walletStore from "@/store";
 import { showError, showSuccess, principalToAccountId, txtToPrincipal } from "@/utils/common";
 const rosettaApi = new RosettaApi();
 export const useGetMyBalance = async(tokenId) => {

@@ -1,6 +1,6 @@
 <script setup>
 import EventBus from "@/services/EventBus";
-import { walletStore } from "@/store";
+import walletStore from "@/store";
 import LoadingLabel from "@/components/LoadingLabel.vue"
 
 import { shortPrincipal, shortAccount } from '@/utils/common';

@@ -7,7 +7,7 @@ import icrc1IDL from '@/ic/candid/icrc1.did';
 import icrc2IDL from '@/ic/candid/icrc2.did';
 import icrc3IDL from '@/ic/candid/icrc2.did';
 import contractIDL from '@/ic/candid/contract.did';
-import { walletStore } from '@/store/'
+import walletStore from '@/store/'
 import {idlFactory as deployerIDL} from '../../../src/declarations/deployer/deployer.did.js'
 import {idlFactory as backendIDL} from '../../../src/declarations/backend/backend.did.js'
 class CreateActor {
@@ -38,9 +38,8 @@ class CreateActor {
                     try{
                         return await target._actor[name](...arguments);
                     }catch(e){
-                        console.log('target._actor',target._actor);
-                        console.log('name',name);
                         console.log('e', e, );
+                        return null;
                     }
                     
                 }

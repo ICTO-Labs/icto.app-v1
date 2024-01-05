@@ -13,7 +13,13 @@ export const useCreateContract = async (data)=>{
 export const useGetMyContracts = (page=0)=>{
     return useQuery({
         queryKey: ['myContracts', page],
-        queryFn: async () => await Connect.canister(config.BACKEND_CANISTER_ID, 'backend').getMyContracts(page),
+        queryFn: async () =>{
+            try{
+                return await Connect.canister(config.BACKEND_CANISTER_ID, 'backend').getMyContracts(page)
+            }catch(e){
+                throw new Error(e);
+            }
+        },
         keepPreviousData: true,
         retry: 3,
         refetchInterval: 0
@@ -29,7 +35,7 @@ export const useGetContract = (contractId) => {
           try{
             return await Connect.canister(contractId, 'contract').get()
           }catch(e){
-            throw e;
+            throw new Error(e);
           }
         },
         keepPreviousData: true,

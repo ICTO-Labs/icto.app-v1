@@ -62,3 +62,5 @@ export const walletStore = reactive({
 
     }
 })
+
+export default walletStore;

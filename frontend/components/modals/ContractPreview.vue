@@ -15,7 +15,7 @@
     const contractData = ref(null);
     const contractDetailsModal = ref(false);
     const isLoading = ref(false);
-    import { walletStore } from '@/store/'
+    import walletStore from '@/store/'
     import config from '../../config';
 
     const closeModal = ()=>{

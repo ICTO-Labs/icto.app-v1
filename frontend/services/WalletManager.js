@@ -1,7 +1,7 @@
 import {AuthClient} from "@dfinity/auth-client";
 import EventBus from "./EventBus";
 import { principalToAccountId } from "@/utils/common";
-import { walletStore } from "@/store";
+import walletStore from "@/store";
 import config from "@/config";
 import { showSuccess } from "@/utils/common";
 
@@ -47,7 +47,7 @@ class walletManager {
                                 });
                             }
                             
-                            var pid = await window.ic.plug.sessionManager.sessionData.agent.getPrincipal();//await window.ic["plug"].getPrincipal();
+                            var pid = await window.ic.plug.agent.getPrincipal();//await window.ic["plug"].getPrincipal();
                             var id = {
                                 type: "plug",
                                 getPrincipal : () => pid
@@ -165,6 +165,7 @@ class walletManager {
             const result = await window.ic.plug.requestConnect({
                 whitelist,
                 host,
+                timeout: 50000
             });
             const connectionState = result ? "allowed" : "denied";
             console.log(`The Connection was ${connectionState}!`);
