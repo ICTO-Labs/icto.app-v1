@@ -32,7 +32,7 @@
 		</div>
 	</div>
 	<div class="card-body py-3">
-		<div class="table-responsive">
+		<div class="table-responsive" >
 			<table class="table table-row-dashed table-row-gray-200 align-middle gs-0 gy-4">
 				<thead>
 					<tr class="fw-400 fw-bold">
@@ -71,6 +71,8 @@
 				</tbody>
 				<!--end::Table body-->
 			</table>
+			<Empty v-if="myToken && myToken.length ==0"></Empty>
+
 		</div>
 	</div>
 	<!--end::Body-->

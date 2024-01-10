@@ -141,9 +141,10 @@ export const useMintToken = async(tokenId, to, amount)=>{
             created_at_time: [],
         }
         console.log('_payload', _payload);;
-        let response =  await Connect.canister(tokenId, 'icrc1').icrc1_transfer(_payload);
+        let response = await Connect.canister(tokenId, 'icrc1').icrc1_transfer(_payload);
         console.log('response', response);
         if ("Err" in response) {
+            console.log('response.Err', response);
             showError("Some error occured! Please try again"+JSON.stringify(response.Err));
         } else {
             showSuccess("Token Minted!");

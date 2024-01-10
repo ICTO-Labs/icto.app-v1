@@ -24,6 +24,7 @@ import App from "./App.vue"
 
 import ClickToCopy from '@/components/ClickToCopy.vue';
 import Copy from '@/components/icons/Copy.vue'
+import Empty from '@/components/layout/Empty.vue'
 
 const app = createApp(App)
 const vfm = createVfm()
@@ -45,6 +46,7 @@ app.use(vfm)
 app.use(VueApexCharts);
 app.component('ClickToCopy', ClickToCopy);
 app.component('Copy', Copy);
+app.component('Empty', Empty);
 app.component('VueDatePicker', VueDatePicker);
 app.use(VueQueryPlugin)
 app.mount("#root")

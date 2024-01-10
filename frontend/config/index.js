@@ -1,10 +1,10 @@
 const NETWORK = {
     "dev": {
         canister_id: "bkyz2-fmaaa-aaaaa-qaaaq-cai",
-        deployer_id: "ajuq4-ruaaa-aaaaa-qaaga-cai",
-        backend_id: "bkyz2-fmaaa-aaaaa-qaaaq-cai",
+        deployer_id: "be2us-64aaa-aaaaa-qaabq-cai",
+        backend_id: "bd3sg-teaaa-aaaaa-qaaba-cai",
         host: "http://127.0.0.1:8000",
-        identityProvider: "http://127.0.0.1:8000/?canisterId=a3shf-5eaaa-aaaaa-qaafa-cai#authorize",
+        identityProvider: "http://127.0.0.1:8000/?canisterId=br5f7-7uaaa-aaaaa-qaaca-cai#authorize",
         scan: "http://127.0.0.1:8000/?canisterId=bd3sg-teaaa-aaaaa-qaaba-cai&id="
     },
     "staging": {

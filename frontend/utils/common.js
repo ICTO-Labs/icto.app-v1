@@ -58,7 +58,7 @@ export const showError = (message, useSwal=false)=>{
     
 }
 export const clearToast = ()=>{
-    toast.clearAll();
+    // toast.clearAll();
 }
 export const showSuccess = (message, useSwal=false)=>{
     if(useSwal){

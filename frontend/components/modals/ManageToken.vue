@@ -28,7 +28,7 @@
                 if (result.isConfirmed) {
                     isLoading.value = true;
                     //Close the dialog
-                    let _rs = await useMintToken(tokenInfo.value.canister, to.value, amount.value);
+                    let _rs = await useMintToken(tokenInfo.value.tokenId, to.value, amount.value);
                     if(_rs){
                         EventBus.emit('showManageTokenModal', {
                             status: false

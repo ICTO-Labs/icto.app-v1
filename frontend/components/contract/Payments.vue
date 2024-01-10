@@ -4,7 +4,7 @@
     import ContractCard from './ContractCard.vue';
     import walletStore from '@/store'
     const { data: contracts, error, isError, isLoading, isRefetching, refetch } = useGetMyContracts(0);
-
+console.log('contracts', contracts);
     watch(
     () => walletStore.isLogged,
     (newValue, oldValue) => {
@@ -16,9 +16,10 @@
 </script>
 <template>
     <div class="row g-6 g-xl-9">
-        <div v-if="isLoading || isRefetching">Loading...</div>
+        <div v-if="isLoading || isRefetching">Refetching data...</div>
         <div v-if="isError">{{ error }}</div>
-        <div class="col-sm-6 col-xl-4" v-for="contract in contracts" v-if="!isLoading && !isRefetching">
+        <Empty v-if="contracts && contracts.length == 0  && !isLoading && !isRefetching" />
+        <div class="col-sm-6 col-xl-4" v-for="contract in contracts">
            <ContractCard :contractId="contract" />
         </div>
     </div>
