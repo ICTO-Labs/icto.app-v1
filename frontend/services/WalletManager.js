@@ -8,6 +8,7 @@ import { showSuccess } from "@/utils/common";
 const loginSuccessAction = () =>{
     showSuccess("Login successful!")
     EventBus.emit("showLoginModal", false)
+    walletStore.setLastLogged();//set last logged
 }
 const defaultOptions = {
     createOptions: {
@@ -37,7 +38,7 @@ class walletManager {
                 case "plug":
                     (async () => {
                         const connected = await window?.ic?.plug.isConnected();
-                        if (connected) {
+                        if (connected && (new Date().valueOf() - walletStore.lastLogged < config.LOGIN_TIMEOUT)) {
                             if (!window.ic["plug"].agent) {
                                 console.log('check plug login')
                                 // window.ic["plug"].agent = await window.ic.plug.sessionManager.sessionData.agent;
@@ -165,7 +166,7 @@ class walletManager {
             const result = await window.ic.plug.requestConnect({
                 whitelist,
                 host,
-                timeout: 50000
+                timeout: config.LOGIN_TIMEOUT
             });
             const connectionState = result ? "allowed" : "denied";
             console.log(`The Connection was ${connectionState}!`);

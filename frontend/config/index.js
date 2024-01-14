@@ -46,7 +46,9 @@ const config = {
     E8S: 100_000_000,
     CYCLES: 1_000_000_000_000,
     FEE: 10_000,
+    LAUNCHPAD_FEE: 3,
     MIN_DEPOSIT: 10_000*10,
+    LOGIN_TIMEOUT: 30*60*1000, //Reauth when reach the timeout
     IC_SCAN: NETWORK[ENV]['scan'],
     MAX_CHUNK_SIZE: 1900000,
     WALLET_CONFIG: {
