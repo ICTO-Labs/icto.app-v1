@@ -6,6 +6,8 @@ import NewContract from './views/contract/NewContract.vue'
 import MyToken from './views/token/MyToken.vue'
 import TokenDetail from './views/token/TokenDetail.vue'
 import ContractDetail from './views/contract/ContractDetail.vue'
+import Launchpad from './views/launchpad/Launchpad.vue'
+import NewLaunchpad from './views/launchpad/NewLaunchpad.vue'
 const router = createRouter({
   history: createWebHistory(import.meta.env.BASE_URL),
   routes: [
@@ -20,6 +22,18 @@ const router = createRouter({
       meta: {title: 'Payments'},
       name: 'contract',
       component: Contract,
+    },
+    {
+      path: '/launchpad',
+      meta: {title: 'Launchpad'},
+      name: 'launchpad',
+      component: Launchpad,
+    },
+    {
+      path: '/new-launchpad',
+      meta: {title: 'New Launchpad'},
+      name: 'new-launchpad',
+      component: NewLaunchpad,
     },
     {
       path: '/vesting',

@@ -5,7 +5,7 @@ import Footer from "./components/layout/Footer.vue"
 import Toolbar from "./components/layout/Toolbar.vue"
 import ScrollTop from "./components/ScrollTop.vue"
 import Modals from "./components/Modals.vue"
-
+import Wallet from "./components/Wallet.vue"
 import WalletManager from "@/services/WalletManager";
 
 WalletManager.checkLoginStatus();
@@ -36,6 +36,7 @@ WalletManager.checkLoginStatus();
             </div>
             <Modals />
             <!--end::Content-->
+            <Wallet />
             <Footer></Footer>
           </div>
           <!--end::Wrapper-->
