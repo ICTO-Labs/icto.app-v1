@@ -114,7 +114,7 @@ export const useGetTokenOwner = (tokenId, standard)=>{
 export const usetGetMetadata = async(tokenId, standard="icrc3")=>{
     try{
         let _tokenInfo =  await Connect.canister(tokenId, standard).icrc1_metadata();
-        if("err" in _tokenInfo){
+        if(!_tokenInfo || "err" in _tokenInfo){
 			showError('Canister not found or did not match the token standard: '+standard.toUpperCase());
             return null;
 		}else{
