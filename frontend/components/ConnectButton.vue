@@ -3,7 +3,7 @@ import EventBus from "@/services/EventBus";
 import walletStore from "@/store";
 import LoadingLabel from "@/components/LoadingLabel.vue"
 
-import { shortPrincipal, shortAccount } from '@/utils/common';
+import { showModal, shortPrincipal, shortAccount } from '@/utils/common';
 
 import _api from "@/ic/api";
 import Copy from "@/components/icons/Copy.vue";
@@ -25,11 +25,11 @@ const logout = ()=>{
 }
 
 const login = ()=>{
-	EventBus.emit('showLoginModal', true);
+	showModal('showLoginModal', true);
 }
 
 const showWallet = ()=>{
-	EventBus.emit('showWalletModal', true);
+	showModal('showWalletModal', true);
 }
 
 </script>

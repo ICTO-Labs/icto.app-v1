@@ -1,15 +1,16 @@
 <script setup>
-    import { onMounted, ref } from "vue";
-    import EventBus from "@/services/EventBus";
-    import walletStore from "@/store";
-    import { shortPrincipal, shortAccount } from '@/utils/common';
+  import { onMounted, ref } from "vue";
+  import EventBus from "@/services/EventBus";
+  import walletStore from "@/store";
+  import { showModal, shortPrincipal, shortAccount } from '@/utils/common';
+  import { TOKEN_DATA } from "@/config/constants"
 	import { useAssetStore } from "@/store/token";
+  import NFTItem from "@/components/wallet/NFTItem.vue";
 	const storeAssets = useAssetStore();
-
+  const collectionInfo = {'name': "ICTO NFT Card", 'symbol': "NFT", 'canisterId': "1"};
     const openWallet = ref(false);
     onMounted(() => {
         EventBus.on("showWalletModal", (status) =>{
-            console.log('ok')
             openWallet.value = status;
         });
     });
@@ -17,8 +18,14 @@
         openWallet.value = false;
     }
     const importToken = ()=>{
-		EventBus.emit("showImportTokenModal", true)
-	}
+      showModal("showImportTokenModal", true)
+	  }
+    const transferToken = (token)=>{
+      const newObj = {...token};
+		  newObj.status = true;
+		  newObj.action = 'transfer';
+      showModal("showManageTokenModal", newObj)
+    }
     const logout = ()=>{
         Swal.fire({
             title: "Are you sure?",
@@ -111,15 +118,17 @@
                       <!--end::Table head-->
                       <!--begin::Table body-->
                       <tbody>
-                        <tr>
+                        <tr v-for="token in TOKEN_DATA">
                           <td>
                             <div class="d-flex align-items-center">
                               <div class="symbol symbol-45px me-5 symbol-circle">
-                                <img src="https://app.icpswap.com/static/media/icp.971d3265d25976274074de359ddc638b.svg" alt="">
+                                <img :src="token.logo" :alt="token.symbol">
                               </div>
                               <div class="d-flex justify-content-start flex-column">
-                                <a href="#" class="text-dark fw-bolder text-hover-primary fs-6">Internet Computer (ICP)</a>
-                                <span class="text-muted fw-bold text-muted d-block fs-7">ICRC-2</span>
+                                <a href="#" class="text-dark fw-bolder text-hover-primary fs-6"> {{ token.symbol }}  <span class="badge badge-light-primary fw-bolder fs-8 px-2 py-1 ms-2">{{ token.standard }}</span></a>
+                                <span class="text-muted fw-bold text-muted d-block fs-7">
+                                  {{ token.name }}
+                                 </span>
                               </div>
                             </div>
                           </td>
@@ -130,14 +139,14 @@
                           <td class="text-end">
                             <div class="d-flex flex-column w-100 me-2">
                               <div class="d-flex flex-stack mb-2">
-                                <span class="text-muted me-2 fs-7 fw-bold">$12.54</span>
+                                <span class="text-dark me-2 fs-6 fw-bold">$12.54</span>
                               </div>
                             </div>
                           </td>
                           <td>
                             <div class="d-flex justify-content-end flex-shrink-0">
-                              <a href="#" class="btn btn-icon btn-bg-light btn-active-color-primary btn-sm">
-                                <i class="fas fa-paper-plane"></i>
+                              <a href="#" @click="transferToken(token)" class="btn btn-light-primary btn-sm">
+                                <i class="fas fa-paper-plane"></i> Transfer
                               </a>
                             </div>
                           </td>
@@ -145,12 +154,14 @@
                         <tr v-for="token in storeAssets.assets">
                           <td>
                             <div class="d-flex align-items-center">
-                              <div class="symbol symbol-45px me-5">
-                                <img src="https://psh4l-7qaaa-aaaap-qasia-cai.raw.icp0.io/6ytv5-fqaaa-aaaap-qblcq-cai.png" alt="">
+                              <div class="symbol symbol-45px me-5 symbol-circle">
+                                <img :src="token.logo" :alt="token.symbol">
                               </div>
                               <div class="d-flex justify-content-start flex-column">
-                                <a href="#" class="text-dark fw-bolder text-hover-primary fs-6">{{token.name}} ({{token.symbol}})</a>
-                                <span class="text-muted fw-bold text-muted d-block fs-7">ICRC-2</span>
+                                <a href="#" class="text-dark fw-bolder text-hover-primary fs-6"> {{ token.symbol }}  <span class="badge badge-light-primary fw-bolder fs-8 px-2 py-1 ms-2">{{ token.standard.toUpperCase() }}</span></a>
+                                <span class="text-muted fw-bold text-muted d-block fs-7">
+                                  {{ token.name }}
+                                 </span>
                               </div>
                             </div>
                           </td>
@@ -167,8 +178,8 @@
                           </td>
                           <td>
                             <div class="d-flex justify-content-end flex-shrink-0">
-                              <a href="#" class="btn btn-icon btn-bg-light btn-active-color-primary btn-sm">
-                                <i class="fas fa-paper-plane"></i>
+                              <a href="#" @click="transferToken(token)" class="btn btn-light-primary btn-sm">
+                                <i class="fas fa-paper-plane"></i> Transfer
                               </a>
                             </div>
                           </td>
@@ -182,48 +193,53 @@
             </div>
           
           <div class="tab-pane fade" id="wallet_nfts" role="tabpanel">
-            <div class="container">
-                <div class="row">
-                <!--begin::Col-->
-                <div class="col-md-4 mb-10" v-for="nft in 35">
-                    <!--begin::Hot sales post-->
-                    <div class="bg-light bg-opacity-75 p-5 rounded-3">
-                    <div class="card-xl-stretch">
-                        <!--begin::Overlay-->
-                        <a class="d-block overlay" data-fslightbox="lightbox-hot-sales" href="http://be2us-64aaa-aaaaa-qaabq-cai.localhost:8000/">
-                        <!--begin::Image-->
-                        <div class="overlay-wrapper bgi-no-repeat bgi-position-center bgi-size-cover card-rounded min-h-125px" style="background-image:url('http://be2us-64aaa-aaaaa-qaabq-cai.localhost:8000/')"></div>
-                        <!--end::Image-->
-                        <!--begin::Action-->
-                        <div class="overlay-layer card-rounded bg-dark bg-opacity-25">
-                            <i class="bi bi-eye-fill fs-2x text-white"></i>
-                        </div>
-                        <!--end::Action-->
-                        </a>
-                        <!--end::Overlay-->
-                        <!--begin::Body-->
-                        <div class="mt-5">
-                        <!--begin::Title-->
-                        <a href="#" class="fs-6 text-dark fw-bolder text-hover-primary text-dark lh-base">ICTO NFT Card</a>
-                        <div class="fs-6 fw-bolder mt-5 d-flex flex-stack">
-                            <!--begin::Label-->
-                            <span class="badge border-dashed fs-2 fw-bolder text-dark p-1">
-                            <span class="fs-6 fw-bold text-gray-400">#</span>{{nft}}
-                            </span>
-                            <!--end::Label-->
-                            <!--begin::Action-->
-                            <a href="#" class="btn btn-primary btn-sm">Transfer <i class="fas fa-paper-plane"></i>
-                            </a>
-                            <!--end::Action-->
-                        </div>
-                        <!--end::Text-->
-                        </div>
-                        <!--end::Body-->
-                    </div>
-                    </div>
-                </div>
-                </div>
+            <!--begin::Accordion-->
+            <div class="accordion" id="kt_accordion_1">
+              <div class="accordion-item">
+                  <h2 class="accordion-header" id="kt_accordion_1_header_1">
+                      <button class="accordion-button fs-6 fw-bold p-3" type="button" data-bs-toggle="collapse" data-bs-target="#kt_accordion_1_body_1" aria-expanded="true" aria-controls="kt_accordion_1_body_1">
+                          ICTO NFT Card <span class="badge badge-circle badge-primary ms-2">6</span>
+                      </button>
+                  </h2>
+                  <div id="kt_accordion_1_body_1" class="accordion-collapse collapse show" aria-labelledby="kt_accordion_1_header_1" data-bs-parent="#kt_accordion_1">
+                      <div class="accordion-body-none">
+                        <div class="row p-3">
+                          <div class="col-md-4 mb-5" v-for="nft in ['common', 'uncommon', 'rare', 'veryrare', 'epic', 'legend']">
+                              <NFTItem :nft="nft" :collectionInfo="collectionInfo"></NFTItem>
+                          </div>
+                      </div>
+                      </div>
+                  </div>
+              </div>
+
+              <div class="accordion-item">
+                  <h2 class="accordion-header" id="kt_accordion_1_header_2">
+                      <button class="accordion-button fs-6 fw-bold collapsed p-3" type="button" data-bs-toggle="collapse" data-bs-target="#kt_accordion_1_body_2" aria-expanded="false" aria-controls="kt_accordion_1_body_2">
+                      MOTOKO Ghost
+                      </button>
+                  </h2>
+                  <div id="kt_accordion_1_body_2" class="accordion-collapse collapse" aria-labelledby="kt_accordion_1_header_2" data-bs-parent="#kt_accordion_1">
+                      <div class="accordion-body">
+                          ...
+                      </div>
+                  </div>
+              </div>
+
+              <div class="accordion-item">
+                  <h2 class="accordion-header" id="kt_accordion_1_header_3">
+                      <button class="accordion-button fs-6 fw-bold collapsed  p-3" type="button" data-bs-toggle="collapse" data-bs-target="#kt_accordion_1_body_3" aria-expanded="false" aria-controls="kt_accordion_1_body_3">
+                      BTC Flower
+                      </button>
+                  </h2>
+                  <div id="kt_accordion_1_body_3" class="accordion-collapse collapse" aria-labelledby="kt_accordion_1_header_3" data-bs-parent="#kt_accordion_1">
+                      <div class="accordion-body">
+                          ...
+                      </div>
+                  </div>
+              </div>
             </div>
+            <!--end::Accordion-->    
+            
           </div>
           <div class="tab-pane fade" id="wallet_airdrops" role="tabpanel"> Coming soon </div>
 		  </div>

@@ -28,6 +28,7 @@
 	const mintToken = (token)=>{
 		const newObj = {...token};
 		newObj.status = true;
+		newObj.action = 'mint';
 		showModal("showManageTokenModal", newObj);
 	}
 

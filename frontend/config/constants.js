@@ -18,3 +18,6 @@ export const SCHEDULE = {
     "7884006": "Quarterly",
     "31536000": "Yearly",
 };
+export const TOKEN_DATA = [
+    {name: "Internet Computer", symbol: "ICP", "logo": "https://app.icpswap.com/static/media/icp.971d3265d25976274074de359ddc638b.svg", standard: "ICRC2", canisterId: "ryjl3-tyaaa-aaaaa-aaaba-cai"}
+];
