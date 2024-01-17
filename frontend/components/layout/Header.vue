@@ -46,7 +46,7 @@ const router = useRoute();
 													<span class="menu-title">Token Locking</span>
                                                 </router-link>
 											</div>
-											<div class="menu-item menu-lg-down-accordion me-lg-1">
+											<div :class="`menu-item menu-lg-down-accordion me-lg-1 ${router.name=='launchpad' || router.name=='new-launchpad' ?'here':''}`">
 												<router-link class="menu-link py-3" to="/launchpad">
 													<span class="menu-title">Launchpad</span>
                                                 </router-link>
@@ -59,9 +59,11 @@ const router = useRoute();
 								</div>
 								<!--end::Navbar-->
 								<!--begin::Topbar-->
+								
 								<div class="d-flex align-items-stretch flex-shrink-0">
 									<!--begin::Toolbar wrapper-->
 									<div class="d-flex align-items-stretch flex-shrink-0">
+										
                                         <ConnectButton />
 										<!--begin::Heaeder menu toggle-->
 										<div class="d-flex align-items-center d-lg-none ms-2 me-n3" title="Show header menu">

@@ -409,3 +409,23 @@ fieldset[disabled] .multiselect {
   .circle-small .current-counter{
     font-size:20px !important;
 }
+
+.dp__input_icons{
+  padding: 10px 10px !important;
+}
+.dp__input {
+  padding: 0.75rem 2rem 0.75rem 2rem !important;
+  font-size: 1.1rem !important;
+  font-weight: 500 !important;
+  line-height: 1.5 !important;
+}
+
+@media (max-width: 1080px) { 
+  .wallet-modal{
+    width: 80% !important
+  }
+}
+
+.wallet-modal{
+  width: 50%
+}

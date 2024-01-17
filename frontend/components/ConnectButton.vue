@@ -28,6 +28,10 @@ const login = ()=>{
 	EventBus.emit('showLoginModal', true);
 }
 
+const showWallet = ()=>{
+	EventBus.emit('showWalletModal', true);
+}
+
 </script>
 
 <template>
@@ -37,7 +41,7 @@ const login = ()=>{
 		<!--begin::Menu wrapper-->
 		<div class="cursor-pointer symbol symbol-30px symbol-md-40px" data-kt-menu-trigger="click" data-kt-menu-attach="parent" data-kt-menu-placement="bottom-end">
 			<button v-if="!walletStore.isLogged || walletStore.isLogged === false" class="btn btn-sm btn-danger" @click="login()">Connect <i class="fas fa-chevron-circle-right"></i></button>
-			<button v-if="walletStore.isLogged || walletStore.isLogged == 'true'" class="btn btn-sm btn-primary"><span class="fw-bolder"><i class="fas fa-wallet"></i>My Wallet</span> </button>
+			<button v-if="walletStore.isLogged || walletStore.isLogged == 'true'" class="btn btn-sm btn-primary" ><span class="fw-bolder"><i class="fas fa-user"></i> My Account</span> </button>
 			
 		</div>
 		<!--begin::Menu-->
@@ -58,7 +62,7 @@ const login = ()=>{
 							<span class="badge badge-success fw-bolder fs-8 px-2 py-1 ms-2">{{ walletStore.connector }}</span>
 						</div>
 						<div class="d-flex fw-semibold align-items-center fs-6">
-							<span class="text-gray-600 fs-6">PID:</span>  <span class="ms-2 me-2 fw-bold text-gray-800 fs-6" data-bs-toggle="tooltip" :title="walletStore.principal" v-show="walletStore.principal">{{ shortPrincipal(walletStore.principal) }}</span> <Copy :text="principal"></Copy>
+							<span class="text-gray-600 fs-6">PID:</span>  <span class="ms-2 me-2 fw-bold text-gray-800 fs-6" data-bs-toggle="tooltip" :title="walletStore.principal" v-show="walletStore.principal">{{ shortPrincipal(walletStore.principal) }}</span> <Copy :text="walletStore.principal"></Copy>
 						</div> 
 					</div>
 					
@@ -74,7 +78,7 @@ const login = ()=>{
 						<div class="fw-semibold text-gray-600 fs-7">Address ID:</div> 
 						<div class="fw-bold text-gray-800 fs-6"> <span data-bs-toggle="tooltip" :title="walletStore.address" v-show="walletStore.address">{{ shortAccount(walletStore.address) }}</span> <Copy :text="walletStore.address"></Copy></div>          
 					</div>
-					<div class="mb-1">       
+					<div class="mb-3">       
 						<div class="fw-semibold text-gray-600 fs-7">ICP Balance:</div> 
 						<div class="fw-bold text-gray-800 fs-6"> {{ walletStore.balance }} 
 							
@@ -85,34 +89,12 @@ const login = ()=>{
 							</LoadingLabel>
 						</div>          
 					</div>
+					<div class="d-flex flex-column gap-7 gap-md-10">
+						<button class="btn btn-sm btn-primary" type="button" @click="showWallet()"><span class="fw-bolder"><i class="fas fa-wallet"></i> Open Wallet</span> </button>
+					</div>
 				</div>
-				
 			</div>
-			<!--end::Menu item-->
-			<!--begin::Menu separator-->
-			<div class="separator my-2"></div>
-			<!--end::Menu separator-->
-			<!--begin::Menu item-->
-			<div class="menu-item px-5">
-				<a href="#" class="menu-link px-5">My Wallet</a>
-			</div>
-			<!--end::Menu item-->
-			<!--begin::Menu item-->
-			<div class="menu-item px-5">
-				<a href="#" class="menu-link px-5">
-					<span class="menu-text">My Tokens</span>
-					<span class="menu-badge">
-						<span class="badge badge-light-danger badge-circle fw-bolder fs-7">3</span>
-					</span>
-				</a>
-			</div>
-			<!--end::Menu item-->
-			<!--begin::Menu item-->
-			<div class="menu-item px-5">
-				<a href="#" class="menu-link px-5">My Contracts</a>
-			</div>
-			<!--end::Menu item-->
-			<!--begin::Menu separator-->
+
 			<div class="separator my-2"></div>
 			<!--end::Menu separator-->
 			<!--begin::Menu item-->

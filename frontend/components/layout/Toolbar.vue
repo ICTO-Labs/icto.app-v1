@@ -1,6 +1,11 @@
 <script setup>
+import EventBus from "@/services/EventBus";
 import { useRoute } from 'vue-router';
 const router = useRoute();
+
+const showWallet = ()=>{
+	EventBus.emit('showWalletModal', true);
+}
 </script>
 <template>
     <!--begin::Toolbar-->
@@ -36,7 +41,8 @@ const router = useRoute();
 			<!--end::Page title-->
 			<!--begin::Actions-->
 			<div class="d-flex align-items-center py-1">
-				<router-link to="/new-contract" class="btn btn-sm btn-danger">New Contract</router-link>
+				<router-link to="/new-contract" class="btn btn-sm btn-light-danger me-2">New Contract</router-link>
+				<a href="#" @click="showWallet" class="btn btn-sm btn-light-primary"><i class="fas fa-wallet  me-2"></i>My Wallet</a>
 			</div>
 			<!--end::Actions-->
 		</div>
