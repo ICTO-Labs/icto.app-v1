@@ -10,6 +10,7 @@
 	const mintToken = (token)=>{
 		const newObj = {...token};
 		newObj.status = true;
+		newObj.canisterId = token.canister;
 		showModal("showManageTokenModal", newObj);
 	}
 </script>

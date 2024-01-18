@@ -34,7 +34,7 @@ app.use(router)
 app.use(Toast, {
     shareAppContext: true,
     multiple: true,
-    maxToasts: 3,
+    maxToasts: 2,
     position: POSITION.BOTTOM_LEFT,
     hideProgressBar: true,
     theme: 'colored'

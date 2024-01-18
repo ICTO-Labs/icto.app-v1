@@ -79,6 +79,9 @@ export const showLoading = (message)=>{
         showConfirmButton: false
     });
 }
+export const closeMessage = ()=>{
+    Swal.close();
+}
 const to32bits = (num) => {
     let b = new ArrayBuffer(4)
     new DataView(b).setUint32(0, num)

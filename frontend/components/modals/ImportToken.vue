@@ -40,6 +40,7 @@
         if(validatePrincipal(canisterId.value.trim())){
             clearToast();
             let _tokenInfo = await usetGetMetadata(canisterId.value, tokenStandard.value);
+            console.log(_tokenInfo);
             isLoading.value = false;
             if(!_tokenInfo || _tokenInfo.standard != tokenStandard.value){
                 isLoading.value = false;
@@ -57,7 +58,7 @@
     }
 
     const confirmImport = ()=>{
-        let _rs = storeAsset.addAsset(canisterId.value, tokenInfo.value.name, tokenInfo.value.symbol, tokenStandard.value)
+        let _rs = storeAsset.addAsset(canisterId.value, '', tokenInfo.value.name, tokenInfo.value.symbol, tokenStandard.value, tokenInfo.value.decimals, tokenInfo.value.fee);
         if(_rs){
             EventBus.emit("showImportTokenModal", false);
             showSuccess("Token imported!")
@@ -113,8 +114,8 @@
                                 @click="importToken">Import
                             </LoadingButton>
                         </div>
-                        <div v-if="isImported" class="mt-10">
-                            <div class="d-flex align-items-center mb-10 alert alert-dismissible bg-light-primary d-flex flex-column flex-sm-row w-100 p-5 mb-10">
+                        <div v-if="isImported" class="mt-5">
+                            <div class="d-flex align-items-center mb-10 alert alert-dismissible bg-light-primary d-flex flex-column flex-sm-row w-100 p-5 mb-5">
                                 <div class="me-5 position-relative">
                                     <div class="symbol symbol-45px symbol-circle">
                                         <span class="symbol-label bg-primary text-white fw-semibold">
@@ -131,7 +132,7 @@
                                 <div class="badge badge-primary ms-auto">{{tokenInfo.standard.toLocaleUpperCase()}}</div>
                             </div>
                             <div class="col-sm-12">
-                                <div class="alert alert-dismissible bg-light-danger border border-danger border-dashed flex-sm-row w-100 p-5 mb-10">
+                                <div class="alert alert-dismissible bg-light-danger border border-danger border-dashed flex-sm-row w-100 p-5 mb-5">
                                     <h4 class="mb-1 text-danger">Warning!</h4>
                                     <em class="icon ni ni-alert-circle"></em> 
                                         Anyone can create a token on Internet Computer with any name and logo, including creating fake versions of existing tokens and tokens that claim to represent projects that do not have a token.
@@ -147,7 +148,7 @@
                                 </label>
                             </div>
                         </div>
-                        <div class="col-sm-12 text-center mt-5">
+                        <div class="d-flex flex-column gap-7 gap-md-10 pt-10">
                             <button type="submit" class="btn btn-primary btn-block" @click="confirmImport" :disabled="!agree">
                                 <em class="icon ni ni-send"></em><span class="text-capitalize">Confirm</span>
                             </button>

@@ -5,9 +5,11 @@
   import { showModal, shortPrincipal, shortAccount } from '@/utils/common';
   import { TOKEN_DATA } from "@/config/constants"
 	import { useAssetStore } from "@/store/token";
+  import { currencyFormat } from "@/utils/token";
+
   import NFTItem from "@/components/wallet/NFTItem.vue";
-	const storeAssets = useAssetStore();
-  const collectionInfo = {'name': "ICTO NFT Card", 'symbol': "NFT", 'canisterId': "1"};
+    const storeAssets = useAssetStore();
+    const collectionInfo = {'name': "ICTO NFT Card", 'symbol': "NFT", 'canisterId': "1"};
     const openWallet = ref(false);
     onMounted(() => {
         EventBus.on("showWalletModal", (status) =>{
@@ -19,6 +21,9 @@
     }
     const importToken = ()=>{
       showModal("showImportTokenModal", true)
+	  }
+    const refreshBalance = async()=>{
+      await storeAssets.updateBalanceAll();
 	  }
     const transferToken = (token)=>{
       const newObj = {...token};
@@ -75,30 +80,45 @@
             <!--end::Avatar-->
             <div class="d-flex flex-column">
                 <div class="mb-1">       
-						<div class="fw-semibold text-gray-600 fs-7">Principal ID:</div> 
-						<div class="fw-bold text-gray-800 fs-6">
-                            <ClickToCopy :text="walletStore.principal">{{ walletStore.principal }}</ClickToCopy>
-                            </div>          
-					</div>
+                  <div class="fw-semibold text-gray-600 fs-7">Principal ID:</div> 
+                  <div class="fw-bold text-gray-800 fs-6">
+                    {{ walletStore.principal }} <Copy :text="walletStore.principal"></Copy>
+                  </div>
+					      </div>
                 <div class="mb-1">       
                     <div class="fw-semibold text-gray-600 fs-7">Address ID:</div> 
                     <div class="fw-bold text-gray-800 fs-6">
-                        <ClickToCopy :text="walletStore.address">{{ walletStore.address }}</ClickToCopy>
+                      {{ walletStore.address }} <Copy :text="walletStore.address"></Copy>
                     </div>       
                 </div>
             </div>
           </div>
-          <ul class="nav nav-tabs nav-line-tabs nav-line-tabs-2x mb-5 fs-5 fw-bold">
-            <li class="nav-item">
-              <a class="nav-link active" data-bs-toggle="tab" href="#wallet_tokens">Tokens</a>
-            </li>
-            <li class="nav-item">
-              <a class="nav-link" data-bs-toggle="tab" href="#wallet_nfts">NFTs</a>
-            </li>
-            <li class="nav-item">
-              <a class="nav-link" data-bs-toggle="tab" href="#wallet_airdrops">Airdrops</a>
-            </li>
-          </ul>
+          <div class="separator my-2"></div>
+
+          <div class="card-header px-0 border-0">
+            <h3 class="card-title align-items-start flex-column">
+              <ul class="nav fs-5 ">
+                <li class="nav-item">
+                  <a class="nav-link btn btn-sm btn-color-muted btn-active btn-active-primary fw-bolder fs-6 px-4 me-1 active" data-bs-toggle="tab" href="#wallet_tokens">Tokens</a>
+                </li>
+                <li class="nav-item">
+                  <a class="nav-link btn btn-sm btn-color-muted btn-active btn-active-danger fw-bolder fs-6 px-4 me-1" data-bs-toggle="tab" href="#wallet_nfts">NFTs</a>
+                </li>
+                <li class="nav-item">
+                  <a class="nav-link btn btn-sm btn-color-muted btn-active btn-active-success fw-bolder fs-6 px-4" data-bs-toggle="tab" href="#wallet_airdrops">Airdrops</a>
+                </li>
+              </ul>
+            </h3>
+            <div class="card-toolbar">
+                <button type="button"
+                    class="btn btn-sm btn-light-primary ms-5"
+                    @click="refreshBalance"><i class="fas fa-sync"></i> Check Balance
+                </button>
+            </div>
+          </div>
+   
+          <div class="separator my-2"></div>
+
           <div class="tab-content" id="icto_wallet">
             <div class="tab-pane fade active show" id="wallet_tokens" role="tabpanel">
                 <div class="py-1">
@@ -111,7 +131,7 @@
                         <tr class="fw-bolder text-muted">
                           <th class="min-w-150px">Token</th>
                           <th class="min-w-140px">Balance</th>
-                          <th class="min-w-120px">Price</th>
+                          <th class="min-w-120px text-end">Price</th>
                           <th class="min-w-100px text-end">Actions</th>
                         </tr>
                       </thead>
@@ -122,10 +142,11 @@
                           <td>
                             <div class="d-flex align-items-center">
                               <div class="symbol symbol-45px me-5 symbol-circle">
-                                <img :src="token.logo" :alt="token.symbol">
+                                <img :src="token.logo" :alt="token.symbol" v-if="token.logo">
+                                <div v-else class="symbol-label fs-3 bg-light-primary text-primary">{{ token.symbol.charAt(0) }}</div>
                               </div>
                               <div class="d-flex justify-content-start flex-column">
-                                <a href="#" class="text-dark fw-bolder text-hover-primary fs-6"> {{ token.symbol }}  <span class="badge badge-light-primary fw-bolder fs-8 px-2 py-1 ms-2">{{ token.standard }}</span></a>
+                                <span class="text-dark fw-bolder text-hover-primary fs-6"> {{ token.symbol }}  <span class="badge badge-light-primary fw-bolder fs-8 px-2 py-1 ms-2">{{ token.standard }}</span></span>
                                 <span class="text-muted fw-bold text-muted d-block fs-7">
                                   {{ token.name }}
                                  </span>
@@ -133,15 +154,13 @@
                             </div>
                           </td>
                           <td>
-                            <a href="#" class="text-dark fw-bolder text-hover-primary d-block fs-6">881</a>
-                            <span class="text-muted fw-bold text-muted d-block fs-7">≈ $5029</span>
+                            <span class="text-dark fw-bolder text-hover-primary fs-6">
+                              {{ token.balance || 0 }}
+                            </span>
+                            <!-- <span class="text-muted fw-bold text-muted d-block fs-7">≈ $5029</span> -->
                           </td>
                           <td class="text-end">
-                            <div class="d-flex flex-column w-100 me-2">
-                              <div class="d-flex flex-stack mb-2">
-                                <span class="text-dark me-2 fs-6 fw-bold">$12.54</span>
-                              </div>
-                            </div>
+                            <span class="text-muted me-2 fs-7 fw-bold">---</span>
                           </td>
                           <td>
                             <div class="d-flex justify-content-end flex-shrink-0">
@@ -155,10 +174,11 @@
                           <td>
                             <div class="d-flex align-items-center">
                               <div class="symbol symbol-45px me-5 symbol-circle">
-                                <img :src="token.logo" :alt="token.symbol">
+                                <img :src="token.logo" :alt="token.symbol" v-if="token.logo">
+                                <div v-else class="symbol-label fs-3 bg-light-primary text-primary">{{ token.symbol.charAt(0) }}</div>
                               </div>
                               <div class="d-flex justify-content-start flex-column">
-                                <a href="#" class="text-dark fw-bolder text-hover-primary fs-6"> {{ token.symbol }}  <span class="badge badge-light-primary fw-bolder fs-8 px-2 py-1 ms-2">{{ token.standard.toUpperCase() }}</span></a>
+                                <span class="text-dark fw-bolder text-hover-primary fs-6"> {{ token.symbol }}  <span class="badge badge-light-primary fw-bolder fs-8 px-2 py-1 ms-2">{{ token.standard.toUpperCase() }}</span></span>
                                 <span class="text-muted fw-bold text-muted d-block fs-7">
                                   {{ token.name }}
                                  </span>
@@ -166,15 +186,13 @@
                             </div>
                           </td>
                           <td>
-                            <a href="#" class="text-dark fw-bolder text-hover-primary d-block fs-6">1.231</a>
-                            <span class="text-muted fw-bold text-muted d-block fs-7">≈ ${{1231*0.54}}</span>
+                            <span class="text-dark fw-bolder text-hover-primary d-block fs-6">
+                              {{ currencyFormat(token.balance) }}
+                            </span>
+                            <!-- <span class="text-muted fw-bold text-muted d-block fs-7">≈ ${{1231*0.54}}</span> -->
                           </td>
                           <td class="text-end">
-                            <div class="d-flex flex-column w-100 me-2">
-                              <div class="d-flex flex-stack mb-2">
-                                <span class="text-muted me-2 fs-7 fw-bold">$0.54</span>
-                              </div>
-                            </div>
+                            <span class="text-muted me-2 fs-7 fw-bold">---</span>
                           </td>
                           <td>
                             <div class="d-flex justify-content-end flex-shrink-0">
