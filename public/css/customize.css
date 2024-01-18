@@ -429,3 +429,7 @@ fieldset[disabled] .multiselect {
 .wallet-modal{
   width: 50%
 }
+.btn-auto{
+  height: auto !important;
+  width: auto !important;
+}
