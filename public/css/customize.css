@@ -433,3 +433,9 @@ fieldset[disabled] .multiselect {
   height: auto !important;
   width: auto !important;
 }
+.float-right{
+  float:right
+}
+.float-left{
+  float: left;
+}

@@ -42,6 +42,10 @@
             }
         }
     }
+    const selectMax = ()=>{
+        amount.value = tokenInfo.value.balance;
+        checkActually();
+    }
     const checkPrincipal = ()=>{
         if(tokenInfo.value.canisterId == config.LEDGER_CANISTER_ID && !validateAddress(to.value.trim())){
             showError("Please use Account ID to send ICP");
@@ -112,6 +116,7 @@
                         <div class="col-sm-4">
                             <div class="form-group">
                                 <label class="form-label required">Amount</label>
+                                <div class="float-right">Balance: <a href="#" @click="selectMax" title="Select Max" class="fw-bold">{{ tokenInfo.balance }}</a> <span class="text-blue">{{ tokenInfo.symbol }}</span></div>
                                 <div class="form-control-wrap">
                                     <input type="text" class="form-control" v-model="amount" required @change="checkActually" :disabled="isNFT"/>
                                 </div>
