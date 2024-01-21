@@ -1,10 +1,13 @@
 <script setup>
-import EventBus from "@/services/EventBus";
+import { showModal} from "@/utils/common";
 import { useRoute } from 'vue-router';
 const router = useRoute();
 
 const showWallet = ()=>{
-	EventBus.emit('showWalletModal', true);
+	showModal('showWalletModal', true);
+}
+const showProgress = ()=>{
+	showModal('showProcessBuyingModal', {status: true})
 }
 </script>
 <template>
@@ -42,7 +45,14 @@ const showWallet = ()=>{
 			<!--begin::Actions-->
 			<div class="d-flex align-items-center py-1">
 				<router-link to="/new-contract" class="btn btn-sm btn-light-danger me-2">New Contract</router-link>
-				<a href="#" @click="showWallet" class="btn btn-sm btn-light-primary"><i class="fas fa-wallet  me-2"></i>My Wallet</a>
+				<a href="#" @click="showWallet" class="btn btn-sm btn-light-primary me-2"><i class="fas fa-wallet"></i> My Wallet</a> 
+				<!-- <a href="#" @click="showProgress" class="btn btn-sm btn-light-info me-2">
+					<span >
+						<i class="fas fa-tasks"></i> 
+						Buying...
+						<span class="spinner-border spinner-border-sm align-middle ms-2"></span>
+					</span>
+				</a> -->
 			</div>
 			<!--end::Actions-->
 		</div>

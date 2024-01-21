@@ -171,6 +171,13 @@ export const copyToClipboard = (text, item) => {
         console.error('Async: Could not copy text: ', err);
     });
 }
+export const getRandomBytes = () => {
+    var bs = [];
+    for (let i = 0; i < 32; i++) {
+        bs.push(Math.floor(Math.random() * 256));
+    }
+    return bs;
+};
 export default {
     validateAddress,
     showError

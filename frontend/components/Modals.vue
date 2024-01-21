@@ -4,6 +4,8 @@
 	import DeployToken from './modals/DeployToken.vue'
 	import ManageToken from './modals/ManageToken.vue'
 	import Login from './modals/Login.vue'
+	import BuyModal from './marketplace/BuyModal.vue'
+	import ProcessBuyingModal from './marketplace/ProcessBuyingModal.vue'
 </script>
 <template>
 	<ContractPreview />
@@ -11,4 +13,6 @@
 	<DeployToken />
 	<ManageToken />
 	<Login />
+	<BuyModal />
+	<ProcessBuyingModal />
 </template>

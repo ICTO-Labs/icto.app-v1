@@ -104,14 +104,14 @@
                                 </div>
                             </div>
                         </div>
-                        <div class="col-sm-12 text-center" v-if="!isImported">
+                            <div class="d-flex flex-column gap-7 gap-md-10" v-if="!isImported">
                             <!-- <button type="submit" class="btn btn-primary btn-block" @click="importToken" :disabled="!importButtonReady || isLoading">
                                 <em class="icon ni ni-send"></em><span class="text-capitalize">Import</span>
                             </button> -->
                             <LoadingButton 
                                 :loading="isLoading"
                                 class="btn btn-primary btn-block"
-                                @click="importToken">Import
+                                @click="importToken">Check
                             </LoadingButton>
                         </div>
                         <div v-if="isImported" class="mt-5">

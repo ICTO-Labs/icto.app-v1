@@ -8,6 +8,9 @@ import TokenDetail from './views/token/TokenDetail.vue'
 import ContractDetail from './views/contract/ContractDetail.vue'
 import Launchpad from './views/launchpad/Launchpad.vue'
 import NewLaunchpad from './views/launchpad/NewLaunchpad.vue'
+import Marketplace from './views/marketplace/Marketplace.vue'
+import CollectionDetail from './views/marketplace/Collection.vue'
+import ItemDetail from './views/marketplace/Item.vue'
 const router = createRouter({
   history: createWebHistory(import.meta.env.BASE_URL),
   routes: [
@@ -34,6 +37,24 @@ const router = createRouter({
       meta: {title: 'New Launchpad'},
       name: 'new-launchpad',
       component: NewLaunchpad,
+    },
+    {
+      path: '/marketplace',
+      meta: {title: 'Marketplace'},
+      name: 'marketplace',
+      component: Marketplace,
+    },
+    {
+      path: '/marketplace/:canisterId',
+      meta: {title: 'Collection'},
+      name: 'collection-detail',
+      component: CollectionDetail,
+    },
+    {
+      path: '/marketplace/:canisterId/:itemId',
+      meta: {title: 'Item'},
+      name: 'item-detail',
+      component: ItemDetail,
     },
     {
       path: '/vesting',
