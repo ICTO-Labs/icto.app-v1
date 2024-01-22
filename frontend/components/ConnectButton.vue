@@ -1,9 +1,16 @@
 <script setup>
+import { watchEffect } from "vue";
 import EventBus from "@/services/EventBus";
 import walletStore from "@/store";
 import LoadingLabel from "@/components/LoadingLabel.vue"
 
 import { showModal, shortPrincipal, shortAccount } from '@/utils/common';
+
+watchEffect(() => {
+	if(walletStore.isLogged && !walletStore.principal){
+		walletStore.logout();
+	}
+});
 
 import _api from "@/ic/api";
 import Copy from "@/components/icons/Copy.vue";

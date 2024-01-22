@@ -3,7 +3,6 @@
     import config from "@/config"
     import { Money3Component as money3 } from 'v-money3'
     import {currencyFormat} from "@/utils/token";
-    import Verified from "@/components/Verified.vue";
     const icpPrice = ref(13.75);
     const tokenBalance = ref(0);
     const tokenId = ref("b77ix-eeaaa-aaaaa-qaada-cai");
@@ -80,6 +79,8 @@
     }
 </script>
 <template>
+    <Toolbar :current="`New Launchpad`" :parents="[{title: 'Launchpad', to: '/launchpad'}]"/>
+
     <div class="stepper stepper-pills stepper-column d-flex flex-column flex-xl-row flex-row-fluid first" id="kt_create_account_stepper" data-kt-stepper="true">
             <!--begin::Aside-->
             <div class="d-flex justify-content-center bg-body rounded justify-content-xl-start flex-row-auto w-100 w-xl-300px w-xxl-300px me-9">

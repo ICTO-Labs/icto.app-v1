@@ -116,6 +116,8 @@
 	}
 </script>
 <template>
+    <Toolbar :current="`New Contract`" :parents="[{title: 'Payments', to: '/payments'}]"/>
+
 	<form class="form" @submit.prevent="reviewContract">
 	<div class="card  mb-xl-8">
 		<div class="card-header align-items-center">

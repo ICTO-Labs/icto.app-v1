@@ -4,8 +4,10 @@
     console.log(router);
 
     import Payments from '@/components/contract/Payments.vue';
+import Toolbar from '../../components/layout/Toolbar.vue';
     
 </script>
 <template>
-   <Payments v-if="router.path == '/payments'"/>
+    <Toolbar :current="`Payments`" :parents="[]"/>
+    <Payments v-if="router.path == '/payments'"/>
 </template>

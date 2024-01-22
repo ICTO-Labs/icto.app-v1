@@ -38,6 +38,7 @@
 	
 </script>
 <template>
+	<Toolbar :current="tokenInfo?tokenInfo.name:''" :parents="[{title: 'My Tokens', to: '/my-token'}]" />
 	<div class="d-flex flex-column flex-lg-row">
 		<!--begin::Sidebar-->
 		<div class="flex-column flex-lg-row-auto me-lg-10  w-lg-250px w-xl-300px mb-10 order-1 order-lg-1">

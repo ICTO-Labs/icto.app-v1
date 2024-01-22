@@ -1,38 +1,57 @@
+<script setup>
+    import { shortAccount } from '@/utils/common';
+    import { showModal } from '@/utils/common';
+    const buyNow = ()=>{
+        showModal('showBuyModal', { status: true, 
+            nft: 'uncommon'
+        });
+    }
+</script>
 <template>
+    <Toolbar :current="`ICTO NFT Card #2302`" :parents="[{title: 'Marketplace', to: '/marketplace'}, {title: 'ICTO NFT Card', to: '/marketplace/2ouva-viaaa-aaaaq-aaamq-cai'}]"/>
     <div class="row g-xxl-9">
         <!--begin::Col-->
-        <div class="col-xxl-8">
+        <div class="col-xxl-6">
             <!--begin::Security summary-->
             <div class="card1 card-xxl-stretch overflow-hidden">
+                
                 <div class="card-body p-0">
                     <div class="row gy-4">
                         <div class="col-sm-12">
                             <img :src="`http://localhost:5500/sample/uncommon.svg`" class="w-100 max-h-350" />
                         </div>
+
+                        <div class="align-items-center mb-2">
+                            <h4 class=" p-2">Description</h4>
+                            <div class="fs-7 text-muted p-2">
+                                <p>This second generation collection builds on our popular first release by introducing increased rarity and exclusive traits for only 3,460 tokens.</p>
+                                <p>
+                                We focused on higher scarcity and prestige for Gen 2 holders. Owners can also customize names and images for each token. Join our growing community focused on utility!
+                                </p>
+                            </div>
+                        </div>
                     </div>
                 </div>
             </div>
         </div>
-        <div class="col-xxl-4">
+        <div class="col-xxl-6">
             <div class="card mb-2 mb-xl-10">
-                <div class="card-header card-header-stretch">
-                    <div class="card-title">
-                        <h3 class="text-primary">
-                            <router-link to="/"><i class="fas fa-folder text-primary fs-4"></i> ICTO NFT Card</router-link>
-                        </h3>
+                <div class="card-body p-5">
+                    <h3 class="fs-6 fw-bolder">
+                            <router-link to="/" class="text-primary">ICTO NFT Card <Verified /></router-link>
+                    </h3>
+                    <h1 class="text-dark">
+                        <router-link to="/"  class="text-dark">ICTO NFT Card #2302</router-link> <a href="#" class="fs-6 fw-bold ms-2">View Onchain <i class="fas fa-link"></i></a>
+                    </h1>
+                    <div class="d-flex align-items-center d-column">
+                        <div class="d-flex align-items-center min-w-125px py-3 me-6 mb-3 col">
+                            <span class="fw-bold me-2">Creator: </span> <a href="#">{{ shortAccount('6102c39ede652286711a1019b6e2e67c0b765241db23b3e96b9f203b6174e6a2')  }}</a> <Verified :size="5"/>
+                        </div>
+                        <div class="d-flex align-items-center min-w-125px py-3 me-6 mb-3 col">
+                            <span class="fw-bold me-2">Owner: </span>  <a href="#">{{ shortAccount('6102c39ede652286711a1019b6e2e67c0b765241db23b3e96b9f203b6174e6a2')  }}</a>
+                        </div>
                     </div>
-                </div>
-                <div class="card-body">
-                    <div class="fs-4 text-primary fw-bolder">ICTO NFT Card #2302</div>
                     <div class="d-flex align-items-center d-column mb-5">
-                        <div class="fw-bolder fs-6">
-                            <i class="fas fa-user"></i> Owner:<span class="text-muted fs-6 fw-bold ms-2">2c7436...d74f2</span>
-                        </div>
-                        <div class="fw-bolder fs-6 ms-3">
-                            <a href="#" class="fs-6 fw-bold ms-2">View Onchain <i class="fas fa-link"></i></a>
-                        </div>
-                    </div>
-                    <div class="row pt-3">
                         <!--begin::Stat-->
                         <div class="border border-gray-300 border-dashed rounded min-w-125px py-3 px-4 me-6 mb-3 col">
                             <!--begin::Number-->
@@ -71,20 +90,8 @@
                             <div class="fw-bold fs-6 text-gray-400">Age (days)</div>
                             <!--end::Label-->
                         </div>
-                        </div>
-                    
-                </div>
-            </div>
-            
-            <div class="card mb-5 mb-xl-10">
-                <div class="card-header card-header-stretch">
-                    <div class="card-title py-0">
-                        <h3 class="m-0 text-gray-900">
-                            <i class="fas fa-shopping-cart"></i> Price
-                        </h3>
                     </div>
-                </div>
-                <div class="card-body pt-5">
+                    <h5>PRICE</h5>
                     <div class="row">
                         <div class="col">
                             <div class="fw-bolder fs-2">200<span class="text-muted fs-4 fw-bold ms-2">ICP</span>
@@ -93,97 +100,172 @@
                         </div>
                         <div class="col mt-1">
                             <div class="d-flex flex-column">
-                                <button class="btn btn-danger"><i class="fas fa-wallet"></i> Buy Now</button>
+                                <button class="btn btn-danger" @click.stop="buyNow"><i class="fas fa-wallet"></i> Buy Now</button>
                             </div>
                         </div>
                     </div>
                 </div>
             </div>
+            <div class="card mb-5 mb-xl-10">
+                <div class="card-header p-5 min-h-50px card-header-stretch">
+                    <div class="card-title py-0">
+                        <h3 class="m-0 text-gray-900">
+                            <i class="fas fa-tag"></i> Offers
+                        </h3>
+                    </div>
+                </div>
+                <div class="card-body p-5">
+                    <div class="row p-5">
+                        There are currently no offers!
+                    </div>
+                </div>
+            </div>
         </div>
     </div>
-    <div class="card mb-5 mb-xl-10 mt-10" data-select2-id="select2-data-74-0rja">
+
+    <div class="card mb-5 mb-xl-10 mt-10">
         <!--begin::Card header-->
-        <div class="card-header">
-            <!--begin::Heading-->
-            <div class="card-title">
-                <h3>#2302 Points History</h3>
-            </div>
-            <!--end::Heading-->
-            <!--begin::Toolbar-->
+        <div class="card-header border-0 pt-0">
+            <h3 class="card-title align-items-start flex-column">
+                <ul class="nav">
+                    <li class="nav-item">
+                        <a class="nav-link btn btn-sm btn-color-muted btn-active btn-active-dark active fw-bolder px-4 me-1 fs-6" data-bs-toggle="tab" href="#kt_tab_pane_1">Item History</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link btn btn-sm btn-color-muted btn-active btn-active-dark fw-bolder px-4 me-1 fs-6" data-bs-toggle="tab" href="#kt_tab_pane_2">Point History</a>
+                    </li>
+                </ul>
+
+                
+            </h3>
             <div class="card-toolbar">
-                <a href="#" class="btn btn-sm btn-primary my-1">View All</a>
+                <button class="btn btn-sm btn-light-primary">Refresh</button>
             </div>
-            <!--end::Toolbar-->
         </div>
         <!--end::Card header-->
         <!--begin::Card body-->
         <div class="card-body p-0">
-            <!--begin::Table wrapper-->
-            <div class="table-responsive">
-                <!--begin::Table-->
-                <table class="table table-flush align-middle table-row-bordered table-row-solid gy-4 gs-9">
-                    <!--begin::Thead-->
-                    <thead class="border-gray-200 fs-5 fw-bold bg-lighten">
-                        <tr>
-                            <th class="min-w-100px">Before points</th>
-                            <th class="min-w-100px">Change</th>
-                            <th class="min-w-100px">After points</th>
-                            <th class="min-w-150px">From</th>
-                            <th class="min-w-150px">Descriptions</th>
-                            <th class="min-w-150px">Time</th>
-                        </tr>
-                    </thead>
-                    <!--end::Thead-->
-                    <!--begin::Tbody-->
-                    <tbody class="fw-6 fw-bold text-gray-600">
-                        <tr>
-                            <td>
-                                <span class="text-hover-primary text-info">184</span>
-                            </td>
-                            <td>
-                                <span class="text-hover-primary text-success">+12</span>
-                            </td>
-                            <td>
-                                <span class="text-hover-primary text-primary">196</span>
-                            </td>
-                            <td>System</td>
-                            <td>Staking event #2</td>
-                            <td>2 mins ago</td>
-                        </tr>
-                        <tr>
-                            <td>
-                                <span class="text-hover-primary text-info">182</span>
-                            </td>
-                            <td>
-                                <span class="text-hover-primary text-success">+2</span>
-                            </td>
-                            <td>
-                                <span class="text-hover-primary text-primary">184</span>
-                            </td>
-                            <td>System</td>
-                            <td>Daily age bonus</td>
-                            <td>2 days ago</td>
-                        </tr>
-                        <tr>
-                            <td>
-                                <span class="text-hover-primary text-info">0</span>
-                            </td>
-                            <td>
-                                <span class="text-hover-primary text-success">+182</span>
-                            </td>
-                            <td>
-                                <span class="text-hover-primary text-primary">182</span>
-                            </td>
-                            <td>System</td>
-                            <td>Bonus point from Pioneer Gen 1</td>
-                            <td>16 days ago</td>
-                        </tr>
-                    </tbody>
-                    <!--end::Tbody-->
-                </table>
-                <!--end::Table-->
+            <div class="tab-content" id="myTabContent">
+                <div class="tab-pane fade active show" id="kt_tab_pane_1" role="tabpanel">
+                    <!--begin::Table wrapper-->
+                    <div class="table-responsive">
+                        <!--begin::Table-->
+                        <table class="table table-flush align-middle table-row-bordered table-row-solid gy-4 gs-9">
+                            <!--begin::Thead-->
+                            <thead class="border-gray-200 fs-5 fw-bold bg-lighten">
+                                <tr>
+                                    <th class="min-w-100px">Action</th>
+                                    <th class="min-w-100px">Price</th>
+                                    <th class="min-w-100px">From</th>
+                                    <th class="min-w-150px">To</th>
+                                    <th class="min-w-150px">Time</th>
+                                </tr>
+                            </thead>
+                            <!--end::Thead-->
+                            <!--begin::Tbody-->
+                            <tbody class="fw-6 fw-bold text-gray-600">
+                                <tr>
+                                    <td>
+                                        <span class="text-hover-primary text-info">Sale</span>
+                                    </td>
+                                    <td>
+                                        <span class="text-hover-primary text-success">+12</span>
+                                    </td>
+                                    <td>
+                                        <span class="text-hover-primary text-primary">196</span>
+                                    </td>
+                                    <td>System</td>
+                                    <td>2 mins ago</td>
+                                </tr>
+                                <tr>
+                                    <td>
+                                        <span class="text-hover-primary text-info">Sale</span>
+                                    </td>
+                                    <td>
+                                        <span class="text-hover-primary text-success">+2</span>
+                                    </td>
+                                    <td>
+                                        <span class="text-hover-primary text-primary">184</span>
+                                    </td>
+                                    <td>System</td>
+                                    <td>2 days ago</td>
+                                </tr>
+                            </tbody>
+                            <!--end::Tbody-->
+                        </table>
+                        <!--end::Table-->
+                    </div>
+                    <!--end::Table wrapper-->
+                </div>
+                <div class="tab-pane fade" id="kt_tab_pane_2" role="tabpanel">
+                    <!--begin::Table wrapper-->
+                    <div class="table-responsive">
+                        <!--begin::Table-->
+                        <table class="table table-flush align-middle table-row-bordered table-row-solid gy-4 gs-9">
+                            <!--begin::Thead-->
+                            <thead class="border-gray-200 fs-5 fw-bold bg-lighten">
+                                <tr>
+                                    <th class="min-w-100px">Before points</th>
+                                    <th class="min-w-100px">Change</th>
+                                    <th class="min-w-100px">After points</th>
+                                    <th class="min-w-150px">From</th>
+                                    <th class="min-w-150px">Descriptions</th>
+                                    <th class="min-w-150px">Time</th>
+                                </tr>
+                            </thead>
+                            <!--end::Thead-->
+                            <!--begin::Tbody-->
+                            <tbody class="fw-6 fw-bold text-gray-600">
+                                <tr>
+                                    <td>
+                                        <span class="text-hover-primary text-info">184</span>
+                                    </td>
+                                    <td>
+                                        <span class="text-hover-primary text-success">+12</span>
+                                    </td>
+                                    <td>
+                                        <span class="text-hover-primary text-primary">196</span>
+                                    </td>
+                                    <td>System</td>
+                                    <td>Staking event #2</td>
+                                    <td>2 mins ago</td>
+                                </tr>
+                                <tr>
+                                    <td>
+                                        <span class="text-hover-primary text-info">182</span>
+                                    </td>
+                                    <td>
+                                        <span class="text-hover-primary text-success">+2</span>
+                                    </td>
+                                    <td>
+                                        <span class="text-hover-primary text-primary">184</span>
+                                    </td>
+                                    <td>System</td>
+                                    <td>Daily age bonus</td>
+                                    <td>2 days ago</td>
+                                </tr>
+                                <tr>
+                                    <td>
+                                        <span class="text-hover-primary text-info">0</span>
+                                    </td>
+                                    <td>
+                                        <span class="text-hover-primary text-success">+182</span>
+                                    </td>
+                                    <td>
+                                        <span class="text-hover-primary text-primary">182</span>
+                                    </td>
+                                    <td>System</td>
+                                    <td>Bonus point from Pioneer Gen 1</td>
+                                    <td>16 days ago</td>
+                                </tr>
+                            </tbody>
+                            <!--end::Tbody-->
+                        </table>
+                        <!--end::Table-->
+                    </div>
+                    <!--end::Table wrapper-->
+                </div>
             </div>
-            <!--end::Table wrapper-->
         </div>
         <!--end::Card body-->
     </div>

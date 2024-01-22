@@ -15,6 +15,8 @@
 	}
 </script>
 <template>
+	<Toolbar :current="`My Tokens`"/>
+
 	<div class="card card-xl-stretch mb-5 mb-xl-10">
 	<div class="card-header border-0 pt-5">
 		<h3 class="card-title align-items-start flex-column">

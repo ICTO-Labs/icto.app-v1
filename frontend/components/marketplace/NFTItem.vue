@@ -19,7 +19,7 @@
         <div class="bg-light bg-opacity-75 p-3 rounded-3 nft-item">
             <div class="card-xl-stretch">
                 <!--begin::Overlay-->
-                <div class="d-block overlay" data-fslightbox="lightbox-hot-sales" href="#" @click="buyNow(props.nft)">
+                <router-link class="d-block overlay" data-fslightbox="lightbox-hot-sales" to="/marketplace/2ouva-viaaa-aaaaq-aaamq-cai/1">
                 <!--begin::Image-->
                 <div class="overlay-wrapper bgi-no-repeat bgi-position-center bgi-size-cover card-rounded min-h-150px" :style="`background-image:url('http://localhost:5500/sample/${props.nft}.svg')`"></div>
                 <!--end::Image-->
@@ -28,7 +28,7 @@
                     <i class="bi bi-cart fs-2x text-white"></i>
                 </div>
                 <!--end::Action-->
-                </div>
+                </router-link>
                 <!--end::Overlay-->
                 <!--begin::Body-->
                 <div class="mt-5">
