@@ -16,6 +16,12 @@ export const walletStore = reactive({
     _principal: '', 
     address: '', 
     balance: 0,
+    lastFetch: 0,//Timestamp
+    icpPrice: 0,//source from Binance
+    setICPPrice(rate){
+        this.lastFetch = new Date().valueOf();
+        this.icpPrice = rate;
+    },
     setIdentity(identity){
         this.identity = identity;
         if(identity){
@@ -49,6 +55,7 @@ export const walletStore = reactive({
             this.connector = status;
             localStorage.setItem("connector", status);
             localStorage.setItem("isLogged", true);
+            this.getICPPrice();
         }else{
             this.isLogged = false;
             this.connector = null;
@@ -66,7 +73,28 @@ export const walletStore = reactive({
         this.setLoginState(null);
         this.setCurrentAccount({});
 
+    },
+    async getICPPrice() {
+        this.fetchICPPrice();
+        setInterval(() => {//Fetch every 10 min
+            let now = new Date().valueOf();
+            if(this.icpPrice == 0 || now - this.lastFetch > 10*60*1000){
+                this.fetchICPPrice();
+            }
+        }, 60*1000);
+    },
+    async fetchICPPrice() {
+        try {
+            const response = await fetch('https://api.binance.com/api/v3/ticker/price?symbol=ICPUSDT');
+            const data = await response.json();
+            const icpPrice = parseFloat(data.price);
+            this.setICPPrice(icpPrice);
+        } catch (error) {
+            console.error('Error fetching ICP price:', error);
+            return null;
+        }
     }
+
 })
 
 export default walletStore;

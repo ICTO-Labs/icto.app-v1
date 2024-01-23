@@ -57,7 +57,7 @@
                             <div class="form-group">
                                 <label class="form-label">Price</label>
                                 <div class="form-control-wrap">
-                                    <ICP :amount="3.882">3.882</ICP>
+                                    <ICPValue :amount="3.882">3.882</ICPValue>
                                 </div>
                             </div>
                         </div>
@@ -65,7 +65,7 @@
                             <div class="form-group">
                                 <label class="form-label">Floor Price</label>
                                 <div class="form-control-wrap">
-                                    <ICP :amount="1">1</ICP>
+                                    <ICPValue :amount="1">1</ICPValue>
                                 </div>
                             </div>
                         </div>
@@ -73,7 +73,7 @@
                             <div class="form-group">
                                 <label class="form-label">Lowest Price</label>
                                 <div class="form-control-wrap">
-                                    <ICP :amount="0.91">0.91</ICP>
+                                    <ICPValue :amount="0.91">0.91</ICPValue>
                                 </div>
                             </div>
                         </div>

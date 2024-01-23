@@ -3,7 +3,6 @@ import { watchEffect } from "vue";
 import EventBus from "@/services/EventBus";
 import walletStore from "@/store";
 import LoadingLabel from "@/components/LoadingLabel.vue"
-
 import { showModal, shortPrincipal, shortAccount } from '@/utils/common';
 
 watchEffect(() => {
@@ -13,7 +12,7 @@ watchEffect(() => {
 });
 
 import _api from "@/ic/api";
-import Copy from "@/components/icons/Copy.vue";
+import moment from "moment";
 
 const logout = ()=>{
 	Swal.fire({
@@ -44,6 +43,16 @@ const showWallet = ()=>{
 <template>
 
     <!--begin::User-->
+	<div class="d-flex align-items-center ms-1 ms-lg-3">
+		<!--begin::Menu wrapper-->
+		<div class="position-relative border p-2 rounded" id="kt_drawer_chat_toggle" data-bs-toggle="tooltip" data-bs-placement="bottom" title="" :data-bs-original-title="`Source: Binance. Last update: ${moment(walletStore.lastFetch).fromNow()} `">
+			<!--begin::Svg Icon | path: icons/duotune/communication/com012.svg-->
+			<span class="fw-bold">ICP:</span> ${{ walletStore.icpPrice }}
+			<!--end::Svg Icon-->
+			<span class="bullet bullet-dot bg-success h-6px w-6px position-absolute translate-middle top-0 start-0 animation-blink"></span>
+		</div>
+		<!--end::Menu wrapper-->
+	</div>
     <div class="d-flex align-items-center ms-1 ms-lg-3" id="kt_header_user_menu_toggle">
 		<!--begin::Menu wrapper-->
 		<div class="cursor-pointer symbol symbol-30px symbol-md-40px" data-kt-menu-trigger="click" data-kt-menu-attach="parent" data-kt-menu-placement="bottom-end">

@@ -1,13 +1,15 @@
 <script setup>
-    import { ref } from "vue"
-    const props = defineProps(["amount", "noUSD"]);
-    const amount = ref(0);
-    const toUSD = ref(props.amount*12.82);
+    const props = defineProps(['size']);
+    const size = props.size || 1;
 </script>
 <template>
-    <div class="fw-bolder fs-2">
-        <slot></slot>
-        <span class="text-muted fs-4 fw-bold ms-2">ICP</span>
-        <span class="text-muted fw-bold text-muted d-block fs-6" v-if="!noUSD">≈ ${{ toUSD|0 }}</span>
-    </div>
+    <span class="me-1">
+        <img src="/media/icp.png" alt="ICP" width="24">
+    </span>
 </template>
+
+<style scoped>
+.btn-icon {
+    /* Add your button styles here */
+}
+</style>

@@ -8,6 +8,8 @@ import Modals from "./components/Modals.vue"
 import Popup from "./components/Popup.vue"
 import Wallet from "./components/Wallet.vue"
 import WalletManager from "@/services/WalletManager";
+import walletStore from './store';
+walletStore.getICPPrice();//init ICP price
 
 WalletManager.checkLoginStatus();
 </script>

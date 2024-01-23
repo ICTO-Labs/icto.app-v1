@@ -14,16 +14,16 @@
 </script>
 <template>
     <!--begin::Toolbar-->
-    <div class=" p-2 mt-5 mb-5 px-0 rounded" id="kt_toolbar">
+    <div class="p-2 mt-5 mb-5 px-0 " id="kt_toolbar">
 		<!--begin::Container-->
 		<div id="kt_toolbar_container" class="w-100 d-flex flex-stack">
 			<!--begin::Page title-->
 			<div data-kt-swapper="true" data-kt-swapper-mode="prepend" data-kt-swapper-parent="{default: '#kt_content_container', 'lg': '#kt_toolbar_container'}" class="page-title d-flex align-items-center flex-wrap me-3 mb-5 mb-lg-0">
 				<!--begin::Breadcrumb-->
-				<ul class="breadcrumb  fw-bold fs-7 my-1">
+				<ul class="breadcrumb fw-bold fs-7 my-1">
 					<!--begin::Item-->
 					<li class="breadcrumb-item text-muted">
-						<router-link to="/" class="text-muted text-hover-primary" title="Home">Home</router-link>
+						<router-link to="/" class="text-muted text-hover-primary" title="Home"><i class="fas fa-home me-1"></i>Home</router-link>
 					</li>
 					<!--end::Item-->
 					<!--begin::Item-->
@@ -32,7 +32,7 @@
 					</li>
 					<!--end::Item-->
 					<!--begin::Item-->
-					<li class="breadcrumb-item text-dark">{{ props.current }}</li>
+					<li class="breadcrumb-item ">{{ props.current }}</li>
 					<!--end::Item-->
 				</ul>
 				<!--end::Breadcrumb-->

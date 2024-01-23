@@ -94,9 +94,7 @@
                     <h5>PRICE</h5>
                     <div class="row">
                         <div class="col">
-                            <div class="fw-bolder fs-2">200<span class="text-muted fs-4 fw-bold ms-2">ICP</span>
-                                <span class="text-muted fw-bold text-muted d-block fs-6">≈ $0</span>
-                            </div>
+                            <ICPValue :amount="3.882">3.882</ICPValue>
                         </div>
                         <div class="col mt-1">
                             <div class="d-flex flex-column">

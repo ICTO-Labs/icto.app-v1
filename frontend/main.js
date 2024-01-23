@@ -25,6 +25,7 @@ import App from "./App.vue"
 import ClickToCopy from '@/components/ClickToCopy.vue';
 import Copy from '@/components/icons/Copy.vue'
 import ICP from '@/components/icons/ICP.vue'
+import ICPValue from '@/components/icons/ICPValue.vue'
 import Spinner from '@/components/icons/Spinner.vue'
 import Verified from '@/components/icons/Verified.vue'
 import Empty from '@/components/layout/Empty.vue'
@@ -51,6 +52,7 @@ app.use(VueApexCharts);
 app.component('ClickToCopy', ClickToCopy);
 app.component('Copy', Copy);
 app.component('ICP', ICP);
+app.component('ICPValue', ICPValue);
 app.component('Spinner', Spinner);
 app.component('Verified', Verified);
 app.component('Toolbar', Toolbar);
