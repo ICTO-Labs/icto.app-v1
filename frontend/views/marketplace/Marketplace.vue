@@ -1,5 +1,10 @@
+<script setup>
+    import SingleCollection from '@/components/marketplace/SingleCollection.vue';
+</script>
 <template>
     <Toolbar :current="`Marketplace`"/>
 
-    <router-link to="/marketplace/2ouva-viaaa-aaaaq-aaamq-cai">ICTO Collection</router-link>
+    <div class="row g-6 g-xl-9">
+        <SingleCollection />
+    </div>
 </template>

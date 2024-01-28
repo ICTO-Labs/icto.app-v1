@@ -1,6 +1,11 @@
 <script setup>
-    import { ref } from "vue";
+    import { ref, onMounted } from "vue";
     import NFTItem from "@/components/marketplace/NFTItem.vue";
+    import { getCollectionInfo, getCollectionStats } from "@/services/Marketplace";
+    import { useRoute } from "vue-router";
+    import CountUp from 'vue-countup-v3'
+
+    const router = useRoute();
     const items = ref([
         {tokenId: "common", price: 2, image: ""},
         {tokenId: "rare", price: 5},
@@ -13,6 +18,15 @@
         {tokenId: "exclusive", price: 30},
         {tokenId: "premium", price: 18},
     ])
+
+    const canisterId = router.params.canisterId;
+    const collectionInfo = ref({});
+    const stats = ref({});
+
+    onMounted(async () => {
+        collectionInfo.value = await getCollectionInfo(canisterId);
+        stats.value = await getCollectionStats(canisterId);
+    })
 </script>
 <template>
     <Toolbar :current="`ICTO NFT Card`" :parents="[{title: 'Marketplace', to: '/marketplace'}]"/>
@@ -95,10 +109,12 @@
                                 <!--begin::Stats-->
                                 <div class="d-flex flex-wrap">
                                     <!--begin::Stat-->
-                                    <div class="border border-gray-300 border-dashed rounded min-w-125px py-3 px-4 me-6 mb-3">
+                                    <div class="border border-gray-300 border-dashed rounded min-w-100px p-2 mb-3 me-3">
                                         <!--begin::Number-->
                                         <div class="d-flex align-items-center">
-                                            <div class="fs-2 fw-bolder counted" data-kt-countup="true" data-kt-countup-value="4500" data-kt-countup-prefix="$">$4,500</div>
+                                            <div class="fs-2 fw-bolder counted">
+                                                <count-up :end-val="100"></count-up>
+                                            </div>
                                         </div>
                                         <!--end::Number-->
                                         <!--begin::Label-->
@@ -107,27 +123,51 @@
                                     </div>
                                     <!--end::Stat-->
                                     <!--begin::Stat-->
-                                    <div class="border border-gray-300 border-dashed rounded min-w-125px py-3 px-4 me-6 mb-3">
+                                    <div class="border border-gray-300 border-dashed rounded min-w-100px p-2 mb-3 me-3">
                                         <!--begin::Number-->
                                         <div class="d-flex align-items-center">
-                                            <div class="fs-2 fw-bolder counted" data-kt-countup="true" data-kt-countup-value="80">3460</div>
-                                        </div>
-                                        <!--end::Number-->
-                                        <!--begin::Label-->
-                                        <div class="fw-bold fs-6 text-gray-400">Items</div>
-                                        <!--end::Label-->
-                                    </div>
-                                    <!--end::Stat-->
-                                    <!--begin::Stat-->
-                                    <div class="border border-gray-300 border-dashed rounded min-w-125px py-3 px-4 me-6 mb-3">
-                                        <!--begin::Number-->
-                                        <div class="d-flex align-items-center">
-                                            <div class="fs-2 fw-bolder counted" data-kt-countup="true" data-kt-countup-value="60" data-kt-countup-prefix="%">60</div>
+                                            <div class="fs-2 fw-bolder counted">
+                                                <count-up :end-val="30"></count-up>
+                                            </div>
                                         </div>
                                         <!--end::Number-->
                                         <!--begin::Label-->
                                         <div class="fw-bold fs-6 text-gray-400">Floor</div>
                                         <!--end::Label-->
+                                    </div>
+                                    <!--end::Stat-->
+                                    <!--begin::Stat-->
+                                    <div class="border border-gray-300 border-dashed rounded min-w-100px p-2 mb-3 me-3">
+                                        <div class="d-flex align-items-center">
+                                            <div class="fs-2 fw-bolder counted">
+                                                <count-up :end-val="collectionInfo.total"></count-up>
+                                            </div>
+                                        </div>
+                                        <div class="fw-bold fs-6 text-gray-400">Sales</div>
+                                    </div>
+                                    <div class="border border-gray-300 border-dashed rounded min-w-100px p-2 mb-3 me-3">
+                                        <div class="d-flex align-items-center">
+                                            <div class="fs-2 fw-bolder counted">
+                                                <count-up :end-val="collectionInfo.average"></count-up>
+                                            </div>
+                                        </div>
+                                        <div class="fw-bold fs-6 text-gray-400">Avg Price</div>
+                                    </div>
+                                    <div class="border border-gray-300 border-dashed rounded min-w-100px p-2 mb-3 me-3">
+                                        <div class="d-flex align-items-center">
+                                            <div class="fs-2 fw-bolder counted">
+                                                <count-up :end-val="collectionInfo.listing"></count-up>
+                                            </div>
+                                        </div>
+                                        <div class="fw-bold fs-6 text-gray-400">Listing</div>
+                                    </div>
+                                    <div class="border border-gray-300 border-dashed rounded min-w-100px p-2 mb-3 me-3">
+                                        <div class="d-flex align-items-center">
+                                            <div class="fs-2 fw-bolder counted">
+                                                <count-up :end-val="collectionInfo.tokens"></count-up>
+                                            </div>
+                                        </div>
+                                        <div class="fw-bold fs-6 text-gray-400">Total supply</div>
                                     </div>
                                     <!--end::Stat-->
                                 </div>

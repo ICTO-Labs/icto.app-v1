@@ -18,9 +18,11 @@ export const walletStore = reactive({
     balance: 0,
     lastFetch: 0,//Timestamp
     icpPrice: 0,//source from Binance
-    setICPPrice(rate){
+    priceChange: 0,//24h change
+    setICPPrice(price, change){
         this.lastFetch = new Date().valueOf();
-        this.icpPrice = rate;
+        this.icpPrice = price;
+        this.priceChange = change.toFixed(2);
     },
     setIdentity(identity){
         this.identity = identity;
@@ -75,13 +77,25 @@ export const walletStore = reactive({
 
     },
     async getICPPrice() {
-        this.fetchICPPrice();
+        this.getICPPriceWithChange();
         setInterval(() => {//Fetch every 10 min
             let now = new Date().valueOf();
             if(this.icpPrice == 0 || now - this.lastFetch > 10*60*1000){
-                this.fetchICPPrice();
+                this.getICPPriceWithChange();
             }
         }, 60*1000);
+    },
+    async getICPPriceWithChange() {
+        try {
+            const response = await fetch('https://api.coingecko.com/api/v3/simple/price?ids=internet-computer&vs_currencies=usd&include_24hr_change=true');
+            const data = await response.json();
+            const icpPrice = parseFloat(data['internet-computer'].usd);
+            const icpPriceChange = parseFloat(data['internet-computer'].usd_24h_change);
+            this.setICPPrice(icpPrice, icpPriceChange);
+        } catch (error) {
+            console.error('Error fetching ICP price:', error);
+            return null;
+        }
     },
     async fetchICPPrice() {
         try {

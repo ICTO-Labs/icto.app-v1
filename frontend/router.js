@@ -13,7 +13,6 @@ import CollectionDetail from './views/marketplace/Collection.vue'
 import ItemDetail from './views/marketplace/Item.vue'
 import LocksIndex from './views/tokenlocks/Index.vue'
 import LiquidityLocks from './views/tokenlocks/Liquidity.vue'
-import OverviewLocks from './views/tokenlocks/Overview.vue'
 import TokenLocks from './views/tokenlocks/Token.vue'
 import NftLocks from './views/tokenlocks/Nft.vue'
 const router = createRouter({

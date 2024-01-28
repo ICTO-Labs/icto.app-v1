@@ -6,6 +6,7 @@ import nnsIDL from '@/ic/candid/nns.did';
 import icrc1IDL from '@/ic/candid/icrc1.did';
 import icrc2IDL from '@/ic/candid/icrc2.did';
 import icrc3IDL from '@/ic/candid/icrc2.did';
+import extIDL from '@/ic/candid/extNFT.did';
 import contractIDL from '@/ic/candid/contract.did';
 import walletStore from '@/store/'
 import {idlFactory as deployerIDL} from '../../../src/declarations/deployer/deployer.did.js'
@@ -55,6 +56,7 @@ class Connect {
         'icrc1' : icrc1IDL,
         'icrc2' : icrc2IDL,
         'icrc3' : icrc3IDL,
+        'EXT': extIDL,
         'IC': icIDL,
         'contract': contractIDL,
         'deployer': deployerIDL,
