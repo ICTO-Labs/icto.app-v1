@@ -11,6 +11,11 @@ import NewLaunchpad from './views/launchpad/NewLaunchpad.vue'
 import Marketplace from './views/marketplace/Marketplace.vue'
 import CollectionDetail from './views/marketplace/Collection.vue'
 import ItemDetail from './views/marketplace/Item.vue'
+import LocksIndex from './views/tokenlocks/Index.vue'
+import LiquidityLocks from './views/tokenlocks/Liquidity.vue'
+import OverviewLocks from './views/tokenlocks/Overview.vue'
+import TokenLocks from './views/tokenlocks/Token.vue'
+import NftLocks from './views/tokenlocks/Nft.vue'
 const router = createRouter({
   history: createWebHistory(import.meta.env.BASE_URL),
   routes: [
@@ -61,6 +66,17 @@ const router = createRouter({
       meta: {title: 'Vesting'},
       name: 'vesting',
       component: Contract,
+    },
+    {
+      path: '/token-locks',
+      meta: {title: 'Token Locks'},
+      name: 'token-locks',
+      component: LocksIndex,
+      children: [
+        { path: 'liquidity', component: LiquidityLocks, name: 'Liquidity'},
+        { path: 'token', component: TokenLocks, name: 'Token'},
+        { path: 'nft', component: NftLocks, name: 'Nft'},
+      ],
     },
     {
       path: '/new-contract',

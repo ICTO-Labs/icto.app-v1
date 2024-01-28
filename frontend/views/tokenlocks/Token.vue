@@ -1,0 +1,3 @@
+<template>
+    Token
+</template>
