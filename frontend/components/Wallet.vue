@@ -11,6 +11,7 @@
     const storeAssets = useAssetStore();
     const collectionInfo = {'name': "ICTO NFT Card", 'symbol': "NFT", 'canisterId': "1"};
     const openWallet = ref(false);
+    const activeTab = ref('wallet_tokens');
     onMounted(() => {
         EventBus.on("showWalletModal", (status) =>{
             openWallet.value = status;
@@ -19,16 +20,19 @@
     const closeWallet = ()=>{
         openWallet.value = false;
     }
+    const showTab = (tab)=>{
+      activeTab.value = tab;
+    }
     const importToken = ()=>{
       showModal("showImportTokenModal", true)
-	  }
+    }
     const refreshBalance = async()=>{
       await storeAssets.updateBalanceAll();
-	  }
+    }
     const transferToken = (token)=>{
       const newObj = {...token};
-		  newObj.status = true;
-		  newObj.action = 'transfer';
+      newObj.status = true;
+      newObj.action = 'transfer';
       showModal("showManageTokenModal", newObj)
     }
     const logout = ()=>{
@@ -84,7 +88,7 @@
                   <div class="fw-bold text-gray-800 fs-6">
                     {{ walletStore.principal }} <Copy :text="walletStore.principal"></Copy>
                   </div>
-					      </div>
+                </div>
                 <div class="mb-1">       
                     <div class="fw-semibold text-gray-600 fs-7">Address ID:</div> 
                     <div class="fw-bold text-gray-800 fs-6">
@@ -94,18 +98,32 @@
             </div>
           </div>
           <div class="separator my-2"></div>
-
           <div class="card-header px-0 border-0">
             <h3 class="card-title align-items-start flex-column">
-              <ul class="nav fs-5 ">
+              <ul class="nav fs-5">
                 <li class="nav-item">
-                  <a class="nav-link btn btn-sm btn-color-muted btn-active btn-active-primary fw-bolder fs-6 px-4 me-1 active" data-bs-toggle="tab" href="#wallet_tokens">Tokens</a>
+                  <a class="nav-link btn btn-sm btn-color-muted btn-active btn-active-primary fw-bolder fs-6 px-4 me-1"
+                    @click="showTab('wallet_tokens')"
+                    :class="{ active: activeTab === 'wallet_tokens' }"
+                  >
+                    Tokens
+                  </a>
                 </li>
                 <li class="nav-item">
-                  <a class="nav-link btn btn-sm btn-color-muted btn-active btn-active-danger fw-bolder fs-6 px-4 me-1" data-bs-toggle="tab" href="#wallet_nfts">NFTs</a>
+                  <a class="nav-link btn btn-sm btn-color-muted btn-active btn-active-danger fw-bolder fs-6 px-4 me-1"
+                    @click="showTab('wallet_nfts')"
+                    :class="{ active: activeTab === 'wallet_nfts' }"
+                  >
+                    NFTs
+                  </a>
                 </li>
                 <li class="nav-item">
-                  <a class="nav-link btn btn-sm btn-color-muted btn-active btn-active-success fw-bolder fs-6 px-4" data-bs-toggle="tab" href="#wallet_airdrops">Airdrops</a>
+                  <a class="nav-link btn btn-sm btn-color-muted btn-active btn-active-success fw-bolder fs-6 px-4"
+                    @click="showTab('wallet_airdrops')"
+                    :class="{ active: activeTab === 'wallet_airdrops' }"
+                  >
+                    Airdrops
+                  </a>
                 </li>
               </ul>
             </h3>
@@ -116,11 +134,10 @@
                 </button>
             </div>
           </div>
-   
           <div class="separator my-2"></div>
 
           <div class="tab-content" id="icto_wallet">
-            <div class="tab-pane fade active show" id="wallet_tokens" role="tabpanel">
+            <div :class="`tab-pane fade ${activeTab=='wallet_tokens'?'active show':''}`" id="wallet_tokens" role="tabpanel">
                 <div class="py-1">
                   <!--begin::Table container-->
                   <div class="table-responsive">
@@ -210,7 +227,7 @@
                 </div>
             </div>
           
-          <div class="tab-pane fade" id="wallet_nfts" role="tabpanel">
+          <div :class="`tab-pane fade ${activeTab=='wallet_nfts'?'active show':''}`"  id="wallet_nfts" role="tabpanel">
             <!--begin::Accordion-->
             <div class="accordion" id="kt_accordion_1">
               <div class="accordion-item">
@@ -259,7 +276,7 @@
             <!--end::Accordion-->    
             
           </div>
-          <div class="tab-pane fade" id="wallet_airdrops" role="tabpanel"> Coming soon </div>
+          <div :class="`tab-pane fade ${activeTab=='wallet_airdrops'?'active show':''}`"  id="wallet_airdrops" role="tabpanel"> Coming soon </div>
 		  </div>
         </div>
       </div>

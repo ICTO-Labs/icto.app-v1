@@ -23,8 +23,7 @@ const NETWORK = {
         identityProvider: "https://identity.ic0.app/#authorize"
     }
 }
-const ENV = "dev";// //dev, staging, ic
-
+const ENV = process.env.NODE_ENV == "development" ? "dev" : "ic";
 const config = {
     APP_VERSION: '2.0.1',
     ENV: ENV,

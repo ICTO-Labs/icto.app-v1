@@ -242,10 +242,16 @@ class walletManager {
     async iiWallet(){
         this.connectLoading();
         const auth  = await AuthClient.create();
+        const width = 500;
+        const height = screen.height;
+        const left = ((screen.width/2)-(width/2))|0;
+        const top = ((screen.height/2)-(height/2))|0; 
         auth.login({
             ...defaultOptions.loginOptions,
             maxTimeToLive: 7 * 24 * 60 * 60 * 1000 * 1000 * 1000,
             disableDefaultIdleCallback: true,
+            windowOpenerFeatures: `toolbar=0,location=0,menubar=0,width=${width},height=${height},top=${top},left=${left}`,
+            derivationOrigin: 'https://y3yam-6aaaa-aaaap-qb7aq-cai.icp0.io',
             onSuccess: async () => {
                 window.Swal.close();
                 let pid = await auth.getIdentity();

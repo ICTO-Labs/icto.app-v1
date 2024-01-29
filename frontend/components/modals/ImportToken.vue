@@ -44,7 +44,7 @@
             isLoading.value = false;
             if(!_tokenInfo || _tokenInfo.standard != tokenStandard.value){
                 isLoading.value = false;
-                // showError('Canister not found or did not match the token standard: '+tokenStandard.value.toUpperCase());
+                showError('Token not found or did not match the token standard: '+tokenStandard.value.toUpperCase());
             }else{
                 tokenInfo.value = _tokenInfo;
                 isImported.value = true;
