@@ -48,30 +48,52 @@
                 <div class="modal-body">
                         <div class="row gy-4 btn-group-login">
                             <div class="col-md-6">
-                                <div class="d-flex flex-column gap-7 gap-md-10">
-                                    <a href="javascript:void(0)" @click="walletLogin('ii')" :class="`btn btn-primary ${!config.WALLET_CONFIG['nns']?'disabled':''}`">
-                                        <img src="/partner/ii.png" alt="Internet Identity" class=" wallet-icon-small"> <span class="wallet-name">Internet Identity</span>
-                                    </a>
-                                </div>
-                            </div>
-                            <div class="col-md-6">
-                                <div class="d-flex flex-column gap-7 gap-md-10">
-                                <a href="javascript:void(0)" @click="walletLogin('plug')" :class="`btn btn-secondary ${!config.WALLET_CONFIG['plug']?'disabled':''}`">
-                                    <img src="/partner/plug.png" alt="Plug" class="wallet-icon-small"> <span class="wallet-name">Plug Wallet</span>
-                                </a></div>
-                            </div>
-                            <div class="col-md-6">
-                                <div class="d-flex flex-column gap-7 gap-md-10">
-                                <a href="javascript:void(0)" @click="walletLogin('stoic')" :class="`btn btn-secondary ${!config.WALLET_CONFIG['stoic']?'disabled':''}`">
-                                    <img src="/partner/stoic.png" alt="Stoic" class="wallet-icon-small"> <span class="wallet-name">Stoic Wallet</span>
-                                </a></div>
-                            </div>
-                            <div class="col-md-6">
-                                <div class="d-flex flex-column gap-7 gap-md-10">
-                                <a href="javascript:void(0)" @click="walletLogin('bitfinity')" :class="`btn btn-secondary ${!config.WALLET_CONFIG['bitfinity']?'disabled':''}`">
-                                    <img src="/partner/bitfinity.png" alt="Infinity" class="wallet-icon-small"> <span class="wallet-name">Bitfinity Wallet</span>
+                                <a href="javascript:void(0)" @click="walletLogin('ii')" :class="`w-100 btn btn-primary ${!config.WALLET_CONFIG['nns']?'disabled':''}`">
+                                    <div class="d-flex align-items-center">
+                                        <div class="symbol symbol-45px me-5 symbol-circle bg-white">
+                                            <img src="/partner/ii.png" alt="I" class="h-45 align-self-center">
+                                        </div>
+                                        <div class="d-flex justify-content-start flex-column">
+                                            <a href="#" class="text-light-dark fw-bolder fs-6">Internet Identity</a>
+                                        </div>
+                                    </div>
                                 </a>
                             </div>
+                            <div class="col-md-6">
+                                <a href="javascript:void(0)" @click="walletLogin('plug')" :class="`w-100 btn btn-secondary ${!config.WALLET_CONFIG['plug']?'disabled':''}`">
+                                    <div class="d-flex align-items-center">
+                                        <div class="symbol symbol-45px me-5 symbol-circle bg-white">
+                                            <img src="/partner/plug.png" alt="P" class="h-45 align-self-center">
+                                        </div>
+                                        <div class="d-flex justify-content-start flex-column">
+                                            <a href="#" class="text-gray-600 fw-bolder fs-6">Plug Wallet</a>
+                                        </div>
+                                    </div>
+                                </a>
+                            </div>
+                            <div class="col-md-6">
+                                <a href="javascript:void(0)" @click="walletLogin('stoic')" :class="`w-100 btn btn-secondary ${!config.WALLET_CONFIG['stoic']?'disabled':''}`">
+                                    <div class="d-flex align-items-center">
+                                        <div class="symbol symbol-45px me-5 symbol-circle bg-white">
+                                            <img src="/partner/stoic.png" alt="S" class="h-45 align-self-center">
+                                        </div>
+                                        <div class="d-flex justify-content-start flex-column">
+                                            <a href="#" class="text-gray-600 fw-bolder fs-6">Stoic Wallet</a>
+                                        </div>
+                                    </div>
+                                </a>
+                            </div>
+                            <div class="col-md-6">
+                                <a href="javascript:void(0)" @click="walletLogin('bitfinity')" :class="`w-100 btn btn-secondary ${!config.WALLET_CONFIG['bitfinity']?'disabled':''}`">
+                                    <div class="d-flex align-items-center">
+                                        <div class="symbol symbol-45px me-5 symbol-circle bg-white">
+                                            <img src="/partner/bitfinity.png" alt="B" class="h-45 align-self-center">
+                                        </div>
+                                        <div class="d-flex justify-content-start flex-column">
+                                            <a href="#" class="text-gray-600 fw-bolder fs-6">Bitfinity Wallet</a>
+                                        </div>
+                                    </div>
+                                </a>
                             </div>
                         </div>
                 </div>
@@ -81,26 +103,7 @@
 
 </template>
 <style>
-    .wallet-name{
-        float: left;
-        vertical-align: middle;
-        line-height: 36px;
-    }
-    .btn-group-login img{
-        margin-right: 20px;
-    }
-    .wallet-icon{
-        background: #efefef;
-        padding: 6px;
-    }
-    .wallet-icon-small{
-        width: 38px;
-        float: left;
-        border-radius: 100%;
-        border-color: #525050;
-        background: #ffffff;
-        padding: 2px;
-    }
+   
     a.disabled {
         pointer-events: none;
         cursor: default;
