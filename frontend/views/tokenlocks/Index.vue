@@ -1,11 +1,16 @@
 <script setup>
+    import { ref } from 'vue';
     import { useRoute } from 'vue-router';
     const route = useRoute();
     console.log('route', route);
+    const modalInfo = ref({
+        modal: 'showLiquidityLocksModal',
+        label: 'Create Liquidity Locks',
+        icon: 'fa-lock'
+    })
 </script>
 <template>
     <Toolbar :current="`Token Locks`" v-if="route.name=='token-locks'"/>
-    <Toolbar :current="route.name" :parents="[{title: 'Token Locks', to: '/token-locks'}]" v-else/>
     <div class="row" v-if="route.name == 'token-locks'">
         <div class="col-xl-4">
             <div class="card bgi-no-repeat card-xl-stretch mb-xl-8 border-hover">

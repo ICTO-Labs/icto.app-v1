@@ -2,14 +2,25 @@
 	import { ref } from 'vue';
 	import { showModal} from "@/utils/common";
 	import { useRoute } from 'vue-router';
-	const props = defineProps(['current', 'parents']);
+	const props = defineProps(['current', 'parents', 'modal']);
 	const router = useRoute();
-
-	const showWallet = ()=>{
-		showModal('showWalletModal', true);
+	import walletStore from "@/store";
+	const btnLabel = ref('');
+	const btnIcon = ref('');
+	const modalName = ref('');
+	if(props.modal){
+		btnLabel.value = props.modal.label;
+		btnIcon.value = props.modal.icon;
+		modalName.value = props.modal.modal;
 	}
-	const showProgress = ()=>{
-		showModal('showProcessBuyingModal', {status: true})
+	const showWallet = ()=>{	
+		walletStore.isLogged ? showModal('showWalletModal', true) : showModal('showLoginModal', true);	
+	}
+	const showBtnModal = ()=>{
+		if(props.modal){
+			walletStore.isLogged ? showModal(modalName.value, true) : showModal('showLoginModal', true);
+		}
+		showModal('showLiquidityLocksModal', {status: true})
 	}
 </script>
 <template>
@@ -40,8 +51,9 @@
 			<!--end::Page title-->
 			<!--begin::Actions-->
 			<div class="d-flex align-items-center py-1">
-				<router-link to="/new-contract" class="btn btn-sm btn-danger me-2">New Contract</router-link>
-				<a href="#" @click="showWallet" class="btn btn-sm btn-primary me-2"><i class="fas fa-wallet"></i> My Wallet</a> 
+				<!-- <router-link to="/new-contract" class="btn btn-sm btn-danger me-2">New Contract</router-link> -->
+				<a href="#" @click.stop="showBtnModal" class="btn btn-sm btn-danger me-2" v-if="props.modal"><i :class="`fas ${btnIcon}`"></i> {{btnLabel}}</a> 
+				<a href="#" @click.stop="showWallet" class="btn btn-sm btn-primary me-2"><i class="fas fa-wallet"></i> My Wallet</a> 
 				<!-- <a href="#" @click="showProgress" class="btn btn-sm btn-light-info me-2">
 					<span >
 						<i class="fas fa-tasks"></i> 

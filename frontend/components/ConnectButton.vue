@@ -33,7 +33,7 @@ const login = ()=>{
 }
 
 const showWallet = ()=>{
-	showModal('showWalletModal', true);
+	walletStore.isLogged ? showModal('showWalletModal', true) : showModal('showLoginModal', true);	
 }
 
 </script>

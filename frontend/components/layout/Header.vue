@@ -26,22 +26,22 @@ const router = useRoute();
 									<div class="header-menu align-items-stretch" data-kt-drawer="true" data-kt-drawer-name="header-menu" data-kt-drawer-activate="{default: true, lg: false}" data-kt-drawer-overlay="true" data-kt-drawer-width="{default:'200px', '300px': '250px'}" data-kt-drawer-direction="end" data-kt-drawer-toggle="#kt_header_menu_mobile_toggle" data-kt-swapper="true" data-kt-swapper-mode="prepend" data-kt-swapper-parent="{default: '#kt_body', lg: '#kt_header_nav'}">
 										<!--begin::Menu-->
 										<div class="menu menu-lg-rounded menu-column menu-lg-row menu-state-bg menu-title-gray-700 menu-state-title-primary menu-state-icon-primary menu-state-bullet-primary menu-arrow-gray-400 fw-bold my-5 my-lg-0 align-items-stretch" id="#kt_header_menu" data-kt-menu="true">
-											<div :class="`menu-item menu-lg-down-accordion me-lg-1 ${router.name=='my-token' || router.name=='token-detail'?'here':''}`">
+											<div data-kt-menu-dismiss="true" :class="`menu-item menu-lg-down-accordion me-lg-1 ${router.name=='my-token' || router.name=='token-detail'?'here':''}`">
 												<router-link class="menu-link py-3" to="/my-token">
 													<span class="menu-title">My Tokens</span>
                                                 </router-link>
 											</div>
-											<div :class="`menu-item menu-lg-down-accordion me-lg-1 ${router.name=='contract' || router.name=='contract-detail' ?'here':''}`">
+											<div data-kt-menu-dismiss="true" :class="`menu-item menu-lg-down-accordion me-lg-1 ${router.name=='contract' || router.name=='contract-detail' ?'here':''}`">
 												<router-link class="menu-link py-3" to="/payments">
 													<span class="menu-title">Payments</span>
                                                 </router-link>
 											</div>
-											<div class="menu-item menu-lg-down-accordion me-lg-1">
+											<div data-kt-menu-dismiss="true" class="menu-item menu-lg-down-accordion me-lg-1">
 												<router-link class="menu-link py-3" to="/vesting">
 													<span class="menu-title">Vesting</span>
                                                 </router-link>
 											</div>
-											<div data-kt-menu-trigger="click" data-kt-menu-placement="bottom-start" :class="`menu-item menu-lg-down-accordion me-lg-1 ${router.name=='token-locks' || router.name=='Liquidity' || router.name=='Token' || router.name=='Nft'  ?'here':''}`">
+											<div data-kt-menu-trigger="click" data-kt-menu-placement="bottom-start" :class="`menu-item menu-lg-down-accordion me-lg-1 ${router.name=='token-locks' || router.name=='Liquidity' || router.name=='Token' || router.name=='nft-locks'  ?'here':''}`">
 												<span class="menu-link py-3">
 													<span class="menu-title">Token Locks</span>
 													<span class="menu-arrow d-lg-none"></span>
@@ -51,7 +51,7 @@ const router = useRoute();
                                                 </router-link> -->
 												<div class="menu-sub menu-sub-lg-down-accordion menu-sub-lg-dropdown menu-rounded-0 py-lg-4 w-lg-225px" data-popper-placement="bottom-start">
 													<div class="menu-item">
-														<router-link class="menu-link py-3" to="/token-locks/liquidity" title="" data-bs-toggle="tooltip" data-bs-trigger="hover" data-bs-dismiss="click" data-bs-placement="right">
+														<router-link class="menu-link py-3" to="/token-locks/liquidity" title="" data-bs-toggle="tooltip" data-bs-trigger="hover" data-kt-menu-dismiss="true" data-bs-placement="right">
 															<span class="menu-icon">
 																<!--begin::Svg Icon | path: /icons/duotune/general/gen002.svg-->
 																<span class="svg-icon svg-icon-2">
@@ -66,7 +66,7 @@ const router = useRoute();
 														</router-link>
 													</div>
 													<div class="menu-item">
-														<router-link class="menu-link py-3" to="/token-locks/token">
+														<router-link class="menu-link py-3" data-kt-menu-dismiss="true" to="/token-locks/token">
 															<span class="menu-icon">
 																<!--begin::Svg Icon | path: icons/duotune/coding/cod003.svg-->
 																<span class="svg-icon svg-icon-2">
@@ -81,7 +81,7 @@ const router = useRoute();
 														</router-link>
 													</div>
 													<div class="menu-item">
-														<router-link class="menu-link py-3" to="/token-locks/nft" title="" data-bs-toggle="tooltip" data-bs-trigger="hover" data-bs-dismiss="click" data-bs-placement="right">
+														<router-link class="menu-link py-3" data-kt-menu-dismiss="true" to="/token-locks/nft" title="" data-bs-toggle="tooltip" data-bs-trigger="hover" data-bs-dismiss="click" data-bs-placement="right">
 															<span class="menu-icon">
 																<!--begin::Svg Icon | path: icons/duotune/abstract/abs027.svg-->
 																<span class="svg-icon svg-icon-2">
@@ -97,7 +97,7 @@ const router = useRoute();
 													</div>
 												</div>
 											</div>
-											<div :class="`menu-item menu-lg-down-accordion me-lg-1 ${router.name=='launchpad' || router.name=='new-launchpad' ?'here':''}`">
+											<div data-kt-menu-dismiss="true" :class="`menu-item menu-lg-down-accordion me-lg-1 ${router.name=='launchpad' || router.name=='new-launchpad' ?'here':''}`">
 												<router-link class="menu-link py-3" to="/launchpad">
 													<span class="menu-title">Launchpad</span>
                                                 </router-link>
