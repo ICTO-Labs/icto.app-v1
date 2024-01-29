@@ -1,3 +1,7 @@
+<script setup>
+	import { sha } from '~build/git'
+
+</script>
 <template>
     <!--begin::Footer-->
     <div class="footer py-4 d-flex flex-lg-column" id="kt_footer">
@@ -5,9 +9,9 @@
 						<div class="container-fluid d-flex flex-column flex-md-row align-items-center justify-content-between">
 							<!--begin::Copyright-->
 							<div class="text-dark order-2 order-md-1">
-								<span class="fw-bold text-gray-800 me-1">2023 ©</span>
+								<span class="fw-bold text-gray-800 me-1">2024 ©</span>
 								<a href="https://icto.app" class="text-gray-800 text-hover-primary me-1 fw-bold me-2">ICTO.APP</a>
-								<span class="text-muted fs-7"><i class="fas fa-code"></i> build: 8d788326</span>
+								<span class="text-muted fs-7"><i class="fas fa-code"></i> build <span class="badge badge-light my-0">{{ sha.substring(0,7) }}</span></span>
 								
 							</div>
 							<!--end::Copyright-->

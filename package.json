@@ -48,6 +48,7 @@
     "@vitejs/plugin-vue": "^4.5.2",
     "@vue/compiler-sfc": "^3.3.12",
     "buffer": "^6.0.3",
+    "unplugin-info": "^1.0.2",
     "vite": "^5.0.10"
   }
 }
