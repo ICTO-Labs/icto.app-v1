@@ -17,7 +17,7 @@
 	const token = ref({symbol: 'ICP', name: 'Internet Computer', canisterId: 'ryjl3-tyaaa-aaaaa-aaaba-cai', standard: 'ledger'});
 	const tokenBalance = ref(walletStore.wallet.balance);
 	const totalAmount = ref(0);
-	const newRecipient = ref({amount:4, address: "lekqg-fvb6g-4kubt-oqgzu-rd5r7-muoce-kppfz-aaem3-abfaj-cxq7a-dqe", title: "Jason Nguyen", note: "Developer"});
+	const newRecipient = ref({amount:"", address: "", title: "", note: ""});
 	const recipients = ref([]);
 	const props = defineProps({
 		options: {
@@ -26,8 +26,8 @@
 		}
 		});
 	const contractData = ref({
-		name: "Recurring payment for Developer Team",
-		description: "#1 Payment for EU Developer Team",
+		name: "",
+		description: "",
 		startNow: true,
 		startDate: new Date(),
 		startTime: new Date(),
@@ -40,7 +40,7 @@
 		canChange: 'neither',
 	})
 	const customLabel = ({ name, canisterId })=>{
-      return `${name} | Canister ID: ${canisterId}`
+    	return `${name} | Canister ID: ${canisterId}`
     }
 	const setSelectedToken = async ()=>{
 		resetRecipients();

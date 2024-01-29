@@ -38,7 +38,7 @@
     const logout = ()=>{
         Swal.fire({
             title: "Are you sure?",
-            text: "Logout and delete this session!",
+            text: "Disconnect your wallet and delete this session data?",
             icon: "warning",
             showCancelButton: true,
             confirmButtonColor: "#3085d6",
@@ -58,7 +58,9 @@
     <div class="card-header">
         <h3 class="card-title align-items-start flex-column">
             <span class="fw-bolder mb-2 text-primary"><i class="fas fa-wallet text-primary me-2"></i> My Wallet</span>
-            <span class="text-muted fw-bold fs-7">Connected: {{walletStore?.account?.name}} <span class="badge badge-success fw-bolder fs-8 px-2 py-1 ms-2">{{ walletStore.connector }}</span></span>
+            <span class="text-muted fw-bold fs-7">Connected: <span class="fw-bold text-gray-800">{{walletStore?.account?.name}}</span>
+              <button class="btn btn-sm btn-danger fw-bolder fs-8 px-2 py-1 ms-2" @click.stop="() => logout()">Disconnect</button>
+            </span>
         </h3>
 
       <div class="card-toolbar">
@@ -76,20 +78,20 @@
       <!--begin::Content-->
       <div id="kt_activities_scroll" class="position-relative scroll-y me-n5 pe-5">
         <div class="menu-item px-3">
-          <div class="menu-content d-flex align-items-center px-3" v-show="walletStore.isLogged">
+          <div class="menu-content d-flex align-items-center px-3 w-100 " v-show="walletStore.isLogged">
             <!--begin::Avatar-->
             <div class="symbol symbol-circle bg-light-primary symbol-60px me-5">
               <img alt="Logo" :src="`/partner/${walletStore.connector}.png`" />
             </div>
             <!--end::Avatar-->
-            <div class="d-flex flex-column">
-                <div class="mb-1">       
+            <div class="d-flex flex-column flex-wrap w-100 flex-wrap">
+                <div class="mb-1 w-100 flex-wrap">       
                   <div class="fw-semibold text-gray-600 fs-7">Principal ID:</div> 
-                  <div class="fw-bold text-gray-800 fs-6">
+                  <div class="fw-bold text-gray-800 fs-6 flex-wrap">
                     {{ walletStore.principal }} <Copy :text="walletStore.principal"></Copy>
                   </div>
                 </div>
-                <div class="mb-1">       
+                <div class="mb-1 w-100">       
                     <div class="fw-semibold text-gray-600 fs-7">Address ID:</div> 
                     <div class="fw-bold text-gray-800 fs-6">
                       {{ walletStore.address }} <Copy :text="walletStore.address"></Copy>
@@ -130,7 +132,7 @@
             <div class="card-toolbar">
                 <button type="button"
                     class="btn btn-sm btn-light-primary ms-5"
-                    @click="refreshBalance"><i class="fas fa-sync"></i> Check Balance
+                    @click="refreshBalance"><i class="fas fa-sync"></i> Balance
                 </button>
             </div>
           </div>
@@ -148,7 +150,6 @@
                         <tr class="fw-bolder text-muted">
                           <th class="min-w-150px">Token</th>
                           <th class="min-w-140px">Balance</th>
-                          <th class="min-w-120px text-end">Price</th>
                           <th class="min-w-100px text-end">Actions</th>
                         </tr>
                       </thead>
@@ -166,7 +167,7 @@
                                 <span class="text-dark fw-bolder text-hover-primary fs-6"> {{ token.symbol }}  <span class="badge badge-light-primary fw-bolder fs-8 px-2 py-1 ms-2">{{ token.standard }}</span></span>
                                 <span class="text-muted fw-bold text-muted d-block fs-7">
                                   {{ token.name }}
-                                 </span>
+                                </span>
                               </div>
                             </div>
                           </td>
@@ -175,9 +176,6 @@
                               {{ token.balance || 0 }}
                             </span>
                             <!-- <span class="text-muted fw-bold text-muted d-block fs-7">≈ $5029</span> -->
-                          </td>
-                          <td class="text-end">
-                            <span class="text-muted me-2 fs-7 fw-bold">---</span>
                           </td>
                           <td>
                             <div class="d-flex justify-content-end flex-shrink-0">
@@ -198,7 +196,7 @@
                                 <span class="text-dark fw-bolder text-hover-primary fs-6"> {{ token.symbol }}  <span class="badge badge-light-primary fw-bolder fs-8 px-2 py-1 ms-2">{{ token.standard.toUpperCase() }}</span></span>
                                 <span class="text-muted fw-bold text-muted d-block fs-7">
                                   {{ token.name }}
-                                 </span>
+                                </span>
                               </div>
                             </div>
                           </td>
@@ -207,9 +205,6 @@
                               {{ currencyFormat(token.balance) }}
                             </span>
                             <!-- <span class="text-muted fw-bold text-muted d-block fs-7">≈ ${{1231*0.54}}</span> -->
-                          </td>
-                          <td class="text-end">
-                            <span class="text-muted me-2 fs-7 fw-bold">---</span>
                           </td>
                           <td>
                             <div class="d-flex justify-content-end flex-shrink-0">

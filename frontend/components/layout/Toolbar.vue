@@ -51,9 +51,9 @@
 			<!--end::Page title-->
 			<!--begin::Actions-->
 			<div class="d-flex align-items-center py-1">
-				<!-- <router-link to="/new-contract" class="btn btn-sm btn-danger me-2">New Contract</router-link> -->
-				<a href="#" @click.stop="showBtnModal" class="btn btn-sm btn-danger me-2" v-if="props.modal"><i :class="`fas ${btnIcon}`"></i> {{btnLabel}}</a> 
-				<a href="#" @click.stop="showWallet" class="btn btn-sm btn-primary me-2"><i class="fas fa-wallet"></i> My Wallet</a> 
+				<router-link to="/new-contract" class="btn btn-sm btn-danger me-2">New Contract</router-link>
+				<!-- <a href="#" @click.stop="showBtnModal" class="btn btn-sm btn-danger me-2" v-if="props.modal"><i :class="`fas ${btnIcon}`"></i> {{btnLabel}}</a>  -->
+				<!-- <a href="#" @click.stop="showWallet" class="btn btn-sm btn-primary me-2"><i class="fas fa-wallet"></i> My Wallet</a>  -->
 			</div>
 			<!--end::Actions-->
 		</div>
