@@ -10,7 +10,7 @@
     })
 </script>
 <template>
-    <Toolbar :current="`Token Locks`" v-if="route.name=='token-locks'"/>
+    <Toolbar :current="`Token Locks`" v-if="route.path=='/token-locks'"/>
     <div class="row" v-if="route.name == 'token-locks'">
         <div class="col-xl-4">
             <div class="card bgi-no-repeat card-xl-stretch mb-xl-8 border-hover">

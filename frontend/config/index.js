@@ -8,13 +8,17 @@ const NETWORK = {
         scan: "http://127.0.0.1:8000/?canisterId=bd3sg-teaaa-aaaaa-qaaba-cai&id="
     },
     "staging": {
-        canister_id: "xq3hn-siaaa-aaaap-qbg7a-cai",
-        host: "https://icp0.io",
+        canister_id: "bkyz2-fmaaa-aaaaa-qaaaq-cai",
+        deployer_id: "be2us-64aaa-aaaaa-qaabq-cai",
+        backend_id: "bd3sg-teaaa-aaaaa-qaaba-cai",
+        host: "https://icp-api.io",
         scan: "https://dashboard.internetcomputer.org/canister/"
     },
     "ic": {
-        canister_id: "can63-sqaaa-aaaap-qbjaq-cai",
-        host: "https://icp0.io",
+        canister_id: "y3yam-6aaaa-aaaap-qb7aq-cai",
+        deployer_id: "be2us-64aaa-aaaaa-qaabq-cai",
+        backend_id: "ys3lq-iiaaa-aaaap-qb7ba-cai",
+        host: "https://icp-api.io",
         scan: "https://dashboard.internetcomputer.org/canister/",
         identityProvider: "https://identity.ic0.app/#authorize"
     }

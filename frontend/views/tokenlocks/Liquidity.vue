@@ -4,8 +4,7 @@
 	const poolCanister = ref("z6v2h-2qaaa-aaaag-qblva-cai");
 	const poolName = ref("");
 	const poolMeta = ref(null);
-    const getPoolMeta = ()=> {
-        let _poolMeta = {
+    let _poolMeta = {
             "token0":[
                 [
                     "name", { "Text":"Canister Token" }
@@ -37,7 +36,8 @@
         }
         poolMeta.value = formatPoolMeta(_poolMeta);
         poolName.value = `${poolMeta.value.token0.symbol}/${poolMeta.value.token1.symbol}`;
-    };
+
+    const getPoolMeta = ()=> {};
 
 </script>
 <template>
@@ -70,7 +70,7 @@
                                 <div class="col-md-12 fv-row">
                                     <label class="fs-6 fw-bold form-label mb-2 mb-5">Your LP Positions</label>
                                     <div class="row fv-row">
-                                        <div class="col-4">
+                                        <div class="col-lg-4">
                                             <div class="d-flex d-flex-column align-items-center bg-light-primary rounded p-5 mb-7">
                                                 <div class="symbol symbol-35px symbol-circle me-5" data-bs-toggle="tooltip" title="" data-bs-original-title="Susan Redwood">
                                                     <span class="symbol-label bg-primary text-inverse-primary fw-bolder">1</span>
@@ -83,7 +83,7 @@
                                                 <button class="btn btn-sm btn-danger"><i class="fas fa-lock"></i> Lock</button>
                                             </div>
                                         </div>
-                                        <div class="col-4">
+                                        <div class="col-lg-4">
                                             <div class="d-flex d-flex-column align-items-center bg-light-primary rounded p-5 mb-7">
                                                 <div class="symbol symbol-35px symbol-circle me-5" data-bs-toggle="tooltip" title="" data-bs-original-title="Susan Redwood">
                                                     <span class="symbol-label bg-primary text-inverse-primary fw-bolder">3</span>
@@ -96,7 +96,7 @@
                                                 <button class="btn btn-sm btn-danger"><i class="fas fa-lock"></i> Lock</button>
                                             </div>
                                         </div>
-                                        <div class="col-4">
+                                        <div class="col-lg-4">
                                             <div class="d-flex d-flex-column align-items-center bg-light-primary rounded p-5 mb-7">
                                                 <div class="symbol symbol-35px symbol-circle me-5" data-bs-toggle="tooltip" title="" data-bs-original-title="Susan Redwood">
                                                     <span class="symbol-label bg-primary text-inverse-primary fw-bolder">10</span>
@@ -109,7 +109,7 @@
                                                 <button class="btn btn-sm btn-danger"><i class="fas fa-lock"></i> Lock</button>
                                             </div>
                                         </div>
-                                        <div class="col-4">
+                                        <div class="col-lg-4">
                                             <div class="d-flex d-flex-column align-items-center bg-light-primary rounded p-5 mb-7">
                                                 <div class="symbol symbol-35px symbol-circle me-5" data-bs-toggle="tooltip" title="" data-bs-original-title="Susan Redwood">
                                                     <span class="symbol-label bg-primary text-inverse-primary fw-bolder">25</span>

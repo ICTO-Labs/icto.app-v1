@@ -43,12 +43,12 @@ const showWallet = ()=>{
     <!--begin::User-->
 	<div class="d-flex align-items-center ms-1 ms-lg-3">
 		<!--begin::Menu wrapper-->
-		<div class="position-relative border p-2 rounded" id="kt_drawer_chat_toggle" data-bs-toggle="tooltip" data-bs-placement="bottom" title="" :data-bs-original-title="`Source: CoinGecko`">
+		<div class="position-relative  p-2 rounded" id="kt_drawer_chat_toggle" data-bs-toggle="tooltip" data-bs-placement="bottom" title="" :data-bs-original-title="`Source: CoinGecko`">
 			<!--begin::Svg Icon | path: icons/duotune/communication/com012.svg-->
 			<span class="fw-bold">ICP:</span> <span :class="`${walletStore.priceChange>0?'text-success':'text-danger'}`">${{ walletStore.icpPrice }}</span>
 			<Arrow :type="walletStore.priceChange > 0 ? 'up': 'down'" :size="4"/>
 			<!--end::Svg Icon-->
-			<span :class="`bullet bullet-dot ${walletStore.priceChange>0?'bg-success':'bg-danger'} h-6px w-6px position-absolute translate-middle top-0 start-0 animation-blink`"></span>
+			<!-- <span :class="`bullet bullet-dot ${walletStore.priceChange>0?'bg-success':'bg-danger'} h-6px w-6px position-absolute translate-middle top-0 start-0 animation-blink`"></span> -->
 		</div>
 		<!--end::Menu wrapper-->
 	</div>

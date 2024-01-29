@@ -2,7 +2,6 @@
 import { RouterLink, RouterView } from 'vue-router'
 import Header from "./components/layout/Header.vue"
 import Footer from "./components/layout/Footer.vue"
-import Toolbar from "./components/layout/Toolbar.vue"
 import ScrollTop from "./components/ScrollTop.vue"
 import Modals from "./components/Modals.vue"
 import Popup from "./components/Popup.vue"
@@ -10,7 +9,6 @@ import Wallet from "./components/Wallet.vue"
 import WalletManager from "@/services/WalletManager";
 import walletStore from './store';
 walletStore.getICPPrice();//init ICP price
-
 WalletManager.checkLoginStatus();
 </script>
 
