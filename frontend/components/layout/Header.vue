@@ -103,8 +103,8 @@ const router = useRoute();
                                                 </router-link>
 											</div>
 											<div :class="`menu-item menu-lg-down-accordion me-lg-1 ${router.name=='marketplace' || router.name=='collection-detail' ?'here':''}`">
-												<router-link class="menu-link py-3 bg-danger" to="/marketplace">
-													<span class="text-white">Marketplace</span>
+												<router-link class="btn btn-sm btn-light-danger" to="/marketplace">
+													<span class="">Marketplace</span>
                                                 </router-link>
 											</div>
 											

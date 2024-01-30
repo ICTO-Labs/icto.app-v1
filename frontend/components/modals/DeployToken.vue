@@ -38,16 +38,15 @@
 
 </script>
 <template>
-	 <VueFinalModal v-model="deployTokenModal" :z-index-base="1" classes="modal fade show" content-class="modal-dialog modal-lg" data-bs-focus="false" no-enforce-focus >
+        <VueFinalModal v-model="deployTokenModal" :z-index-base="2000" classes="modal fade show" content-class="modal-dialog modal-lg modal-dialog-scrollable">
             <div class="modal-content">
-               
                 <div class="modal-header  pt-5 pb-3">
                     <h5 class="modal-title">Deploy New Token</h5>
                     <div class="btn btn-icon btn-sm btn-bg-light btn-active-light-danger ms-2" data-bs-dismiss="modal" aria-label="Close" @click="closeModal()">
                         <i class="fas fa-times"></i>
                     </div>
                 </div>
-                <div class="">
+                <div class="modal-body pt-0 pb-5">
                     <form class="form" @submit.prevent="deployToken">
                     <div class="card mb-xl-1">
                         <div class="card-body">

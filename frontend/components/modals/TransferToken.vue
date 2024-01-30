@@ -5,7 +5,7 @@
     import { VueFinalModal } from 'vue-final-modal'
     import LoadingButton from "@/components/LoadingButton.vue"
 	import { showLoading, closeMessage, showSuccess, showError, validateAddress, validatePrincipal } from '@/utils/common';
-    import { useMintToken } from "@/services/Token"
+    import { useMintToken, useGetMyBalance } from "@/services/Token"
     const action = ref('mint');
     const isNFT = ref(false);
     const to = ref('');
@@ -14,6 +14,7 @@
     const manageTokenModal = ref(false);
     const isLoading = ref(false);
     const tokenInfo = ref(null);
+    const tokenBalance = ref(0);
     
     const processAction = ()=>{
         if(checkPrincipal()){
@@ -43,7 +44,7 @@
         }
     }
     const selectMax = ()=>{
-        amount.value = tokenInfo.value.balance;
+        amount.value = tokenBalance.value;
         checkActually();
     }
     const checkPrincipal = ()=>{
@@ -58,14 +59,18 @@
         return true;
     }
     const checkActually = ()=>{
-        actually.value = amount.value>0?amount.value-(tokenInfo.value.fee?tokenInfo.value.fee:0):0;
+        actually.value = amount.value>0?amount.value-(tokenInfo.value.fee?tokenInfo.value.fee/Math.pow(10, tokenInfo.value.decimals):0):0;
     }
     const closeModal = ()=>{ manageTokenModal.value = false};
+    const checkBalance = async (canisterId)=>{tokenBalance.value = await useGetMyBalance(canisterId)};
 
     onMounted(() => {
-        EventBus.on("showManageTokenModal", obj => {
-            console.log('obj', obj);
+        EventBus.on("showTransferTokenModal", (obj) => {
+            tokenBalance.value = 0;
+            checkBalance(obj.canisterId);
             manageTokenModal.value = obj.status;
+            console.log(obj);
+            // obj.fee = obj.fee>0?obj.fee/Math.pow(10, obj.decimals):0;
             tokenInfo.value = obj;
             to.value = '';
             action.value = obj.action;
@@ -83,7 +88,7 @@
     })
 </script>
 <template>
-    <VueFinalModal v-model="manageTokenModal" :z-index-base="2000" classes="modal fade show" content-class="modal-dialog modal-lg ">
+    <VueFinalModal v-model="manageTokenModal" :z-index-base="2000" classes="modal fade show" content-class="modal-dialog modal-lg modal-dialog-scrollable">
         <div class="modal-content">
             <div class="modal-header">
                 <h5 class="modal-title">
@@ -113,24 +118,24 @@
                         </div>
                     </div>
                     <div class="row gy-4 mb-5">
-                        <div class="col-sm-4">
+                        <div class="col-lg-5">
                             <div class="form-group">
                                 <label class="form-label required">Amount</label>
-                                <div class="float-right">Balance: <a href="#" @click="selectMax" title="Select Max" class="fw-bold">{{ tokenInfo.balance }}</a> <span class="text-blue">{{ tokenInfo.symbol }}</span></div>
+                                <div class="float-right">Balance: <a href="#" @click="selectMax" title="Select Max" class="fw-bold">{{ tokenBalance }}</a> <span class="text-blue">{{ tokenInfo.symbol }}</span></div>
                                 <div class="form-control-wrap">
                                     <input type="text" class="form-control" v-model="amount" required @change="checkActually" :disabled="isNFT"/>
                                 </div>
                             </div>
                         </div>
-                        <div class="col-sm-4">
+                        <div class="col-lg-2">
                             <div class="form-group">
                                 <label class="form-label">Fee</label>
                                 <div class="form-control-wrap">
-                                    <input type="text" class="form-control" v-model="tokenInfo.fee" disabled />
+                                    <input type="text" class="form-control" :value="tokenInfo.fee>0?tokenInfo.fee/Math.pow(10, tokenInfo.decimals):0" disabled />
                                 </div>
                             </div>
                         </div>
-                        <div class="col-sm-4">
+                        <div class="col-lg-5">
                             <div class="form-group">
                                 <label class="form-label">Actually received</label>
                                 <div class="form-control-wrap">

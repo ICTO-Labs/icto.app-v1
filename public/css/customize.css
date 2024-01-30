@@ -439,3 +439,7 @@ fieldset[disabled] .multiselect {
 .float-left{
   float: left;
 }
+.vfm__content .modal-content > .modal-header{
+  padding-top: 10px !important;
+  padding-bottom: 10px !important;
+}

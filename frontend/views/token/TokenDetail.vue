@@ -29,7 +29,7 @@
 		const newObj = {...token};
 		newObj.status = true;
 		newObj.action = 'mint';
-		showModal("showManageTokenModal", newObj);
+		showModal("showTransferTokenModal", newObj);
 	}
 
 	onMounted(()=>{

@@ -3,6 +3,7 @@ import { principalToAccountId } from '@/utils/common.js'
 const isLogged = localStorage.getItem('isLogged');
 const lastLogged = localStorage.getItem('lastLogged');
 const connector = localStorage.getItem('connector');
+const lastFetch = localStorage.getItem('lastFetch');
 const _identity = null
 export const walletStore = reactive({
     isLogged: isLogged?isLogged:null,
@@ -16,11 +17,12 @@ export const walletStore = reactive({
     _principal: '', 
     address: '', 
     balance: 0,
-    lastFetch: 0,//Timestamp
+    lastFetch: lastFetch,//Timestamp
     icpPrice: 0,//source from Binance
     priceChange: 0,//24h change
     setICPPrice(price, change){
         this.lastFetch = new Date().valueOf();
+        localStorage.setItem("lastFetch", this.lastFetch);
         this.icpPrice = price;
         this.priceChange = change.toFixed(2);
     },
@@ -67,6 +69,7 @@ export const walletStore = reactive({
         localStorage.removeItem("isLogged");
         localStorage.removeItem("connector");
         localStorage.removeItem("lastLogged");
+        localStorage.removeItem("lastFetch");
         this.isLogged = false;
         this.connector = null;
         this.setIdentity(false);

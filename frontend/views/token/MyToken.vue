@@ -11,7 +11,7 @@
 		const newObj = {...token};
 		newObj.status = true;
 		newObj.canisterId = token.canister;
-		showModal("showManageTokenModal", newObj);
+		showModal("showTransferTokenModal", newObj);
 	}
 </script>
 <template>

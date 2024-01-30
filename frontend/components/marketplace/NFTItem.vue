@@ -8,7 +8,7 @@
         newObj.status = true;
         newObj.action = 'transfer';
         newObj.isNFT = true;
-        showModal("showManageTokenModal", newObj)
+        showModal("showTransferTokenModal", newObj)
     }
     const buyNow = (nft)=>{
         showModal('showBuyModal', {status: true, nft});

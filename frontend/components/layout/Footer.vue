@@ -1,5 +1,7 @@
 <script setup>
 	import { sha } from '~build/git'
+	import time from '~build/time'
+	console.log(`Build ${sha} at ${time}`)
 
 </script>
 <template>

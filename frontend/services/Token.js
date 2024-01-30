@@ -17,6 +17,7 @@ export const useGetMyBalance = async(tokenId) => {
                 owner: txtToPrincipal(walletStore.principal),
                 subaccount: []
             });
+            console.log(_balance);
             return Number(_balance)/config.E8S
         }catch(e){
             return 0;
@@ -196,7 +197,11 @@ export const useGetUserTokens = (page)=> {
     return useQuery({
         queryKey: ['user_tokens', page],
         queryFn: async () => {
-            return await Connect.canister(config.DEPLOYER_CANISTER_ID, 'deployer').getUserTokens(walletStore.principal, page);
+            const _rs = await Connect.canister(config.DEPLOYER_CANISTER_ID, 'deployer').getUserTokens(walletStore.principal, page);
+            if (_rs && typeof _rs === 'object' && 'err' in _rs) {
+                throw new Error(_rs.err);
+            }
+            return _rs;
         },
     });
 };

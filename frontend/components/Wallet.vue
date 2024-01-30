@@ -33,7 +33,7 @@
       const newObj = {...token};
       newObj.status = true;
       newObj.action = 'transfer';
-      showModal("showManageTokenModal", newObj)
+      showModal("showTransferTokenModal", newObj)
     }
     const logout = ()=>{
         Swal.fire({
@@ -46,6 +46,7 @@
             confirmButtonText: "Yes, log me out!"
             }).then(async (result) => {
                 if(result.isConfirmed){
+                    openWallet.value = false;//Close modal
                     await walletStore.logout()
                 }
             });
@@ -59,7 +60,7 @@
         <h3 class="card-title align-items-start flex-column">
             <span class="fw-bolder mb-2 text-primary"><i class="fas fa-wallet text-primary me-2"></i> My Wallet</span>
             <span class="text-muted fw-bold fs-7">Connected: <span class="fw-bold text-gray-800">{{walletStore?.account?.name}}</span>
-              <button class="btn btn-sm btn-danger fw-bolder fs-8 px-2 py-1 ms-2" @click.stop="() => logout()">Disconnect</button>
+              <button class="btn btn-sm btn-light-danger fw-bolder fs-8 px-2 py-1 ms-2" @click.stop="() => logout()"><i class="fas fa-xmark"></i> Disconnect</button>
             </span>
         </h3>
 
