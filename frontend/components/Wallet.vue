@@ -157,35 +157,6 @@
                       <!--end::Table head-->
                       <!--begin::Table body-->
                       <tbody>
-                        <tr v-for="token in TOKEN_DATA">
-                          <td>
-                            <div class="d-flex align-items-center">
-                              <div class="symbol symbol-45px me-5 symbol-circle">
-                                <img :src="token.logo" :alt="token.symbol" v-if="token.logo">
-                                <div v-else class="symbol-label fs-3 bg-light-primary text-primary">{{ token.symbol.charAt(0) }}</div>
-                              </div>
-                              <div class="d-flex justify-content-start flex-column">
-                                <span class="text-dark fw-bolder text-hover-primary fs-6"> {{ token.symbol }}  <span class="badge badge-light-primary fw-bolder fs-8 px-2 py-1 ms-2">{{ token.standard }}</span></span>
-                                <span class="text-muted fw-bold text-muted d-block fs-7">
-                                  {{ token.name }}
-                                </span>
-                              </div>
-                            </div>
-                          </td>
-                          <td>
-                            <span class="text-dark fw-bolder text-hover-primary fs-6">
-                              {{ token.balance || 0 }}
-                            </span>
-                            <!-- <span class="text-muted fw-bold text-muted d-block fs-7">≈ $5029</span> -->
-                          </td>
-                          <td>
-                            <div class="d-flex justify-content-end flex-shrink-0">
-                              <a href="#" @click="transferToken(token)" class="btn btn-light-primary btn-sm">
-                                <i class="fas fa-paper-plane"></i> Transfer
-                              </a>
-                            </div>
-                          </td>
-                        </tr>
                         <tr v-for="token in storeAssets.assets">
                           <td>
                             <div class="d-flex align-items-center">

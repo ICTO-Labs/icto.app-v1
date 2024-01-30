@@ -5,7 +5,7 @@
     import { VueFinalModal } from 'vue-final-modal'
     import LoadingButton from "@/components/LoadingButton.vue"
 	import { showLoading, closeMessage, showSuccess, showError, validateAddress, validatePrincipal } from '@/utils/common';
-    import { useMintToken } from "@/services/Token"
+    import { useTransferToken } from "@/services/Token"
     const cartModal = ref(false);
     const carts = ref([]);
     

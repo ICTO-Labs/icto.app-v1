@@ -126,7 +126,7 @@ export const usetGetMetadata = async(tokenId, standard="icrc3")=>{
     }
 }
 
-export const useMintToken = async(tokenId, to, amount)=>{
+export const useTransferToken = async(tokenId, to, amount)=>{
     const _p = txtToPrincipal(to);
     const _amount = amount*config.E8S;
     try{

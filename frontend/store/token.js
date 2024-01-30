@@ -2,11 +2,12 @@ import { defineStore } from "pinia";
 import { useStorage } from '@vueuse/core'
 import { useGetMyBalance } from "@/services/Token";
 import { showSuccess} from "@/utils/common";
+import { TOKEN_DATA } from "@/config/constants";
 
 export const useAssetStore = defineStore({
     id: "assetState",
     state: () => ({
-      assets: useStorage('importedTokens', []),
+        assets: useStorage('importedTokens', TOKEN_DATA),
     }),
     getters: {
         getWalletToken: (state) => {
@@ -15,7 +16,7 @@ export const useAssetStore = defineStore({
         },
         totalAssets: (state) => state.assets.length,
     },
-   actions: {
+    actions: {
         addAsset(canisterId, logo='', name, symbol, standard, decimals, fee, balance=0) {
             const found = this.assets.some(el => el.canisterId == canisterId);
             if(found){
@@ -44,7 +45,6 @@ export const useAssetStore = defineStore({
             })).then(() =>{
                 showSuccess("Balance reloaded!")
             });
-              
         },
         updateBalance(canisterId, balance){
             console.log('update', canisterId, balance);
@@ -57,5 +57,5 @@ export const useAssetStore = defineStore({
         async removeAsset(canisterId) {
             this.assets = this.assets.filter((asset) => asset.canisterId !== canisterId);
         },
-   },
-  });
+    },
+});

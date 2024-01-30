@@ -5,7 +5,7 @@
     import { VueFinalModal } from 'vue-final-modal'
     import LoadingButton from "@/components/LoadingButton.vue"
 	import { showLoading, closeMessage, showSuccess, showError, validateAddress, validatePrincipal } from '@/utils/common';
-    import { useMintToken, useGetMyBalance } from "@/services/Token"
+    import { useTransferToken, useGetMyBalance } from "@/services/Token"
     const action = ref('mint');
     const isNFT = ref(false);
     const to = ref('');
@@ -33,7 +33,7 @@
                         isLoading.value = true;
                         showLoading("Transfering...")
                         //Close the dialog
-                        let _rs = await useMintToken(tokenInfo.value.canisterId, to.value, amount.value);
+                        let _rs = await useTransferToken(tokenInfo.value.canisterId, to.value, amount.value);
                         // if(_rs){
                         //     manageTokenModal.value = false;
                         // }
@@ -48,11 +48,11 @@
         checkActually();
     }
     const checkPrincipal = ()=>{
-        if(tokenInfo.value.canisterId == config.LEDGER_CANISTER_ID && !validateAddress(to.value.trim())){
-            showError("Please use Account ID to send ICP");
-            return false;
-        }
-        if(tokenInfo.value.canisterId != config.LEDGER_CANISTER_ID && !validatePrincipal(to.value.trim())){
+        // if(tokenInfo.value.canisterId == config.LEDGER_CANISTER_ID && !validateAddress(to.value.trim())){
+        //     showError("Please use Account ID to send ICP");
+        //     return false;
+        // }
+        if(!validatePrincipal(to.value.trim())){
             showError("Receipient Principal ID is invalid!");
             return false;
         }
