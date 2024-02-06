@@ -1,16 +1,6 @@
 import { actor } from "./Actor";
-import icIDL from '@/ic/candid/ic.did';
-import cyclesIDL from '@/ic/candid/cycles.did';
-import ledgerIDL from '@/ic/candid/ledger.did';
-import nnsIDL from '@/ic/candid/nns.did';
-import icrc1IDL from '@/ic/candid/icrc1.did';
-import icrc2IDL from '@/ic/candid/icrc2.did';
-import icrc3IDL from '@/ic/candid/icrc2.did';
-import extIDL from '@/ic/candid/extNFT.did';
-import contractIDL from '@/ic/candid/contract.did';
 import walletStore from '@/store/'
-import {idlFactory as deployerIDL} from '../../../src/declarations/deployer/deployer.did.js'
-import {idlFactory as backendIDL} from '../../../src/declarations/backend/backend.did.js'
+import { preloadIdls, mapIdls } from './ConfigIDL';
 class CreateActor {
     _canister = false;
     _idl = false;
@@ -33,7 +23,7 @@ class CreateActor {
                                 identity: walletStore.identity,
                                 canisterId: canister,
                                 idlFactory: idl,
-                              });
+                            });
                         }
                     }
                     try{
@@ -51,24 +41,8 @@ class CreateActor {
 
 class Connect {
     _requiredAuth = false;
-    _preloadedIdls = {
-        'ledger' : ledgerIDL,
-        'icrc1' : icrc1IDL,
-        'icrc2' : icrc2IDL,
-        'icrc3' : icrc3IDL,
-        'EXT': extIDL,
-        'IC': icIDL,
-        'contract': contractIDL,
-        'deployer': deployerIDL,
-        'backend': backendIDL,
-    };
-    _mapIdls = {
-        'aaaaa-aa' : icIDL,
-        'cycles' : cyclesIDL,
-        'ledger' : ledgerIDL,
-        'nns': nnsIDL,
-        '2ouva-viaaa-aaaaq-aaamq-cai': icrc1IDL,
-    };
+    _preloadedIdls = preloadIdls;
+    _mapIdls = mapIdls;
     _canisters = {};
     _actor = null;
     _provider = null;
