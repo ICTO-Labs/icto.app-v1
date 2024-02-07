@@ -148,7 +148,7 @@ export const useTransferToken = async(tokenId, to, amount)=>{
             console.log('response.Err', response);
             showError("Some error occured! Please try again"+JSON.stringify(response.Err));
         } else {
-            showSuccess("Token Minted!");
+            showSuccess("Transferred successfully!");
             return true;
         }
     }catch(e){

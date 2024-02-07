@@ -1,56 +1,73 @@
 <script setup>
-  import { onMounted, ref } from "vue";
+  import { onMounted, ref, watchEffect } from "vue";
   import EventBus from "@/services/EventBus";
   import walletStore from "@/store";
-  import { showModal, shortPrincipal, shortAccount } from '@/utils/common';
-  import { TOKEN_DATA } from "@/config/constants"
+  import { showModal, showSuccess } from '@/utils/common';
 	import { useAssetStore } from "@/store/token";
   import { currencyFormat } from "@/utils/token";
 
   import NFTItem from "@/components/wallet/NFTItem.vue";
-    const storeAssets = useAssetStore();
-    const collectionInfo = {'name': "ICTO NFT Card", 'symbol': "NFT", 'canisterId': "1"};
-    const openWallet = ref(false);
-    const activeTab = ref('wallet_tokens');
-    onMounted(() => {
-        EventBus.on("showWalletModal", (status) =>{
-            openWallet.value = status;
+  const collectionInfo = {'name': "ICTO NFT Card", 'symbol': "NFT", 'canisterId': "1"};
+  const openWallet = ref(false);
+  const activeTab = ref('wallet_tokens');
+  const isLoading = ref(false);
+  onMounted(() => {
+      EventBus.on("showWalletModal", (status) =>{
+          openWallet.value = status;
+      });
+  });
+  const storeAssets = ref(null);
+  watchEffect(() => {
+      if(walletStore.isLogged){
+        console.log('init storeAssets: ', walletStore.principal);
+        storeAssets.value = useAssetStore();
+        storeAssets.value.updateBalanceAll((cb)=>{
+          console.log('cb', cb);
         });
+      }
+  });
+  const closeWallet = ()=>{
+      openWallet.value = false;
+  }
+  const showTab = (tab)=>{
+    activeTab.value = tab;
+  }
+  const importToken = ()=>{
+    showModal("showImportTokenModal", true)
+  }
+  const refreshBalance = async()=>{
+    isLoading.value = true;
+    await storeAssets.value.updateBalanceAll(function(status){
+      console.log('status', status);
+      isLoading.value = false;
+      showSuccess("Balance updated successfully!");
     });
-    const closeWallet = ()=>{
-        openWallet.value = false;
-    }
-    const showTab = (tab)=>{
-      activeTab.value = tab;
-    }
-    const importToken = ()=>{
-      showModal("showImportTokenModal", true)
-    }
-    const refreshBalance = async()=>{
-      await storeAssets.updateBalanceAll();
-    }
-    const transferToken = (token)=>{
-      const newObj = {...token};
-      newObj.status = true;
-      newObj.action = 'transfer';
-      showModal("showTransferTokenModal", newObj)
-    }
-    const logout = ()=>{
-        Swal.fire({
-            title: "Are you sure?",
-            text: "Disconnect your wallet and delete this session data?",
-            icon: "warning",
-            showCancelButton: true,
-            confirmButtonColor: "#3085d6",
-            cancelButtonColor: "#d33",
-            confirmButtonText: "Yes, log me out!"
-            }).then(async (result) => {
-                if(result.isConfirmed){
-                    openWallet.value = false;//Close modal
-                    await walletStore.logout()
-                }
-            });
-    }
+  }
+  const removeToken = (tokenCanister)=>{
+    storeAssets.value.removeAsset(tokenCanister);
+  } 
+  const transferToken = (token)=>{
+    const newObj = {...token};
+    newObj.status = true;
+    newObj.action = 'transfer';
+    showModal("showTransferTokenModal", newObj)
+  }
+  const logout = ()=>{
+      Swal.fire({
+          title: "Are you sure?",
+          text: "Disconnect your wallet and delete this session data?",
+          icon: "warning",
+          showCancelButton: true,
+          confirmButtonColor: "#3085d6",
+          cancelButtonColor: "#d33",
+          confirmButtonText: "Yes, log me out!"
+          }).then(async (result) => {
+              if(result.isConfirmed){
+                  openWallet.value = false;//Close modal
+                  await walletStore.logout()
+              }
+          });
+  }
 </script>
 <template>
 <div :class="`bg-body drawer drawer-end ${openWallet?'drawer-on':''} wallet-modal`">
@@ -133,7 +150,8 @@
             <div class="card-toolbar">
                 <button type="button"
                     class="btn btn-sm btn-light-primary ms-5"
-                    @click="refreshBalance"><i class="fas fa-sync"></i> Balance
+                    @click="refreshBalance" :disabled="isLoading">
+                    <i :class="`fas fa-sync ${isLoading?'fa-spin fa-fixed-spin':''}`"></i> Balance
                 </button>
             </div>
           </div>
@@ -149,15 +167,15 @@
                       <!--begin::Table head-->
                       <thead>
                         <tr class="fw-bolder text-muted">
-                          <th class="min-w-150px">Token</th>
-                          <th class="min-w-140px">Balance</th>
-                          <th class="min-w-100px text-end">Actions</th>
+                          <th class="min-w-200px">Token</th>
+                          <th class="min-w-80px">Balance</th>
+                          <th class="min-w-50px text-end">Actions</th>
                         </tr>
                       </thead>
                       <!--end::Table head-->
                       <!--begin::Table body-->
                       <tbody>
-                        <tr v-for="token in storeAssets.assets">
+                        <tr v-for="token in storeAssets.assets" v-if="storeAssets">
                           <td>
                             <div class="d-flex align-items-center">
                               <div class="symbol symbol-45px me-5 symbol-circle">
@@ -182,6 +200,9 @@
                             <div class="d-flex justify-content-end flex-shrink-0">
                               <a href="#" @click="transferToken(token)" class="btn btn-light-primary btn-sm">
                                 <i class="fas fa-paper-plane"></i> Transfer
+                              </a>
+                              <a href="#" @click="removeToken(token.canisterId)" class="btn btn-light-danger btn-sm ms-2" v-if="token.type !='default'">
+                                <i class="fas fa-minus"></i> Remove
                               </a>
                             </div>
                           </td>
@@ -250,10 +271,17 @@
     </div>
     <div class="card-footer py-5 text-center" id="kt_activities_footer">
 		<div class="d-flex flex-column gap-7 gap-md-10">
-            <button class="btn btn-sm btn-light-primary" type="button" @click="importToken()"><span class="fw-bolder">+ Import Token</span> </button>
+            <button class="btn btn-sm btn-primary" type="button" @click="importToken()"><span class="fw-bolder">+ Import Token</span> </button>
         </div>
 	</div>
   </div>
 </div>
 <div style="z-index: 109;" class="drawer-overlay" v-if="openWallet" @click="closeWallet"></div>
 </template>
+<style scoped>
+  .fa-fixed-spin{
+    -webkit-transform-origin: 35% 50%;
+    -ms-transform-origin: 35% 50%;
+    transform-origin: 35% 50%;
+  }
+</style>

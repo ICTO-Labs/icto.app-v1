@@ -41,7 +41,7 @@ app.use(Toast, {
     multiple: true,
     maxToasts: 2,
     position: POSITION.BOTTOM_LEFT,
-    hideProgressBar: true,
+    hideProgressBar: false,
     theme: 'colored'
 })
 app.use(VueSweetalert2)

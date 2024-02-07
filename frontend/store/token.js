@@ -32,22 +32,21 @@ export const useAssetStore = defineStore({
                     fee,
                     balance
                     };
-                this.assets = [asset, ...this.assets];
+                this.assets = [...this.assets, asset];
                 return true;
             }
         },
-        updateBalanceAll(){
+        updateBalanceAll(cb){
             const _assets = this.assets;
             Promise.all(_assets.map(async (asset) => {
                 const balance = await useGetMyBalance(asset.canisterId);
                 asset.balance = balance;
                 this.updateBalance(asset.canisterId, balance);
             })).then(() =>{
-                showSuccess("Balance reloaded!")
+                cb(true);
             });
         },
         updateBalance(canisterId, balance){
-            console.log('update', canisterId, balance);
             this.assets.map((asset) => {
                 if(asset.canisterId == canisterId){
                     asset.balance = balance;
