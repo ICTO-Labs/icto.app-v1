@@ -44,7 +44,7 @@ app.use(Toast, {
     hideProgressBar: false,
     theme: 'colored'
 })
-app.use(VueSweetalert2)
+app.use(VueSweetalert2, {heightAuto: false})
 window.Swal =  app.config.globalProperties.$swal
 app.use(pinia)
 app.use(vfm)
