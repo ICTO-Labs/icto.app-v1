@@ -1,5 +1,5 @@
 <script setup>
-	import {ref, defineProps, computed} from "vue";
+	import {ref, computed} from "vue";
 	import {validateAddress, validatePrincipal, showError} from "@/utils/common"
 	import {currencyFormat} from "@/utils/token"
 	import { useWalletStore } from '@/store/wallet'

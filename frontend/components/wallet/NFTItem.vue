@@ -1,5 +1,4 @@
 <script setup>
-    import { defineProps } from 'vue';
     const props = defineProps(['nft', 'collectionInfo']);
     import { showModal } from '@/utils/common';
 
