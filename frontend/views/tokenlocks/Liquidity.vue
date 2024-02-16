@@ -1,6 +1,8 @@
 <script setup>
     import { ref } from 'vue';
+    import NewLockModal from '@/components/tokenlocks/NewLockModal.vue';
     import { formatPoolMeta } from '@/utils/pool';
+    import { showModal } from "@/utils/common";
 	const poolCanister = ref("z6v2h-2qaaa-aaaag-qblva-cai");
 	const poolName = ref("");
 	const poolMeta = ref(null);
@@ -38,97 +40,53 @@
         poolName.value = `${poolMeta.value.token0.symbol}/${poolMeta.value.token1.symbol}`;
 
     const getPoolMeta = ()=> {};
+    const create = ()=> {
+        showModal("showNewLockModal", true);
+    };
 
 </script>
 <template>
     <Toolbar current="Liquidity" :parents="[{title: 'Token Locks', to: '/token-locks'}]" />
-    <form class="form" @submit.prevent="getPoolMeta">
-        <div class="card mb-xl-1">
-            <div class="card-body">
-                    <div class="current" data-kt-stepper-element="content">
-                        <div class="w-100">
-                            <div class="row mb-5">
-                                <div class="col-md-8 fv-row">
-                                    <label class="required fs-6 fw-bold form-label mb-2">Pool Canister</label>
-                                    <div class="row fv-row">
-                                        <div class="col-12">
-                                            <input type="text" class="form-control" v-model="poolCanister" required  @change="getPoolMeta" placeholder="Pool canister on ICPSwap, ie: XCANIC/ICP"/>
-                                            <div class="form-text">Note: Currently we only support pools created from <strong>ICPSwap</strong>, please add LP on ICPSwap before locking. Find your pools <a href="https://info.icpswap.com/swap" target="_blank">here</a> <i class="fas fa-link"></i> </div>
-                                        </div>
-                                    </div>
-                                </div>
-                                <div class="col-md-4 fv-row">
-                                    <label class="fs-6 fw-bold form-label mb-2">Name</label>
-                                    <div class="row fv-row">
-                                        <div class="col-12">
-                                            <input type="text" class="form-control form-control-solid" :value="poolName" readonly/>
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
-                            <div class="row mb-5">
-                                <div class="col-md-12 fv-row">
-                                    <label class="fs-6 fw-bold form-label mb-2 mb-5">Your LP Positions</label>
-                                    <div class="row fv-row">
-                                        <div class="col-lg-4">
-                                            <div class="d-flex d-flex-column align-items-center bg-light-primary rounded p-5 mb-7">
-                                                <div class="symbol symbol-35px symbol-circle me-5" data-bs-toggle="tooltip" title="" data-bs-original-title="Susan Redwood">
-                                                    <span class="symbol-label bg-primary text-inverse-primary fw-bolder">1</span>
-                                                </div>
-                                                <div class="flex-grow-1 me-2">
-                                                    <span class="fw-bolder text-gray-800 text-hover-primary fs-6">{{poolName}} 
-                                                    </span>
-                                                    <span class="fw-bold d-block text-success py-1">Value: $3.10k</span>
-                                                </div>
-                                                <button class="btn btn-sm btn-danger"><i class="fas fa-lock"></i> Lock</button>
-                                            </div>
-                                        </div>
-                                        <div class="col-lg-4">
-                                            <div class="d-flex d-flex-column align-items-center bg-light-primary rounded p-5 mb-7">
-                                                <div class="symbol symbol-35px symbol-circle me-5" data-bs-toggle="tooltip" title="" data-bs-original-title="Susan Redwood">
-                                                    <span class="symbol-label bg-primary text-inverse-primary fw-bolder">3</span>
-                                                </div>
-                                                <div class="flex-grow-1 me-2">
-                                                    <span class="fw-bolder text-gray-800 text-hover-primary fs-6">{{poolName}} 
-                                                    </span>
-                                                    <span class="fw-bold d-block text-success py-1">Value: $871</span>
-                                                </div>
-                                                <button class="btn btn-sm btn-danger"><i class="fas fa-lock"></i> Lock</button>
-                                            </div>
-                                        </div>
-                                        <div class="col-lg-4">
-                                            <div class="d-flex d-flex-column align-items-center bg-light-primary rounded p-5 mb-7">
-                                                <div class="symbol symbol-35px symbol-circle me-5" data-bs-toggle="tooltip" title="" data-bs-original-title="Susan Redwood">
-                                                    <span class="symbol-label bg-primary text-inverse-primary fw-bolder">10</span>
-                                                </div>
-                                                <div class="flex-grow-1 me-2">
-                                                    <span class="fw-bolder text-gray-800 text-hover-primary fs-6">{{poolName}} 
-                                                    </span>
-                                                    <span class="fw-bold d-block text-success py-1">Value: $209</span>
-                                                </div>
-                                                <button class="btn btn-sm btn-danger"><i class="fas fa-lock"></i> Lock</button>
-                                            </div>
-                                        </div>
-                                        <div class="col-lg-4">
-                                            <div class="d-flex d-flex-column align-items-center bg-light-primary rounded p-5 mb-7">
-                                                <div class="symbol symbol-35px symbol-circle me-5" data-bs-toggle="tooltip" title="" data-bs-original-title="Susan Redwood">
-                                                    <span class="symbol-label bg-primary text-inverse-primary fw-bolder">25</span>
-                                                </div>
-                                                <div class="flex-grow-1 me-2">
-                                                    <span class="fw-bolder text-gray-800 text-hover-primary fs-6">{{poolName}} 
-                                                    </span>
-                                                    <span class="fw-bold d-block text-success py-1">Value: $101k</span>
-                                                </div>
-                                                <button class="btn btn-sm btn-danger"><i class="fas fa-lock"></i> Lock</button>
-                                            </div>
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
-                            
-                        </div>
-                    </div>
-            </div>
-        </div>
-    </form>
+    <div class="card card-xl-stretch mb-5 mb-xl-10">
+	<div class="card-header border-0 pt-5">
+		<h3 class="card-title align-items-start flex-column">
+			<span class="card-label fw-bolder fs-3 mb-1">Liquidity Locks <span class="badge badge-light-primary">{{ myToken?myToken.length:0 }}</span></span>
+			<span class="text-muted mt-1 fw-bold fs-7" v-if="isLoading">Loading...</span>
+			<span class="text-muted mt-1 fw-bold fs-7" v-if="isError">{{ error }}</span>
+		</h3>
+		<div class="card-toolbar">
+			<ul class="nav">
+				<li class="nav-item">
+					<a href="#" class="btn btn-sm btn-bg-light btn-active-dark me-3" @click="refetch()" :disabled="isRefetching">{{isRefetching?'Loading...':'Refresh'}}</a>
+					<a href="#" class="btn btn-sm btn-primary btn-active-dark me-3" @click="create()" >Create new locks</a>
+				</li>
+				
+			</ul>
+		</div>
+	</div>
+	<div class="card-body py-3">
+		<div class="table-responsive" >
+			<table class="table table-row-dashed table-row-gray-200 align-middle gs-0 gy-4">
+				<thead>
+					<tr class="fw-400 fw-bold">
+						<th class="w-50px">#</th>
+						<th class="min-w-150px">Token Name</th>
+						<th class="min-w-150px">Token Symbol</th>
+						<th class="min-w-140px">Canister ID</th>
+						<th class="min-w-110px">Standard</th>
+						<th class="min-w-50px">Manage</th>
+					</tr>
+				</thead>
+				<tbody>
+					
+				</tbody>
+				<!--end::Table body-->
+			</table>
+			<Empty v-if="myToken && myToken.length ==0"></Empty>
+
+		</div>
+	</div>
+	<!--end::Body-->
+</div>
+<NewLockModal />
 </template>
