@@ -10,7 +10,7 @@ import { walletStore } from "@/store/";
  */
 export const useGetPoolLP = async (canisterId) => {
     const _rs = await Connect.canister(canisterId, 'swapPool').getUserPositionsByPrincipal(txtToPrincipal(walletStore.principal));
-    if("ok" in _rs){
+    if(_rs && "ok" in _rs){
         return _rs.ok;
     }else{
         return [];
