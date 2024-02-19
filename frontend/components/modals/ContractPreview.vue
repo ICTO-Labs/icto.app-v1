@@ -77,7 +77,7 @@
             // let _approve = await useTokenApprove(tokenInfo.canisterId, {spender: config.BACKEND_CANISTER_ID, amount: _totalAmount});
             // let _transfer = await useTransferFrom(tokenInfo.canisterId, {from: walletStore.principal, to: config.BACKEND_CANISTER_ID, amount: _totalAmount});
             // return;
-            // showLoading("Deploying your contract data");
+            showLoading("Deploying your contract data");
             let _rs = await useCreateContract(_data);
             isLoading.value = false;
             console.log('rs', _rs);

@@ -130,13 +130,13 @@
 						<div class="row mb-10">
 							<div class="col-md-12 fv-row">
 								<label class="d-flex align-items-center fs-6 fw-bold mb-2"><span class="required">Contract Name</span></label>
-								<input type="text" class="form-control" v-model="contractData.name" name="name" placeholder="Specify your contract name" required />
+								<input type="text" class="form-control fw-normal" v-model="contractData.name" name="name" placeholder="Your contract name" required />
 							</div>
 						</div>
 						<div class="row mb-10">
 							<div class="col-md-12 fv-row">
 								<label class="d-flex align-items-center fs-6 fw-bold mb-2"><span class="required">Description</span></label>
-								<textarea class="form-control fw-normal" v-model="contractData.description" name="description" placeholder="Specify your contract name" required></textarea>
+								<textarea class="form-control fw-normal" v-model="contractData.description" name="description" placeholder="Contract description" required></textarea>
 							</div>
 						</div>
 						<div class="row mb-10">

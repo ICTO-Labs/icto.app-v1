@@ -1,5 +1,5 @@
 <script setup>
-  import {ref, watch} from 'vue'
+  import {ref, watch, onMounted} from 'vue'
   import {useRoute} from 'vue-router';
   import moment from 'moment';
   import { useGetContract, useCancelContract } from "@/services/Contract";
@@ -9,27 +9,40 @@
   import config from "@/config";
   import { SCHEDULE } from "@/config/constants";
   import { currencyFormat } from "@/utils/token"
+  import { showSuccess } from "@/utils/common"
   import IndicativeChart from '@/components/contract/IndicativeChart.vue';
   import PaymentHistory from '@/components/contract/PaymentHistory.vue';
   const route = useRoute();
+  const isLoading = ref(false);
   const contractId = route.params.contractId; // read parameter id (it is reactive) 
   // const contractInfo = ref({});
-  const { data: contractInfo, error, isError, isLoading, isRefetching, refetch } = useGetContract(contractId);
-
-  const loadContract = async () => {
-    refetch();
+  // const { data: contractInfo, error, isError, isLoading, isRefetching, refetch } = useGetContract(contractId);
+  const activeTab = ref('overview');
+  const loadTab = (tab) => {
+    activeTab.value = tab;
+  };
+  const contractInfo = ref(null);
+  const loadContract = async (init) => {
+    isLoading.value = true;
+    contractInfo.value = await useGetContract(contractId);
+    isLoading.value = false;
+    if(!init) showSuccess('Contract reloaded!');
+    console.log('contractInfo', contractInfo.value);
   }
   const cancelContract = async()=>{
       let _me = await useCancelContract(contractId);
       console.log(_me.toText());
   }
+  onMounted(() => {
+    loadContract(true);
+  });
 </script>
 <template>
   <!--begin::Content-->
   <Toolbar :current="contractInfo?.name" :parents="[{title: 'Payments', to: '/payments'}]"/>
   <div id="kt_app_content" class="app-content flex-column-fluid">
     <!--begin::Content container-->
-    <div id="kt_app_content_container" class="app-container container-xxl">
+    <div id="kt_app_content_container" class="app-container container-xxl" v-if="contractInfo">
       <!--begin::Navbar-->
       <div class="card mb-6 mb-xl-9">
         <div class="card-body pt-9 pb-0">
@@ -49,7 +62,7 @@
                   <div class="d-flex align-items-center mb-1">
                     <span class="text-primary fs-2 fw-bold me-3">{{contractInfo?.name}}</span>
                     <span class="badge badge-light-danger me-auto" v-if="contractInfo && contractInfo.totalAmount==contractInfo.unlockedAmount">Ended</span>
-                    <span class="badge badge-light-success me-auto" v-else>Outgoing...</span>
+                    <span class="badge badge-light-success me-auto" v-else>Ongoing...</span>
                   </div>
                   <div class="d-flex flex-wrap fw-bold fs-6 mb-4 pe-2">
                     <span href="#" class="d-flex align-items-center text-gray-800 text-hover-primary me-5 mb-2">
@@ -60,13 +73,13 @@
                       </span> <span class="me-2">{{contractInfo?.tokenId}}</span> <Copy :text="contractInfo?.tokenId"></Copy>
                     </span>
                     <span href="#" class="d-flex align-items-center text-gray-400 text-hover-primary mb-2">
-                      <span class="badge badge-light-primary ms-auto">{{contractInfo?.tokenStandard.toUpperCase()}}</span>
+                      <span class="badge badge-light-primary ms-auto" v-if="contractInfo">{{contractInfo?.tokenStandard}}</span>
                     </span>
                   </div>
                   
                 </div>
                 <div class="d-flex mb-4">
-                  <button type="button" class="btn btn-sm btn-light-primary me-3" @click="loadContract()" :disabled="isRefetching">{{isRefetching?'Refreshing...':'Refresh '}} <i class="fas fa-sync"></i></button>
+                  <button type="button" class="btn btn-sm btn-light-primary me-3" @click="loadContract(false)" :disabled="isLoading">{{isLoading?'Reloading...':'Reload '}} <i class="fas fa-sync"></i></button>
                   <button type="button" class="btn btn-sm btn-light-danger" @click="cancelContract()">Cancel <i class="fas fa-ban"></i></button>
 
                 </div>
@@ -78,7 +91,7 @@
                     <!-- <span v-if="isLoading">Loading...</span>
                     <span v-if="isRefetching">isRefetching...</span>
                     <span v-else-if="isError">Error: {{ error.message }}</span> -->
-               </div>
+              </div>
             </div>
             <!--end::Wrapper-->
           </div>
@@ -140,10 +153,10 @@
           <div class="separator"></div>
           <ul class="nav nav-stretch nav-line-tabs nav-line-tabs-2x border-transparent fs-5 fw-bold">
             <li class="nav-item">
-              <a class="nav-link text-active-primary py-5 me-6 active" data-bs-toggle="tab" href="#overview">Overview</a>
+              <a :class="`nav-link text-active-primary py-5 me-6 ${activeTab == 'overview'?'active':''}`" data-bs-toggle="tab" href="#overview" @click.stop="loadTab('overview')">Overview</a>
             </li>
             <li class="nav-item">
-              <a class="nav-link text-active-primary py-5 me-6" data-bs-toggle="tab" href="#payment-history">Histories</a>
+              <a :class="`nav-link text-active-primary py-5 me-6 ${activeTab == 'histories'?'active':''}`"  data-bs-toggle="tab" href="#payment-history" @click.stop="loadTab('histories')">Histories</a>
             </li>
             <li class="nav-item">
               <a class="nav-link text-active-primary py-5 me-6 " href="#">Settings</a>
@@ -154,7 +167,7 @@
       <!--end::Navbar-->
       <!--begin::Row-->
         <div class="tab-content" id="myTabContent">
-          <div class="tab-pane fade show active" id="overview" role="tabpanel">
+          <div :class="`tab-pane fade ${activeTab == 'overview'?'show active':''}`" id="overview" role="tabpanel">
             <div class="row gx-6 gx-xl-9">
               <!--begin::Col-->
               <div class="col-lg-6">
@@ -314,7 +327,7 @@
               <!--end::Card body-->
             </div>
           </div>
-          <div class="tab-pane fade" id="payment-history" role="tabpanel">
+          <div :class="`tab-pane fade ${activeTab == 'histories'?'show active':''}`" id="payment-history" role="tabpanel">
             <div class="card card-flush mt-6 mt-xl-9">
               <PaymentHistory :contractId="contractId"/>
             </div>

@@ -25,10 +25,11 @@
 			tokenInfo.value = _tokenInfo;
 		}
 	}
-	const mintToken = (token)=>{
-		const newObj = {...token};
+	const transferToken = (action)=>{
+		const newObj = {...tokenInfo.value};
 		newObj.status = true;
-		newObj.action = 'mint';
+		newObj.canisterId = tokenId;
+		newObj.action = action;
 		showModal("showTransferTokenModal", newObj);
 	}
 
@@ -38,7 +39,7 @@
 	
 </script>
 <template>
-	<Toolbar :current="tokenInfo?tokenInfo.name:''" :parents="[{title: 'My Tokens', to: '/my-token'}]" />
+	<Toolbar :current="tokenInfo?tokenInfo.name:''" :parents="[{title: 'Tokens', to: '/my-token'}]" />
 	<div class="d-flex flex-column flex-lg-row">
 		<!--begin::Sidebar-->
 		<div class="flex-column flex-lg-row-auto me-lg-10  w-lg-250px w-xl-300px mb-10 order-1 order-lg-1">
@@ -74,10 +75,12 @@
 							<!--begin::Info-->
 							<div class="d-flex flex-column">
 								<!--begin::Name-->
-								<a href="#" class="fs-4 fw-bolder text-gray-900 text-hover-primary me-2">{{ tokenInfo.name }}</a>
+								<div class="fs-4 fw-bolder text-gray-900 text-hover-primary me-2">{{ tokenInfo.name }}
+									<div class="badge badge-light-primary ms-auto">{{tokenInfo.standard.toUpperCase()}}</div>
+								</div>
 								<!--end::Name-->
 								<!--begin::Email-->
-								<a href="#" class="fs-7 text-gray-600 text-hover-primary">{{tokenInfo.symbol }}</a>
+								<div class="fs-7 text-gray-600 text-hover-primary">{{tokenInfo.symbol }}</div>
 								<!--end::Email-->
 							</div>
 							<!--end::Info-->
@@ -98,52 +101,45 @@
 						<!--begin::Title-->
 						<h5 class="mb-4">Token Data</h5>
 						<table class="table fs-6 fw-bold gs-0 gy-2 gx-2">
-							<!--begin::Row-->
-							<tbody><tr class="">
-								<td class="text-gray-400">Total Supply:</td>
-								<td class="text-gray-800"><span v-if="tokenInfo">{{currencyFormat(Number(tokenSupply)/Math.pow(10, tokenInfo.decimals))}}</span></td>
-							</tr>
-							<!--end::Row-->
-							<!--begin::Row-->
+							<tbody>
+								<tr class="">
+									<td class="text-gray-400">Total Supply:</td>
+									<td class="text-gray-800"><span v-if="tokenInfo">{{currencyFormat(Number(tokenSupply)/Math.pow(10, tokenInfo.decimals))}}</span></td>
+								</tr>
 							<tr class="">
 								<td class="text-gray-400">Decimals:</td>
 								<td class="text-gray-800"><span v-if="tokenInfo">{{tokenInfo.decimals}}</span></td>
 							</tr>
-							<!--end::Row-->
-							<!--begin::Row-->
 							<tr class="">
 								<td class="text-gray-400">Transfer Fee:</td>
 								<td>
 									<span v-if="tokenInfo">{{tokenInfo.fee}}</span>
 								</td>
 							</tr>
-							<!--end::Row-->
-							<!--begin::Row-->
 							<tr class="">
 								<td class="text-gray-400">Holders:</td>
-								<td class="text-gray-800"><span v-if="tokenInfo">15</span></td>
+								<td class="text-gray-800 w-50"><span v-if="tokenInfo">2</span></td>
 							</tr>
-							<!--end::Row-->
-						</tbody></table>
+							</tbody>
+						</table>
 					</div>
 					<div class="separator separator-dashed mb-7"></div>
 					<div class="mb-0">
-						<!--begin::Title-->
 						<h5 class="mb-4">Token Canister</h5>
-						<table class="table fs-6 fw-bold gs-0 gy-2 gx-2">
-							<!--begin::Row-->
-							<tbody><tr class="">
-								<td class="text-gray-400">Cycles:</td>
-								<td class="text-gray-800">3T</td>
-							</tr>
-							<tr class="">
-								<td class="text-gray-400">Memory Size:</td>
-								<td>
-									<span v-if="tokenInfo">102 MB</span>
-								</td>
-							</tr>
-						
-						</tbody></table>
+						<table class="table fs-6 fw-bold gs-0 gy-2 gx-2 w-100">
+							<tbody>
+								<tr class="">
+									<td class="text-gray-400">Cycles:</td>
+									<td class="text-gray-800">3T</td>
+								</tr>
+								<tr class="">
+									<td class="text-gray-400">Memory Size:</td>
+									<td class="w-50">
+										<span v-if="tokenInfo">102 MB</span>
+									</td>
+								</tr>
+							</tbody>
+						</table>
 					</div>
 				</div>
 				<!--end::Card body-->
@@ -157,9 +153,9 @@
 						<h2 class="fw-bolder">Token overview</h2>
 					</div>
 					<div class="card-toolbar">
-						<button type="button" class="btn btn-sm btn-primary me-2" @click="mintToken(tokenInfo)">Swap <i class="fas fa-exchange-alt"></i></button>
-						<button type="button" class="btn btn-sm btn-light-primary me-2" @click="mintToken(tokenInfo)">Mint <i class="fas fa-paper-plane"></i></button>
-						<button type="button" class="btn btn-sm btn-light-danger" @click="mintToken(tokenInfo)">Burn <i class="fas fa-burn"></i></button>
+						<button type="button" class="btn btn-sm btn-primary me-2">Swap <i class="fas fa-exchange-alt"></i></button>
+						<button type="button" class="btn btn-sm btn-light-primary me-2" @click="transferToken('transfer')">Mint <i class="fas fa-paper-plane"></i></button>
+						<button type="button" class="btn btn-sm btn-light-danger" @click="transferToken('burn')">Burn <i class="fas fa-burn"></i></button>
 					</div>
 				</div>
 				<div class="card-body pt-0">
@@ -169,13 +165,13 @@
 								<table class="table fs-6 fw-bold gs-0 gy-2 gx-2 m-0">
 									<tbody>
 										<tr>
-											<td class="text-gray-400 min-w-175px w-175px">Owner:</td>
+											<td class="text-gray-400 min-w-175px w-175px">Token Owner:</td>
 											<td class="text-gray-800 min-w-200px">
 												<a href="#" class="text-gray-800 text-hover-primary" v-if="tokenOwner">{{ tokenOwner.principal }}</a> <Copy  v-if="tokenOwner" :text="tokenOwner.principal"></Copy>
 											</td>
 										</tr>
 										<tr>
-											<td class="text-gray-400">Address:</td>
+											<td class="text-gray-400"></td>
 											<td class="text-gray-800"><a href="" class="text-gray-800 text-hover-primary" v-if="tokenOwner">{{ tokenOwner.subaccount }}</a> <Copy  v-if="tokenOwner" :text="tokenOwner.subaccount"></Copy></td>
 										</tr>
 										<tr>
@@ -187,11 +183,11 @@
 										</td></tr>
 										<tr>
 											<td class="text-gray-400">Price:</td>
-											<td class="text-success">$6,593</td>
+											<td class="text-success">$---</td>
 										</tr>
 										<tr>
 											<td class="text-gray-400">Market Cap:</td>
-											<td class="text-success">$10,324,638</td>
+											<td class="text-success">$----</td>
 										</tr>
 								</tbody></table>
 							</div>

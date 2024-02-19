@@ -10,38 +10,22 @@ export const useCreateContract = async (data)=>{
     }
     
 }
-export const useGetMyContracts = (page=0)=>{
-    return useQuery({
-        queryKey: ['myContracts', page],
-        queryFn: async () =>{
-            try{
-                return await Connect.canister(config.BACKEND_CANISTER_ID, 'backend').getMyContracts(page)
-            }catch(e){
-                throw new Error(e);
-            }
-        },
-        keepPreviousData: true,
-        retry: 3,
-        refetchInterval: 0
-      })
+export const useGetMyContracts = async (page=0)=>{
+    try{
+        return await Connect.canister(config.BACKEND_CANISTER_ID, 'backend').getMyContracts(page)
+    }catch(e){
+        throw new Error(e);
+    }
 }
 export const useCancelContract = async (contractId)=>{
     return await Connect.canister(config.BACKEND_CANISTER_ID, 'contract').whoami();
 }
-export const useGetContract = (contractId) => {
-    return useQuery({
-        queryKey: ['contractInfo', contractId],
-        queryFn: async () => {
-          try{
-            return await Connect.canister(contractId, 'contract').get()
-          }catch(e){
-            throw new Error(e);
-          }
-        },
-        keepPreviousData: true,
-        retry: 0,
-        refetchInterval: 0
-      })
+export const useGetContract = async (contractId) => {
+    try{
+        return await Connect.canister(contractId, 'contract').get()
+    }catch(e){
+        throw new Error(e);
+    }
 }
 export const useGetPaymentHistory = (contractId) => {
     return useQuery({

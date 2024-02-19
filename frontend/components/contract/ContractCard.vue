@@ -1,5 +1,6 @@
 <script setup> 
     import moment from 'moment';
+    import { onMounted, ref } from 'vue';
     import "vue3-circle-progress/dist/circle-progress.css";
     import CircleProgress from "vue3-circle-progress";
     import { currencyFormat } from "@/utils/token"
@@ -7,8 +8,15 @@
 
     import { useGetContract, useCancelContract } from "@/services/Contract";
     const props = defineProps(['contractId', 'contractInfo']);
-    const { data: contract, error, isError, isLoading, isRefetching, refetch } = useGetContract(props.contractId);
-
+    // const { data: contract, error, isError, isLoading, isRefetching, refetch } = useGetContract(props.contractId);
+    const contract = ref(null);
+    const getContract = async () => {
+        contract.value = await useGetContract(props.contractId);
+        console.log(contract.value);
+    }
+    onMounted(() => {
+        getContract();
+    });
 
 </script>
 <template>
@@ -70,16 +78,16 @@
             <div class="d-flex flex-stack flex-wrapr">
                 <div class="d-flex flex-column me-2">
                     <span class="fs-8 text-gray-400 text-hover-primary me-2">Created</span>
-                    <span class="badge bg-light text-gray-700 px-3 py-2">{{ moment.unix(Number(contract?.created)).format("lll") }}</span>
+                    <span class="badge bg-light text-gray-700 px-3 py-2">{{ moment.unix(Number(contract?.startTime)).format("lll") }}</span>
                 </div>
                 
                 <div class="d-flex flex-column me-2">
                     <span class="text-gray-400 fs-8 me-2 text-hover-primary">Created By</span>
-                    <span class="text-gray-700 fw-bold fs-7" :title="contract?.createdBy">{{ shortPrincipal(contract?.createdBy) }} <Copy :text="contract?.createdBy"></Copy></span>
+                    <span class="text-gray-700 fw-bold fs-7" :title="contract?.owner">{{ shortPrincipal(contract?.owner) }} <Copy :text="contract?.owner"></Copy></span>
                 </div>
                 <div class="d-flex flex-column">
                     <span class="fs-8 text-gray-400 text-hover-primary">Status</span>
-                    <span class="badge badge-light-success me-auto">Unlocking</span>
+                    <span class="badge badge-light-success me-auto">Ongoing</span>
                 </div>
             </div>
             

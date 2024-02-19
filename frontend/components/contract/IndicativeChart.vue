@@ -1,14 +1,15 @@
 <script setup>
-    import { ref, watch } from "vue";
+    import { ref, watch, onMounted } from "vue";
     import {LineChart,useLineChart} from "vue-chart-3";
     import {Chart,registerables} from "chart.js";
     Chart.register(...registerables);
     import { useGetContract, useGetPaymentHistory, useCancelContract } from "@/services/Contract";
-import moment from "moment";
+    import moment from "moment";
 
     const props = defineProps(['contractInfo', 'contractId']);
-    const { data: contractInfo, error, isError, isLoading, isRefetching, refetch } = useGetContract(props.contractId);
-
+    const contractInfo = ref(props.contractInfo);
+    console.log(contractInfo.value);
+    // const { data: contractInfo, error, isError, isLoading, isRefetching, refetch } = useGetContract(props.contractId);
     const chartDetail = ref({
         label: [],
         data: []
@@ -75,21 +76,21 @@ import moment from "moment";
     const xseries = [{
             name: "Unlock",
             data: chatSeries.value,//[34, 44, 54, 64, 74, 84, 94, 104, 114, 124, 134]
-          }];
+        }];
     const xchartOptions = {
             chart: {
-              type: 'area',
-              height: 350
+                type: 'area',
+                height: 350
             },
             stroke: {
-              curve: 'stepline',
+                curve: 'stepline',
             },
             dataLabels: {
-              enabled: false
+                enabled: false
             },
             title: {
-              text: '',
-              align: 'left'
+                text: '',
+                align: 'left'
             },
             markers: {
                 size: 5,
@@ -124,18 +125,21 @@ import moment from "moment";
                 strokeDashArray: 1,
                 borderColor: '#018FFB',
                 label: {
-                  borderColor: '#018FFB',
-                  style: {
-                    color: '#fff',
-                    background: '#018FFB',
-                  },
-                  text: 'Today',
+                    borderColor: '#018FFB',
+                    style: {
+                        color: '#fff',
+                        background: '#018FFB',
+                    },
+                    text: 'Today',
                 }
-              }]
+                }]
             }
-          }
+        }
+    onMounted(() => {
+        generateChartData();
+    })   
 </script>
 <template>
-     <apexchart type="line" height="350" :options="xchartOptions" :series="xseries" v-if="chartDetail"></apexchart>
+    <apexchart type="line" height="350" :options="xchartOptions" :series="xseries" v-if="chartDetail"></apexchart>
     <!-- <LineChart :chartData="chartData" :options="chartOptions" /> -->
 </template>
