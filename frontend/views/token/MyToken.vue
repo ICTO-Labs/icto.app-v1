@@ -28,7 +28,7 @@
 			<ul class="nav">
 				<li class="nav-item">
 					<a href="#" class="btn btn-sm btn-bg-light btn-active-dark me-3" @click="refetch()" :disabled="isRefetching">{{isRefetching?'Loading...':'Refresh'}}</a>
-					<a href="#" class="btn btn-sm btn-primary btn-active-dark me-3" @click="deployToken()" >Deploy Token</a>
+					<a href="#" class="btn btn-sm btn-danger btn-active-dark me-3" @click="deployToken()" ><i class="fas fa-angle-double-up"></i> Deploy Token</a>
 				</li>
 				
 			</ul>

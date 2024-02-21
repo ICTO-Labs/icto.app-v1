@@ -1,12 +1,14 @@
 <script setup>
 	import {ref, onMounted} from "vue";
-	import { useCreateToken } from '@/services/Token';
+	import { useCreateToken, useTokenApprove, useTransferFrom  } from '@/services/Token';
+	import { useChargeFee  } from '@/services/Backend';
 	import { showError, showSuccess } from '@/utils/common';
 	const deployTokenModal = ref(false);
     import { VueFinalModal } from 'vue-final-modal'
     import EventBus from "@/services/EventBus";
     import LoadingButton from "@/components/LoadingButton.vue";
-
+    import config from "@/config";
+    import walletStore from "@/store";
     const isLoading = ref(false);
 	const newToken = ref({
 		name: "Test Token",
@@ -24,15 +26,31 @@
     })
 
 	const deployToken = async()=>{
-        isLoading.value = true;
-		let canister_id = await useCreateToken(newToken.value);
-        isLoading.value = false;
-
-		if(typeof(canister_id) =='string') showSuccess("Token deployed successfully! Your token ID: "+canister_id, true);
-        else{
-            showError(canister_id.err, true);
-        }
-		console.log(canister_id);
+        Swal.fire({
+		title: "Are you sure?",
+		text: "Deploy new token $"+newToken.value.symbol+" will charge "+config.SERVICE_FEES.DEPLOY_TOKEN+" $ICTO as service fee. Non-refundable once the token is deployed!",
+		icon: "warning",
+		showCancelButton: true,
+		confirmButtonColor: "#3085d6",
+		cancelButtonColor: "#d33",
+		confirmButtonText: "Yes, I confirmed!"
+		}).then(async (result) => {
+            if (result.isConfirmed) {
+                // let _approve = await useTokenApprove(config.SERVICE_CANISTER_ID, {spender: config.BACKEND_CANISTER_ID, amount: config.SERVICE_FEES.DEPLOY_TOKEN});
+                // console.log('_approve', _approve);
+                let _transfer = await useChargeFee({from: walletStore.principal, to: 'v57dj-hev4p-lsvdl-dckvv-zdcvg-ln2sb-tfqba-nzb4g-iddrv-4rsq3-mae', amount: 1});
+                console.log('transfer', _transfer);
+                return;
+                isLoading.value = true;
+                let canister_id = await useCreateToken(newToken.value);
+                isLoading.value = false;
+                if(typeof(canister_id) =='string') showSuccess("Token deployed successfully! Your token ID: "+canister_id, true);
+                else{
+                    showError(canister_id.err, true);
+                }
+                // console.log(canister_id);
+            }
+        })
 	}
     const closeModal = ()=>{ deployTokenModal.value = false};
 
@@ -108,11 +126,15 @@
                                                 </div>
                                             </div>
                                         </div>
+                                        <div class="alert bg-light-warning mb-5"> 
+                                            <div>- Your connected wallet will be fully controlled this token. ICTO will have no control over this canister.</div>
+                                            <div>- Deploy new token will charges <strong>{{ config.SERVICE_FEES.DEPLOY_TOKEN }} $ICTO</strong> as service fee.</div>
+                                        </div>
                                         <div class="d-flex flex-column gap-7 gap-md-10">
                                             <LoadingButton 
                                             :loading="isLoading"
                                             class="btn btn-danger btn-block"
-                                            type="submit">Confirm Deploy <i class="fas fa-angle-double-up"></i>
+                                            type="submit"><i class="fas fa-angle-double-up"></i> Start Deploy
                                             </LoadingButton>
                                         </div>
                                     </div>
