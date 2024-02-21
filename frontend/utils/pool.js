@@ -1,4 +1,4 @@
-export const formatPoolMeta = (meta) => {
+export const formatTokenMeta = (meta) => {
     let res = {};
     const formatToken = (token) => {
         let result = {};
@@ -14,4 +14,8 @@ export const formatPoolMeta = (meta) => {
     res.token0 = formatToken(meta.token0);
     res.token1 = formatToken(meta.token1);
     return res;
+}
+
+export const isInRange = (tick, tickLower, tickUpper) => {
+    return tick >= tickLower && tick <= tickUpper;
 }

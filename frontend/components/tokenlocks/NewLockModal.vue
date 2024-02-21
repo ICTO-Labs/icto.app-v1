@@ -1,25 +1,30 @@
 <script setup>
     import { ref, onMounted } from 'vue';
-    import { formatPoolMeta } from '@/utils/pool';
+    import { formatTokenMeta, isInRange } from '@/utils/pool';
     import EventBus from "@/services/EventBus";
     import LoadingButton from "@/components/LoadingButton.vue"
     import { VueFinalModal } from 'vue-final-modal'
-    import { useGetPoolMeta, useGetPoolLP, useApprovePosition } from '@/services/SwapPool';
+    import { useGetPoolMeta, useGetTokenMeta, useGetPoolLP, useApprovePosition, useGetPoolValue } from '@/services/SwapPool';
     import { showError, showSuccess, showLoading, closeMessage} from '@/utils/common';
+    import { currencyFormat } from "@/utils/token";
+
     import moment from 'moment';
     const newLockModal = ref(false);
 	const poolCanister = ref("z6v2h-2qaaa-aaaag-qblva-cai");///z6v2h-2qaaa-aaaag-qblva-cai
 	const poolName = ref("");
     const showDetail = ref(false);
-    const positionId = ref("");
+    const positionDetail = ref(null);
     const timeNow = moment().utc();
     const unlockDate = ref(moment().utc().add(30, 'days'));
     const unlockDays = ref(unlockDate.value.diff(timeNow, 'days'));
 	const isLoading = ref(false);
 	const poolMeta = ref(null);
+	const tokenMeta = ref(null);
     const lockStep = ref(1);
 	const userLP = ref([]);
-    const _poolMeta = {
+    const currentTick = ref(0);
+    const sqrtPriceX96 = ref(0);
+    const _tokenMeta = {
             "token0":[
                 [
                     "name", { "Text":"Canister Token" }
@@ -56,14 +61,24 @@
         if(poolCanister.value != ""){
             //fetch pool meta
             isLoading.value = true;
-            // let _meta = await useGetPoolMeta(poolCanister.value);
-            // if(_meta == null){
+            let _poolMeta = await useGetPoolMeta(poolCanister.value);
+            if(_poolMeta == null){
+                isLoading.value = false;
+                showError("Pool not found, please check your pool canister");
+                return;
+            }
+            poolMeta.value = _poolMeta;
+            sqrtPriceX96.value = Number(poolMeta.value.sqrtPriceX96)
+            currentTick.value = Number(poolMeta.value.tick);
+            //Step2. get Token meta
+            // let _tokenMeta = await useGetTokenMeta(poolCanister.value);
+            // if(_tokenMeta == null){
             //     isLoading.value = false;
-            //     showError("Pool not found, please check your pool canister");
+            //     showError("Token not found, please check your pool canister");
             //     return;
             // }
-            poolMeta.value = formatPoolMeta(_poolMeta);
-            poolName.value = `${poolMeta.value.token0.symbol}/${poolMeta.value.token1.symbol}`;
+            tokenMeta.value = formatTokenMeta(_tokenMeta);//formatPoolMeta(_tokenMeta);
+            poolName.value = `${tokenMeta.value.token0.symbol}/${tokenMeta.value.token1.symbol}`;
             await getPoolLP(poolCanister.value);
             isLoading.value = false;
         }
@@ -79,6 +94,13 @@
     const getPoolLP = async ()=> {
         userLP.value = [];
         userLP.value = await useGetPoolLP(poolCanister.value);
+
+        console.log('p dataaaaaaaaaaaa',userLP.value);
+        //"sqrtPriceX96":"821791359623004272717526187","tick":"-91377"
+        userLP.value.forEach((pos)=>{
+            pos.value = useGetPoolValue(sqrtPriceX96.value, Number(pos.tickLower), Number(pos.tickUpper), Number(pos.liquidity), currentTick.value);
+            console.log(pos, 'pos value');
+        })
     };
     const approvePosition = async (poolId) => {
         Swal.fire({
@@ -137,7 +159,7 @@
     };
     const showLPDetail = (position)=>{
         showDetail.value = true;
-        positionId.value = position;
+        positionDetail.value = position;
     }
     const goBack = ()=>{
         showDetail.value = false;
@@ -188,19 +210,53 @@
 
                                         <div class="row mb-5" v-if="poolName !='' && !isLoading">
                                             <div class="col-md-12 fv-row">
-                                                <label class="fs-6 fw-bold form-label mb-2 mb-5">Your {{poolName}} LP <span class="badge badge-primary">{{ userLP.length }}</span></label>
+                                                <label class="fs-6 fw-bold form-label mb-2 mb-5">Your {{poolName}} Positions <span class="badge badge-primary">{{ userLP.length }}</span></label>
                                                 <div class="row fv-row">
-                                                    <div class="col-lg-6" v-for="pool in userLP">
-                                                        <div class="d-flex d-flex-column align-items-center bg-light-primary rounded mb-7 p-5 cursor">
-                                                            <div class="symbol symbol-45px symbol-circle me-5" data-bs-toggle="tooltip" title="" data-bs-original-title="Susan Redwood">
-                                                                <span class="symbol-label bg-primary text-inverse-primary fw-bold fs-3">{{pool.id}}</span>
+                                                    <div class="col-lg-6" v-for="position in userLP">
+                                                        <!-- <div :class="`fw-normal fs-8 py-1 px-2 badge badge-${isInRange(currentTick, position.tickLower, position.tickUpper) ? 'primary' : 'warning'} position-absolute`">{{ isInRange(currentTick, position.tickLower, position.tickUpper) ? "In range": "Out of range" }}</div> -->
+
+                                                        <div class="d-flex d-flex-column align-items-center bg-light-primary rounded mb-5 p-2 border border-primary border-hover">
+                                                            <div class="symbol symbol-65px symbol-circle me-5" title="Position" >
+                                                                <span :class="`symbol-label bg-${isInRange(currentTick, position.tickLower, position.tickUpper) ? 'success' : 'warning'} text-inverse-primary fw-bold fs-1`">{{position.id}}</span>
                                                             </div>
                                                             <div class="flex-grow-1 me-2">
-                                                                <a href="#" class="fw-bolder text-gray-800 text-hover-primary fs-6" @click.stop="showLPDetail(pool.id)">{{poolName}}</a>
-                                                                <span class="fw-bold d-block text-success py-1">Value: {{pool.liquidity}}</span>
+                                                                <div class="card-header p-0 min-h-auto">
+                                                                    <div class="card-title p-0">
+                                                                        <a href="#" class="fw-bolder text-dark text-hover-primary fs-6" @click.stop="showLPDetail(position)">
+                                                                            <span class="fw-normal text-gray">Value:</span> ${{position.value.totalValueInUSD.toFixed(2)}} 
+                                                                        </a>
+                                                                    </div>
+                                                                    <div class="card-toolbar">
+                                                                        <span :class="`fw-normal badge badge-light-${isInRange(currentTick, position.tickLower, position.tickUpper) ? 'success' : 'warning'}`">
+                                                                            <i class="bullet bullet-dot bg-success h-8px w-8px me-1" v-if="isInRange(currentTick, position.tickLower, position.tickUpper)"></i>
+                                                                            <i class="fas fa-warning text-warning fs-1x" v-else></i>
+                                                                            {{ isInRange(currentTick, position.tickLower, position.tickUpper) ? "In range": "Out of range" }}</span>
+                                                                        
+                                                                    </div>
+                                                                </div>
+                                                                    
+                                                                <div class="d-flex flex-stack pt-1">
+                                                                    <div class="d-flex align-items-center me-2">
+                                                                        <div class="bullet bg-primary me-3"></div>
+                                                                        <div class="fs-7 text-gray-800 text-hover-primary">XCANIC amount:</div>
+                                                                    </div>
+                                                                    <div class="fs-7 fw-bold px-3">{{currencyFormat(position.value.amount0)}}</div>
+                                                                </div>
+                                                                <div class="d-flex flex-stack">
+                                                                    <div class="d-flex align-items-center me-2">
+                                                                        <div class="bullet bg-primary me-3"></div>
+                                                                        <div class="fs-7 text-gray-800 text-hover-primary">ICP amount:</div>
+                                                                    </div>
+                                                                    <div class="fs-7 fw-bold px-3">{{position.value.amount1.toFixed(2)}}</div>
+                                                                </div>
+
+                                                                <div class="d-flex flex-column gap-7 gap-md-10 mt-2 mb-2">
+                                                                    <button href="#" class="btn btn-sm btn-danger badge " @click.stop="showLPDetail(position)"><i class="fas fa-lock"></i> Create liquidity lock</button>
+                                                                </div>
+
                                                             </div>
-                                                            <button type="button" class="btn btn-sm btn-danger" @click.stop="showLPDetail(pool.id)">Show</button>
                                                         </div>
+
                                                     </div>
                                                 </div>
                                             </div>
@@ -218,11 +274,11 @@
                                             <div class="fs-6 fw-bold text-gray-400 mb-7">qi26q-6aaaa-aaaap-qapeq-cai <Copy text="qi26q-6aaaa-aaaap-qapeq-cai" /></div>
                                             <div class="fs-6 d-flex justify-content-between mb-4">
                                                 <div class="fw-bold">Position ID</div>
-                                                <div class="d-flex fw-bolder">{{ positionId }}</div>
+                                                <div class="d-flex fw-bolder">{{ positionDetail.id }}</div>
                                             </div>
                                             <div class="fs-6 d-flex justify-content-between mb-4">
                                                 <div class="fw-bold">Total locked value</div>
-                                                <div class="d-flex fw-bolder">$6,570</div>
+                                                <div class="d-flex fw-bolder">${{ positionDetail.value.totalValueInUSD }}</div>
                                             </div>
                                             <div class="fs-6 justify-content-between mt-4">
                                                 <div class="row mb-2">

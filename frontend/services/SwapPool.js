@@ -1,7 +1,25 @@
 import Connect from "@/ic/actor/Connect";
 import { txtToPrincipal } from "@/utils/common";
 import { walletStore } from "@/store/";
+import univ3prices from "@thanpolas/univ3prices";
 
+export const useGetPoolValue = (sqrtPriceX96, tickLower, tickUpper, liquidity, tick) => {
+    console.log(sqrtPriceX96, tickLower, tickUpper, liquidity, tick);
+    const [amount0Raw, amount1Raw] = univ3prices.getAmountsForLiquidityRange(
+        sqrtPriceX96, // generate sqrt price for range
+        univ3prices.tickMath.getSqrtRatioAtTick(tickLower), // lower tick
+        univ3prices.tickMath.getSqrtRatioAtTick(tickUpper), // upper tick
+        liquidity // liquidity
+    );
+    
+    const price = univ3prices.tickPrice([8, 8], tick).toAuto({reverse: true});
+    const amount0 = Number(amount0Raw) / 100_000_000;
+    const amount1 = Number(amount1Raw) / 100_000_000;//ICP
+    const totalValueInICP = amount0 * price + amount1;
+    
+    const totalValueInUSD = totalValueInICP*13.01;//x ICP Price
+    return {amount0, amount1, totalValueInICP, totalValueInUSD};
+}
 
 /**
  * Retrieves the user's positions in a swap pool by principal.
@@ -25,6 +43,19 @@ export const useGetPoolLP = async (canisterId) => {
 export const useGetPoolMeta = async (canisterId) => {
     try{
         const _rs = await Connect.canister(canisterId, 'swapPool').metadata();
+        if(_rs && "ok" in _rs){
+            console.log('_rs', _rs);
+            return _rs.ok;
+        }else{
+            return null;
+        }
+    }catch(e){
+        return null;
+    }
+}
+export const useGetTokenMeta = async (canisterId) => {
+    try{
+        const _rs = await Connect.canister(canisterId, 'swapPool').getTokenMeta();
         console.log('_rs', _rs);
         return _rs;
     }catch(e){

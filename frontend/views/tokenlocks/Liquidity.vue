@@ -1,12 +1,12 @@
 <script setup>
     import { ref } from 'vue';
     import NewLockModal from '@/components/tokenlocks/NewLockModal.vue';
-    import { formatPoolMeta } from '@/utils/pool';
+    import { formatTokenMeta } from '@/utils/pool';
     import { showModal } from "@/utils/common";
 	const poolCanister = ref("z6v2h-2qaaa-aaaag-qblva-cai");
 	const poolName = ref("");
-	const poolMeta = ref(null);
-    let _poolMeta = {
+	const tokenMeta = ref(null);
+    let _tokenMeta = {
             "token0":[
                 [
                     "name", { "Text":"Canister Token" }
@@ -36,8 +36,8 @@
                 ]
             ]
         }
-        poolMeta.value = formatPoolMeta(_poolMeta);
-        poolName.value = `${poolMeta.value.token0.symbol}/${poolMeta.value.token1.symbol}`;
+        tokenMeta.value = formatTokenMeta(_tokenMeta);
+        poolName.value = `${tokenMeta.value.token0.symbol}/${tokenMeta.value.token1.symbol}`;
 
     const getPoolMeta = ()=> {};
     const create = ()=> {
