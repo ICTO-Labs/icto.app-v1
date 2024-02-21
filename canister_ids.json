@@ -4,5 +4,8 @@
   },
   "backend": {
     "ic": "ys3lq-iiaaa-aaaap-qb7ba-cai"
+  },
+  "deployer": {
+    "ic": "p7bu5-uyaaa-aaaap-qca3q-cai"
   }
 }

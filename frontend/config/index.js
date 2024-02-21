@@ -3,6 +3,7 @@ const NETWORK = {
         canister_id: "bkyz2-fmaaa-aaaaa-qaaaq-cai",
         deployer_id: "be2us-64aaa-aaaaa-qaabq-cai",
         backend_id: "bd3sg-teaaa-aaaaa-qaaba-cai",
+        gov_token_id: "ajuq4-ruaaa-aaaaa-qaaga-cai",//governance token, required for charges
         host: "http://127.0.0.1:8000",
         identityProvider: "http://127.0.0.1:8000/?canisterId=br5f7-7uaaa-aaaaa-qaaca-cai#authorize",
         scan: "http://127.0.0.1:8000/?canisterId=bd3sg-teaaa-aaaaa-qaaba-cai&id="
@@ -16,7 +17,7 @@ const NETWORK = {
     },
     "ic": {
         canister_id: "y3yam-6aaaa-aaaap-qb7aq-cai",
-        deployer_id: "be2us-64aaa-aaaaa-qaabq-cai",
+        deployer_id: "p7bu5-uyaaa-aaaap-qca3q-cai",
         backend_id: "ys3lq-iiaaa-aaaap-qb7ba-cai",
         host: "https://icp-api.io",
         scan: "https://dashboard.internetcomputer.org/canister/",
@@ -59,6 +60,13 @@ const config = {
         "stoic": true,
         "plug": true,
         "bitfinity": true,
+    },
+    SERVICE_CANISTER_ID: NETWORK[ENV]['gov_token_id'], 
+    SERVICE_FEES: {
+        "DEPLOY_TOKEN": 0,
+        "PAYMENT_CONTRACT": 10,
+        "VESTING_CONTRACT": 10,
+        "LOCKS_CONTRACT": 10,
     },
 }
 export const defaultTokens = [
