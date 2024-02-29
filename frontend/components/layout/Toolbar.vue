@@ -2,26 +2,27 @@
 	import { ref } from 'vue';
 	import { showModal} from "@/utils/common";
 	import { useRoute } from 'vue-router';
-	const props = defineProps(['current', 'parents', 'modal']);
+	const props = defineProps(['current', 'parents', 'showBtn']);
 	const router = useRoute();
 	import walletStore from "@/store";
 	const btnLabel = ref('');
 	const btnIcon = ref('');
 	const modalName = ref('');
-	if(props.modal){
-		btnLabel.value = props.modal.label;
-		btnIcon.value = props.modal.icon;
-		modalName.value = props.modal.modal;
+	if(props.showBtn){
+		btnLabel.value = props.showBtn.label;
+		btnIcon.value = props.showBtn.icon;
+		modalName.value = props.showBtn.modal;
 	}
 	const showWallet = ()=>{	
 		walletStore.isLogged ? showModal('showWalletModal', true) : showModal('showLoginModal', true);	
 	}
 	const showBtnModal = ()=>{
-		if(props.modal){
-			walletStore.isLogged ? showModal(modalName.value, true) : showModal('showLoginModal', true);
+		if(props.showBtn){
+			walletStore.isLogged ? showModal(''+modalName.value+'', true) : showModal('showLoginModal', true);
 		}
 		showModal('showLiquidityLocksModal', {status: true})
 	}
+	console.log(router);
 </script>
 <template>
     <!--begin::Toolbar-->
@@ -51,8 +52,8 @@
 			<!--end::Page title-->
 			<!--begin::Actions-->
 			<div class="d-flex align-items-center py-1">
-				<router-link to="/new-contract" class="btn btn-sm btn-danger me-2">New Contract</router-link>
-				<!-- <a href="#" @click.stop="showBtnModal" class="btn btn-sm btn-danger me-2" v-if="props.modal"><i :class="`fas ${btnIcon}`"></i> {{btnLabel}}</a>  -->
+				<a href="#" @click.stop="showBtnModal" class="btn btn-sm btn-danger me-2" v-if="props.showBtn"><i :class="`fas ${btnIcon}`"></i> {{btnLabel}}</a> 
+				<router-link to="/new-contract" class="btn btn-sm btn-danger me-2" v-if="router.name =='contract'">New Contract</router-link>
 				<!-- <a href="#" @click.stop="showWallet" class="btn btn-sm btn-primary me-2"><i class="fas fa-wallet"></i> My Wallet</a>  -->
 			</div>
 			<!--end::Actions-->

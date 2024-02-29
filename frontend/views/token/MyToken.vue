@@ -15,7 +15,7 @@
 	}
 </script>
 <template>
-	<Toolbar :current="`My Tokens`"/>
+	<Toolbar :current="`My Tokens`" :showBtn="{modal: 'showDeployTokenModal', icon: 'fa-angle-double-up', label: 'Deploy Token'}"/>
 
 	<div class="card card-xl-stretch mb-5 mb-xl-10">
 	<div class="card-header border-0 pt-5">
@@ -28,7 +28,7 @@
 			<ul class="nav">
 				<li class="nav-item">
 					<a href="#" class="btn btn-sm btn-bg-light btn-active-dark me-3" @click="refetch()" :disabled="isRefetching">{{isRefetching?'Loading...':'Refresh'}}</a>
-					<a href="#" class="btn btn-sm btn-danger btn-active-dark me-3" @click="deployToken()" ><i class="fas fa-angle-double-up"></i> Deploy Token</a>
+					<!-- <a href="#" class="btn btn-sm btn-danger btn-active-dark me-3" @click="deployToken()" ><i class="fas fa-angle-double-up"></i> Deploy Token</a> -->
 				</li>
 				
 			</ul>

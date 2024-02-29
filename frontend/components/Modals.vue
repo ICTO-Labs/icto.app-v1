@@ -6,6 +6,7 @@
 	import Login from './modals/Login.vue'
 	import BuyModal from './marketplace/BuyModal.vue'
 	import ProcessBuyingModal from './marketplace/ProcessBuyingModal.vue'
+	import NewLockModal from '@/components/tokenlocks/NewLockModal.vue';
 </script>
 <template>
 	<ContractPreview />
@@ -15,4 +16,5 @@
 	<Login />
 	<BuyModal />
 	<ProcessBuyingModal />
+	<NewLockModal />
 </template>
