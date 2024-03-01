@@ -8,8 +8,9 @@ import icrc3IDL from '@/ic/candid/icrc2.did';
 import extIDL from '@/ic/candid/extNFT.did';
 import contractIDL from '@/ic/candid/contract.did';
 import swapPoolIDL from '@/ic/candid/icpswap/swapPool.did';
-import {idlFactory as deployerIDL} from '../../../src/declarations/deployer/deployer.did.js'
-import {idlFactory as backendIDL} from '../../../src/declarations/backend/backend.did.js'
+import {idlFactory as deployerIDL} from '../../../src/declarations/deployer/deployer.did.js';
+import {idlFactory as tokenDeployerIDL} from '../../../src/declarations/token_deployer/token_deployer.did.js';
+import {idlFactory as backendIDL} from '../../../src/declarations/backend/backend.did.js';
 
 export const preloadIdls = {
     'cycles' : cyclesIDL,
@@ -22,6 +23,7 @@ export const preloadIdls = {
     'IC': icIDL,
     'contract': contractIDL,
     'deployer': deployerIDL,
+    'token_deployer': tokenDeployerIDL,
     'backend': backendIDL,
     'swapPool': swapPoolIDL,
 }

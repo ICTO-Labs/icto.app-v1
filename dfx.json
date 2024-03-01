@@ -15,11 +15,15 @@
       "main": "canisters/backend/main.mo",
       "type": "motoko"
     },
-    "deployer": {
+    "token_deployer": {
       "main": "canisters/tokens/main.mo",
       "type": "motoko"
     },
-    "assets": {
+    "deployer": {
+      "main": "canisters/deployer/main.mo",
+      "type": "motoko"
+    },
+    "frontend": {
       "dependencies": [
         "backend"
       ],

@@ -1,44 +1,41 @@
 import type { Principal } from '@dfinity/principal';
 import type { ActorMethod } from '@dfinity/agent';
 
-export interface HttpRequest {
-  'url' : string,
-  'method' : string,
-  'body' : Uint8Array | number[],
-  'headers' : Array<headerField>,
+export interface LockContract {
+  'status' : { 'locked' : null } |
+    { 'unlocked' : null },
+  'durationTime' : bigint,
+  'durationUnit' : bigint,
+  'created' : Time,
+  'provider' : string,
+  'meta' : Array<string>,
+  'positionId' : bigint,
+  'positionOwner' : Principal,
+  'poolName' : string,
+  'poolId' : string,
 }
-export interface HttpResponse {
-  'body' : Uint8Array | number[],
-  'headers' : Array<headerField>,
-  'status_code' : number,
+export interface LockContractInit {
+  'durationTime' : bigint,
+  'durationUnit' : bigint,
+  'provider' : string,
+  'meta' : Array<string>,
+  'positionId' : bigint,
+  'poolName' : string,
+  'poolId' : string,
 }
-export type Result = { 'ok' : null } |
-  { 'err' : string };
-export interface Token {
-  'name' : string,
-  'cover' : string,
-  'description' : string,
-  'canister' : string,
-  'symbol' : string,
-}
-export type headerField = [string, string];
+export type Time = bigint;
 export interface _SERVICE {
   'addAdmin' : ActorMethod<[string], undefined>,
-  'createTokenCanister' : ActorMethod<
-    [string, string, string, bigint, string, number, bigint],
-    string
-  >,
+  'createContract' : ActorMethod<[LockContractInit], string>,
   'cycleBalance' : ActorMethod<[], bigint>,
   'getAllAdmins' : ActorMethod<[], Array<string>>,
-  'getAllTokens' : ActorMethod<[], Array<[string, string]>>,
+  'getAllContracts' : ActorMethod<[], Array<[string, LockContract]>>,
+  'getContract' : ActorMethod<[string], [] | [LockContract]>,
+  'getContracts' : ActorMethod<[bigint], Array<LockContract>>,
   'getOwner' : ActorMethod<[string], [] | [string]>,
-  'getTokenDetails' : ActorMethod<[string], [] | [Token]>,
-  'getTokens' : ActorMethod<[bigint], Array<Token>>,
-  'getTotalTokens' : ActorMethod<[], bigint>,
-  'getUserTokens' : ActorMethod<[string, bigint], Array<Token>>,
+  'getTotalContract' : ActorMethod<[], bigint>,
+  'getUserContracts' : ActorMethod<[string, bigint], Array<LockContract>>,
   'getUserTotalTokens' : ActorMethod<[string], bigint>,
-  'http_request' : ActorMethod<[HttpRequest], HttpResponse>,
   'removeAdmin' : ActorMethod<[string], undefined>,
   'updateInitCycles' : ActorMethod<[bigint], undefined>,
-  'updateTokenCover' : ActorMethod<[string, string], Result>,
 }

@@ -1,51 +1,45 @@
-type headerField = 
+type Time = int;
+type LockContractInit = 
  record {
-   text;
-   text;
+   durationTime: nat;
+   durationUnit: nat;
+   meta: vec text;
+   poolId: text;
+   poolName: text;
+   positionId: nat;
+   provider: text;
  };
-type Token = 
+type LockContract = 
  record {
-   canister: text;
-   cover: text;
-   description: text;
-   name: text;
-   symbol: text;
- };
-type Result = 
- variant {
-   err: text;
-   ok;
- };
-type HttpResponse = 
- record {
-   body: blob;
-   headers: vec headerField;
-   status_code: nat16;
- };
-type HttpRequest = 
- record {
-   body: blob;
-   headers: vec headerField;
-   method: text;
-   url: text;
+   created: Time;
+   durationTime: nat;
+   durationUnit: nat;
+   meta: vec text;
+   poolId: text;
+   poolName: text;
+   positionId: nat;
+   positionOwner: principal;
+   provider: text;
+   status: variant {
+             locked;
+             unlocked;
+           };
  };
 service : {
   addAdmin: (text) -> ();
-  createTokenCanister: (text, text, text, nat, text, nat8, nat) -> (text);
+  createContract: (LockContractInit) -> (text);
   cycleBalance: () -> (nat) query;
   getAllAdmins: () -> (vec text) query;
-  getAllTokens: () -> (vec record {
-                             text;
-                             text;
-                           }) query;
+  getAllContracts: () -> (vec record {
+                                text;
+                                LockContract;
+                              }) query;
+  getContract: (text) -> (opt LockContract) query;
+  getContracts: (nat) -> (vec LockContract) query;
   getOwner: (text) -> (opt text) query;
-  getTokenDetails: (text) -> (opt Token) query;
-  getTokens: (nat) -> (vec Token) query;
-  getTotalTokens: () -> (nat) query;
-  getUserTokens: (text, nat) -> (vec Token) query;
+  getTotalContract: () -> (nat) query;
+  getUserContracts: (text, nat) -> (vec LockContract) query;
   getUserTotalTokens: (text) -> (nat) query;
-  http_request: (HttpRequest) -> (HttpResponse) query;
   removeAdmin: (text) -> ();
   updateInitCycles: (nat) -> ();
-  updateTokenCover: (text, text) -> (Result);
 }

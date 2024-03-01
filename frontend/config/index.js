@@ -1,7 +1,8 @@
 const NETWORK = {
     "dev": {
-        canister_id: "bkyz2-fmaaa-aaaaa-qaaaq-cai",
+        canister_id: "aax3a-h4aaa-aaaaa-qaahq-cai",
         deployer_id: "be2us-64aaa-aaaaa-qaabq-cai",
+        token_deployer_id: "c5kvi-uuaaa-aaaaa-qaaia-cai",
         backend_id: "bd3sg-teaaa-aaaaa-qaaba-cai",
         gov_token_id: "ajuq4-ruaaa-aaaaa-qaaga-cai",//governance token, required for charges
         host: "http://127.0.0.1:8000",
@@ -18,6 +19,7 @@ const NETWORK = {
     "ic": {
         canister_id: "y3yam-6aaaa-aaaap-qb7aq-cai",
         deployer_id: "p7bu5-uyaaa-aaaap-qca3q-cai",
+        token_deployer_id: "p7bu5-uyaaa-aaaap-qca3q-cai",
         backend_id: "ys3lq-iiaaa-aaaap-qb7ba-cai",
         host: "https://icp-api.io",
         scan: "https://dashboard.internetcomputer.org/canister/",
@@ -32,6 +34,7 @@ const config = {
     HOST: NETWORK[ENV]['host'],//https://boundary.ic0.app/
     CANISTER_MANAGER_ID: NETWORK[ENV]['canister_id'],
     DEPLOYER_CANISTER_ID: NETWORK[ENV]['deployer_id'],
+    TOKEN_DEPLOYER_CANISTER_ID: NETWORK[ENV]['token_deployer_id'],
     BACKEND_CANISTER_ID: NETWORK[ENV]['backend_id'],
     CANIC_CANISTER_ID: "mxftc-eyaaa-aaaap-qanga-cai",
     CANISTER_CYCLE_MINTING: "rkp4c-7iaaa-aaaaa-aaaca-cai",

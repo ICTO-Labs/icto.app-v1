@@ -179,7 +179,7 @@ export const useCreateToken = async (payload)=>{
         const _decimals = parseInt(payload.decimals);
         const _supply = BigInt(0);
         const _fee = parseInt(payload.fee);
-        const canisterId = await Connect.canister(config.DEPLOYER_CANISTER_ID, 'deployer').createTokenCanister(
+        const canisterId = await Connect.canister(config.TOKEN_DEPLOYER_CANISTER_ID, 'token_deployer').createTokenCanister(
             payload.name,
             payload.symbol,
             payload.description,
@@ -197,7 +197,7 @@ export const useGetUserTokens = (page)=> {
     return useQuery({
         queryKey: ['user_tokens', page],
         queryFn: async () => {
-            const _rs = await Connect.canister(config.DEPLOYER_CANISTER_ID, 'deployer').getUserTokens(walletStore.principal, page);
+            const _rs = await Connect.canister(config.TOKEN_DEPLOYER_CANISTER_ID, 'token_deployer').getUserTokens(walletStore.principal, page);
             if (_rs && typeof _rs === 'object' && 'err' in _rs) {
                 throw new Error(_rs.err);
             }
