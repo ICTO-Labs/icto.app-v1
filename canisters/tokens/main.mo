@@ -27,7 +27,10 @@ import Trie "mo:base/Trie";
 import Trie2D "mo:base/Trie";
 
 import ICRC3 "./ICRC3/Canisters/Token";
-import Types "./ICRC3/Types";
+import Types3 "./ICRC3/Types";
+
+import ICRC2 "./ICRC2/Canisters/Token";
+import Types2 "./ICRC2/Types";
 
 actor Deployer {
 
@@ -198,9 +201,9 @@ actor Deployer {
         return false;
     };
 
-    private func create_canister(_owner : Principal, init : Types.TokenInitArgs) : async (Text) {
+    private func create_canister(_owner : Principal, init : Types2.TokenInitArgs) : async (Text) {
         Cycles.add(_initCycles);
-        let canister = await ICRC3.Token(init);
+        let canister = await ICRC2.Token(init);
         let _ = await updateCanister(canister, _owner);
         let canister_id = Principal.fromActor(canister);
         return Principal.toText(canister_id);
