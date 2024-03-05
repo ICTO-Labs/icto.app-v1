@@ -11,6 +11,7 @@ import swapPoolIDL from '@/ic/candid/icpswap/swapPool.did';
 import {idlFactory as deployerIDL} from '../../../src/declarations/deployer/deployer.did.js';
 import {idlFactory as tokenDeployerIDL} from '../../../src/declarations/token_deployer/token_deployer.did.js';
 import {idlFactory as backendIDL} from '../../../src/declarations/backend/backend.did.js';
+import {idlFactory as lockContractIDL} from '../../../src/declarations/lock_contract/lock_contract.did.js';
 
 export const preloadIdls = {
     'cycles' : cyclesIDL,
@@ -24,6 +25,7 @@ export const preloadIdls = {
     'contract': contractIDL,
     'deployer': deployerIDL,
     'token_deployer': tokenDeployerIDL,
+    'lock_contract': lockContractIDL,
     'backend': backendIDL,
     'swapPool': swapPoolIDL,
 }

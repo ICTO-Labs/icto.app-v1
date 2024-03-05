@@ -12,7 +12,8 @@ import Marketplace from './views/marketplace/Marketplace.vue'
 import CollectionDetail from './views/marketplace/Collection.vue'
 import ItemDetail from './views/marketplace/Item.vue'
 import LocksIndex from './views/tokenlocks/Index.vue'
-import LiquidityLocks from './views/tokenlocks/Liquidity.vue'
+import LiquidityLocks from './views/tokenlocks/liquidity/Index.vue'
+import LiquidityDetail from './views/tokenlocks/liquidity/Detail.vue'
 import TokenLocks from './views/tokenlocks/Token.vue'
 import NftLocks from './views/tokenlocks/Nft.vue'
 const router = createRouter({
@@ -73,6 +74,7 @@ const router = createRouter({
       component: LocksIndex,
       children: [
         { path: 'liquidity', component: LiquidityLocks, name: 'Liquidity'},
+        { path: 'liquidity/:contractId', component: LiquidityDetail, name: 'LiquidityDetail'},
         { path: 'token', component: TokenLocks, name: 'Token'},
         { path: 'nft', component: NftLocks, name: 'Nft'},
       ],
