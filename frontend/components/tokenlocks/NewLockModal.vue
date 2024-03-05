@@ -4,18 +4,22 @@
     import EventBus from "@/services/EventBus";
     import LoadingButton from "@/components/LoadingButton.vue"
     import { VueFinalModal } from 'vue-final-modal'
-    import { useGetPoolMeta, useGetTokenMeta, useGetPoolLP, useApprovePosition, useGetPoolValue } from '@/services/SwapPool';
+    import { useGetPoolMeta, useGetTokenMeta, useGetPoolLP, useApprovePosition, useTransferPosition, useGetPoolValue } from '@/services/SwapPool';
+    import { useCreateLiquidLocker } from '@/services/Deployer';
     import { showError, showSuccess, showLoading, closeMessage} from '@/utils/common';
     import { currencyFormat } from "@/utils/token";
-
+    import walletStore from '@/store/';
     import moment from 'moment';
+    import config from '@/config';
     const newLockModal = ref(false);
 	const poolCanister = ref("z6v2h-2qaaa-aaaag-qblva-cai");///z6v2h-2qaaa-aaaag-qblva-cai
 	const poolName = ref("");
     const showDetail = ref(false);
     const positionDetail = ref(null);
     const timeNow = moment().utc();
-    const unlockDate = ref(moment().utc().add(30, 'days'));
+    const durationTime = ref(2628002);
+    const durationUnit = ref(30);
+    const unlockDate = ref(moment().utc().add(durationUnit.value*durationTime.value, 'seconds'));
     const unlockDays = ref(unlockDate.value.diff(timeNow, 'days'));
 	const isLoading = ref(false);
 	const poolMeta = ref(null);
@@ -24,7 +28,7 @@
 	const userLP = ref([]);
     const currentTick = ref(0);
     const sqrtPriceX96 = ref(0);
-    const _tokenMeta = {
+    let _tokenMeta = {
             "token0":[
                 [
                     "name", { "Text":"Canister Token" }
@@ -71,12 +75,14 @@
             sqrtPriceX96.value = Number(poolMeta.value.sqrtPriceX96)
             currentTick.value = Number(poolMeta.value.tick);
             //Step2. get Token meta
-            // let _tokenMeta = await useGetTokenMeta(poolCanister.value);
-            // if(_tokenMeta == null){
-            //     isLoading.value = false;
-            //     showError("Token not found, please check your pool canister");
-            //     return;
-            // }
+            if(config.ENV != "dev"){
+                _tokenMeta = await useGetTokenMeta(poolCanister.value);
+            }
+            if(_tokenMeta == null){
+                isLoading.value = false;
+                showError("Token not found, please check your pool canister");
+                return;
+            }
             tokenMeta.value = formatTokenMeta(_tokenMeta);//formatPoolMeta(_tokenMeta);
             poolName.value = `${tokenMeta.value.token0.symbol}/${tokenMeta.value.token1.symbol}`;
             await getPoolLP(poolCanister.value);
@@ -86,9 +92,8 @@
     
     const handleDate = ()=>{
         let _now = moment().utc();
-        console.log('object', unlockDate.value.valueOf());
-        let _unlockDate = moment(unlockDate.value).utc();
-        console.log('dfff', _now.format("DD/MM/YYYY hh:mm"), _unlockDate.format("DD/MM/YYYY hh:mm"));
+        let _unlockDate = moment().utc().add(durationUnit.value*durationTime.value, 'seconds');
+        unlockDate.value = _unlockDate;
         unlockDays.value = _unlockDate.diff(_now, 'days');
     }
     const getPoolLP = async ()=> {
@@ -102,9 +107,14 @@
             console.log(pos, 'pos value');
         })
     };
-    const approvePosition = async (poolId) => {
+
+    const _owner = "v57dj-hev4p-lsvdl-dckvv-zdcvg-ln2sb-tfqba-nzb4g-iddrv-4rsq3-mae";//call approve
+    const _spender = "lekqg-fvb6g-4kubt-oqgzu-rd5r7-muoce-kppfz-aaem3-abfaj-cxq7a-dqe";//call lock
+    const _target = "j7uqi-cn5of-nblr2-tc73a-2j3mw-pjdb7-5tdmo-imarq-pemzi-u6ht2-bae";
+
+    const approvePosition = async (positionId) => {
         Swal.fire({
-		title: "Approve position "+poolId+"?",
+		title: "Approve position "+positionId+"?",
 		text: "Grant ICTO permission to manage position ID (including transfer this position to smart contract). Confirm?",
 		icon: "warning",
 		showCancelButton: true,
@@ -115,23 +125,41 @@
             if(result.isConfirmed){
                 showLoading("Approving Position...");
                 console.log('start 1');
-                let _rs = await useApprovePosition(poolCanister.value, poolId);
-                console.log('start 2');
-                if(!_rs){
-                    showError("Approved failed, please try again later");
+                let _payload = {
+                    "positionId": 45,
+                    "durationTime": 60,
+                    "durationUnit": 1,
+                    "provider": "ICPSwap",
+                    "meta": [],
+                    "poolName": "XCANIC/ICP",
+                    "poolId": "z6v2h-2qaaa-aaaag-qblva-cai",
                 }
-                setTimeout(()=>{
-                    lockStep.value = 2;
-                    showSuccess("Approved success");
-                    closeMessage()
-                }, 3000);
+                // let _payload = {
+                //     "positionId": Number(positionId),
+                //     "durationTime": durationTime.value,
+                //     "durationUnit": durationUnit.value,
+                //     "provider": "ICPSwap",
+                //     "meta": [],
+                //     "poolName": poolName.value,
+                //     "poolId": poolCanister.value,
+                // }
+                await useCreateLiquidLocker(_payload);
+                // let _rs = await useApprovePosition(poolCanister.value, _spender, positionId);
+                // console.log('start 2');
+                // if(!_rs){
+                //     showError("Approved failed, please try again later");
+                // }else{
+                //     lockStep.value = 2;
+                //     showSuccess("Approved success");
+                // }
+                closeMessage();
             }
         });
     };
-    const lockPosition = async (poolId) => {
+    const lockPosition = async (positionId) => {
         console.log('unlockDays.value', unlockDate.value);
         Swal.fire({
-            title: "Lock position "+poolId+"",
+            title: "Lock position "+positionId+"",
             text: "Confirm lock this position, unlock date "+moment(unlockDate.value).format('MM/DD/YYYY, HH:mm')+"?",
             icon: "warning",
             showCancelButton: true,
@@ -140,20 +168,25 @@
             confirmButtonText: "Yes, I confirm"
 		}).then(async (result) => {
 			if(result.isConfirmed){
-				//Step 1: Approve LP
-                // showLoading("Approving Position...");
-                // let _rs = await useApprovePosition(poolCanister.value, poolId);
-                // if(!_rs){
-                //     showError("Approved failed, please try again later");
-                // }
-                showLoading("Creating a liquidity lock contract, please wait...");
                 //Step 2: Lock LP
-                setTimeout(()=>{
+                showLoading("Creating a liquidity lock contract, please wait...");
+                let _transfer = await useTransferPosition(poolCanister.value, _owner, _target, positionId);
+                if(!_transfer){
+                    showError("Lock failed, please try again later");
+                    
+                    return;
+                }else{
                     lockStep.value = 3;
                     showSuccess("Contract created successfully, your liquidity locks contract ID: be2us-64aaa-aaaaa-qaabq-cai", 'swal');
                     goBack();
-                    // closeMessage()
-                }, 3000);
+                }
+                closeMessage();
+                // setTimeout(()=>{
+                //     lockStep.value = 3;
+                //     showSuccess("Contract created successfully, your liquidity locks contract ID: be2us-64aaa-aaaaa-qaabq-cai", 'swal');
+                //     goBack();
+                //     // closeMessage()
+                // }, 3000);
 			}
 		});
     };
@@ -170,6 +203,8 @@
         EventBus.on("showNewLockModal", isOpen => {
             newLockModal.value = isOpen;
             isLoading.value = false;
+            showDetail.value = false;
+            userLP.value = [];
         });
     })
 </script>
@@ -184,13 +219,13 @@
             </div>
             <div class="modal-body pt-0 pb-5">
                 <form class="form" @submit.prevent="getPoolMeta">
-                    <div class="card mb-xl-1">
+                    <div class="card1 mb-xl-1">
                         <div class="card-body">
                                 <div class="current" v-if="!showDetail">
                                     <div class="w-100">
                                         <div class="row mb-5">
                                             <div class="col-md-12 fv-row">
-                                                <label class="required fs-6 fw-bold form-label mb-2">Pool Canister</label>
+                                                <label class="required fs-6 fw-bold form-label mb-2">ICPSwap Pair</label>
                                                 <div class="row fv-row">
                                                     <div class="col-10">
                                                         <input type="text" class="form-control form-control-sm" v-model="poolCanister" required placeholder="Pool canister on ICPSwap, ie: XCANIC/ICP"/>
@@ -198,13 +233,15 @@
                                                     <div class="col-2">
                                                         <LoadingButton class="btn btn-primary btn-sm" type="button" @click="getPoolMeta" :disabled="isLoading">Check</LoadingButton>
                                                     </div>
+
+                                                    <button type="button" class="btn btn-sm btn-light-primary" @click="approvePosition(6)"> Create Contract</button>
                                                 </div>
                                                 <div class="form-text">Note: Currently we only support pools created from <strong>ICPSwap</strong>. Find your LP <a href="https://info.icpswap.com/swap" target="_blank">here</a> <i class="fas fa-link"></i> </div>
                                             </div>
                                         </div>
                                         <div class="row mb-5" v-if="isLoading">
                                             <div class="col-md-12 fv-row">
-                                                <label class="fs-6 fw-bold form-label mb-2 mb-5"><i class="fas fa-spinner fa-spin fa-1x"></i> Loading your LP position.</label>
+                                                <label class="fs-6 fw-bold form-label mb-2 mb-5"><i class="fas fa-spinner fa-spin fa-1x"></i> Loading your LP...</label>
                                             </div>
                                         </div>
 
@@ -217,20 +254,25 @@
 
                                                         <div class="d-flex d-flex-column align-items-center bg-light-primary rounded mb-5 p-2 border border-primary border-hover">
                                                             <div class="symbol symbol-65px symbol-circle me-5" title="Position" >
-                                                                <span :class="`symbol-label bg-${isInRange(currentTick, position.tickLower, position.tickUpper) ? 'success' : 'warning'} text-inverse-primary fw-bold fs-1`">{{position.id}}</span>
+                                                                <span :class="`symbol-label bg-${position.isInrange ? 'success' : 'warning'} text-inverse-primary fw-bold fs-1`">{{position.id}}</span>
                                                             </div>
                                                             <div class="flex-grow-1 me-2">
-                                                                <div class="card-header p-0 min-h-auto">
-                                                                    <div class="card-title p-0">
+                                                                <div class="d-flex d-flex-column p-0 min-h-auto">
+                                                                    <div class="flex-grow-1 p-0">
                                                                         <a href="#" class="fw-bolder text-dark text-hover-primary fs-6" @click.stop="showLPDetail(position)">
                                                                             <span class="fw-normal text-gray">Value:</span> ${{position.value.totalValueInUSD.toFixed(2)}} 
                                                                         </a>
                                                                     </div>
-                                                                    <div class="card-toolbar">
-                                                                        <span :class="`fw-normal badge badge-light-${isInRange(currentTick, position.tickLower, position.tickUpper) ? 'success' : 'warning'}`">
+                                                                    <div class="flex-grow-1 text-end">
+                                                                        <span :class="`fw-normal badge badge-light-${position.isInrange ? 'success' : 'warning'}`">
+                                                                            <i class="bullet bullet-dot bg-success h-8px w-8px me-1" v-if="position.isInrange"></i>
+                                                                            <i class="fas fa-exclamation-circle text-warning fs-1x" v-else></i>
+                                                                            {{ position.isInrange ? "In range": "Out of range" }}
+                                                                        </span>
+                                                                        <!-- <span :class="`fw-normal badge badge-light-${isInRange(currentTick, position.tickLower, position.tickUpper) ? 'success' : 'warning'}`">
                                                                             <i class="bullet bullet-dot bg-success h-8px w-8px me-1" v-if="isInRange(currentTick, position.tickLower, position.tickUpper)"></i>
                                                                             <i class="fas fa-warning text-warning fs-1x" v-else></i>
-                                                                            {{ isInRange(currentTick, position.tickLower, position.tickUpper) ? "In range": "Out of range" }}</span>
+                                                                            {{ isInRange(currentTick, position.tickLower, position.tickUpper) ? "In range": "Out of range" }}</span> -->
                                                                         
                                                                     </div>
                                                                 </div>
@@ -238,14 +280,14 @@
                                                                 <div class="d-flex flex-stack pt-1">
                                                                     <div class="d-flex align-items-center me-2">
                                                                         <div class="bullet bg-primary me-3"></div>
-                                                                        <div class="fs-7 text-gray-800 text-hover-primary">XCANIC amount:</div>
+                                                                        <div class="fs-7 text-gray-800 text-hover-primary">{{ tokenMeta.token0.symbol }} amount:</div>
                                                                     </div>
                                                                     <div class="fs-7 fw-bold px-3">{{currencyFormat(position.value.amount0)}}</div>
                                                                 </div>
                                                                 <div class="d-flex flex-stack">
                                                                     <div class="d-flex align-items-center me-2">
                                                                         <div class="bullet bg-primary me-3"></div>
-                                                                        <div class="fs-7 text-gray-800 text-hover-primary">ICP amount:</div>
+                                                                        <div class="fs-7 text-gray-800 text-hover-primary">{{ tokenMeta.token1.symbol }} amount:</div>
                                                                     </div>
                                                                     <div class="fs-7 fw-bold px-3">{{position.value.amount1.toFixed(2)}}</div>
                                                                 </div>
@@ -268,29 +310,38 @@
                                     <div class="card h-100">
                                         <div class="card-body p-2">
                                             <div class="fs-2hx fw-bolder">
-                                                XCANIC
+                                                {{ poolName }}
                                                 <button @click="goBack" class="float-right btn btn-block btn-light-primary btn-sm"><i class="fas fa-arrow-left"></i>Return</button>
                                             </div>
-                                            <div class="fs-6 fw-bold text-gray-400 mb-7">qi26q-6aaaa-aaaap-qapeq-cai <Copy text="qi26q-6aaaa-aaaap-qapeq-cai" /></div>
+                                            <div class="fs-6 fw-bold text-gray-400 mb-7">Pool: {{ poolCanister }} <Copy :text="poolCanister" /></div>
                                             <div class="fs-6 d-flex justify-content-between mb-4">
                                                 <div class="fw-bold">Position ID</div>
                                                 <div class="d-flex fw-bolder">{{ positionDetail.id }}</div>
                                             </div>
                                             <div class="fs-6 d-flex justify-content-between mb-4">
                                                 <div class="fw-bold">Total locked value</div>
-                                                <div class="d-flex fw-bolder">${{ positionDetail.value.totalValueInUSD }}</div>
+                                                <div class="d-flex fw-bolder">${{ positionDetail.value.totalValueInUSD.toFixed(4) }}</div>
                                             </div>
                                             <div class="fs-6 justify-content-between mt-4">
                                                 <div class="row mb-2">
                                                     <div class="col-md-12 fv-row">
-                                                        <label class="required fs-6 fw-bold form-label mb-2"><i class="fas fa-lock"></i> Unlock Date</label>
+                                                        <label class="required fs-6 fw-bold form-label mb-2"><i class="fas fa-unlock-alt"></i> Unlock Duration</label>
                                                         <div class="row fv-row">
-                                                            <div class="col-12">
-                                                                <VueDatePicker v-model="unlockDate" :min-date="timeNow" :enable-time-picker="true" time-picker-inline auto-apply @update:model-value="handleDate"></VueDatePicker>
+                                                            <div class="col-4">
+                                                                <input type="text" class="form-control" v-model="durationUnit" required placeholder="Number" @change="handleDate"/>
                                                             </div>
-                                                            <div class="form-text text-danger">
-                                                                <i class="fas fa-warning text-danger"></i> Please carefully consider the unlock time. You can only claim locked positions after this time.
+                                                            <div class="col-8">
+                                                                <select name="duration" class="form-select" data-hide-search="true" data-placeholder="Month" v-model="durationTime"  @change="handleDate">
+                                                                    <option value="86400">Day</option>
+                                                                    <option value="604800">Week</option>
+                                                                    <option value="2628002" selected>Month</option>
+                                                                    <option value="7884006">Quarter</option>
+                                                                    <option value="31536000">Year</option>
+                                                                </select>
                                                             </div>
+                                                        </div>
+                                                        <div class="form-text text-danger">
+                                                            <i class="fas fa-warning text-danger"></i> Please carefully consider the unlock duration. You can only claim locked position after this time.
                                                         </div>
                                                     </div>
                                                 </div>
@@ -305,14 +356,14 @@
                                                 </div>
                                                 <div class="fs-6 d-flex justify-content-between mb-4">
                                                     <div class="fw-bold">Days until unlock</div>
-                                                    <div class="d-flex fw-bolder">{{ unlockDays || 0 }}</div>
+                                                    <div class="d-flex fw-bolder">~{{ unlockDays || 0 }} {{ unlockDays>1?" days": "day" }}</div>
                                                 </div>
                                                 <div class="row mb-5">
                                                     <div class="col-md-6 d-flex flex-column gap-7 gap-md-10">
-                                                        <button @click="approvePosition(positionId)" class="btn btn-block btn-primary btn-sm" :disabled="lockStep==2">Approve</button>
+                                                        <button @click="approvePosition(positionDetail.id)" class="btn btn-block btn-primary" :disabled="lockStep==2"><em class="fas fa-chevron-circle-down"></em> Approve</button>
                                                     </div>
                                                     <div class="col-md-6 d-flex flex-column gap-7 gap-md-10">
-                                                        <button @click="lockPosition(positionId)" class="btn btn-block btn-primary btn-sm" :disabled="lockStep==1">Lock</button>
+                                                        <button @click="lockPosition(positionDetail.id)" class="btn btn-block btn-primary" :disabled="lockStep==1"><em class="fas fa-lock me-1"></em>Lock</button>
                                                     </div>
                                                 </div>
                                             </div>

@@ -1,3 +1,24 @@
+type anon_class_33_1 = 
+ service {
+   addAdmin: (text) -> ();
+   cancelContract: (principal) -> ();
+   createContract: (LockContractInit) -> (text);
+   cycleBalance: () -> (nat) query;
+   getAllAdmins: () -> (vec text) query;
+   getAllContracts: () -> (vec record {
+                                 text;
+                                 LockContract;
+                               }) query;
+   getContract: (text) -> (opt LockContract) query;
+   getContracts: (nat) -> (vec LockContract) query;
+   getOwner: (text) -> (opt text) query;
+   getTotalContract: () -> (nat) query;
+   getUserContracts: (text, nat) -> (vec LockContract) query;
+   getUserTotalTokens: (text) -> (nat) query;
+   removeAdmin: (text) -> ();
+   updateContractStatus: (text, text) -> ();
+   updateInitCycles: (nat) -> ();
+ };
 type Time = int;
 type LockContractInit = 
  record {
@@ -11,35 +32,18 @@ type LockContractInit =
  };
 type LockContract = 
  record {
+   contractId: opt text;
    created: Time;
    durationTime: nat;
    durationUnit: nat;
+   lockedTime: opt Time;
    meta: vec text;
    poolId: text;
    poolName: text;
    positionId: nat;
    positionOwner: principal;
    provider: text;
-   status: variant {
-             locked;
-             unlocked;
-           };
+   status: text;
+   unlockedTime: opt Time;
  };
-service : {
-  addAdmin: (text) -> ();
-  createContract: (LockContractInit) -> (text);
-  cycleBalance: () -> (nat) query;
-  getAllAdmins: () -> (vec text) query;
-  getAllContracts: () -> (vec record {
-                                text;
-                                LockContract;
-                              }) query;
-  getContract: (text) -> (opt LockContract) query;
-  getContracts: (nat) -> (vec LockContract) query;
-  getOwner: (text) -> (opt text) query;
-  getTotalContract: () -> (nat) query;
-  getUserContracts: (text, nat) -> (vec LockContract) query;
-  getUserTotalTokens: (text) -> (nat) query;
-  removeAdmin: (text) -> ();
-  updateInitCycles: (nat) -> ();
-}
+service : () -> anon_class_33_1

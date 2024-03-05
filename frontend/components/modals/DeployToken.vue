@@ -10,6 +10,7 @@
     import config from "@/config";
     import walletStore from "@/store";
     const isLoading = ref(false);
+    const tabSelected = ref('deployer');//Options: deployer, custom
 	const newToken = ref({
 		name: "Test Token",
 		symbol: "TEST",
@@ -22,6 +23,7 @@
     onMounted(()=>{
         EventBus.on("showDeployTokenModal", isOpen => {
             deployTokenModal.value = isOpen;
+            tabSelected.value = 'deployer';
         });
     })
 
@@ -36,9 +38,9 @@
 		confirmButtonText: "Yes, I confirmed!"
 		}).then(async (result) => {
             if (result.isConfirmed) {
-                // let _approve = await useTokenApprove(config.SERVICE_CANISTER_ID, {spender: config.BACKEND_CANISTER_ID, amount: config.SERVICE_FEES.DEPLOY_TOKEN});
-                // console.log('_approve', _approve);
-                let _transfer = await useChargeFee({from: walletStore.principal, to: 'v57dj-hev4p-lsvdl-dckvv-zdcvg-ln2sb-tfqba-nzb4g-iddrv-4rsq3-mae', amount: 1});
+                let _approve = await useTokenApprove(config.SERVICE_CANISTER_ID, {spender: config.BACKEND_CANISTER_ID, amount: config.SERVICE_FEES.DEPLOY_TOKEN});
+                console.log('_approve', _approve);
+                let _transfer = await useChargeFee({from: walletStore.principal, to: 'v57dj-hev4p-lsvdl-dckvv-zdcvg-ln2sb-tfqba-nzb4g-iddrv-4rsq3-mae', amount: config.SERVICE_FEES.DEPLOY_TOKEN});
                 console.log('transfer', _transfer);
                 return;
                 isLoading.value = true;
@@ -52,6 +54,13 @@
             }
         })
 	}
+    const deployCustom = ()=>{
+        showError("Deploy with custom wasm and candid are under development!", true);
+        return;
+    }
+    const swicthTab = (tab)=>{
+        tabSelected.value = tab;
+    }
     const closeModal = ()=>{ deployTokenModal.value = false};
 
 </script>
@@ -67,9 +76,44 @@
                 <div class="modal-body pt-0 pb-5">
                     <form class="form" @submit.prevent="deployToken">
                     <div class="card mb-xl-1">
-                        <div class="card-body">
-                                <div class="current" data-kt-stepper-element="content">
-                                    <div class="w-100">
+                        <div class="">
+                                <div class="current">
+                                    <ul class="nav nav-tabs nav-line-tabs nav-stretch fs-6 border-0 fw-bolder mt-2">
+                                        <li class="nav-item">
+                                            <a href="#" :class="`nav-link text-active-primary fw-bolder fs-6 me-1 ${tabSelected=='deployer'?'active':''}`" @click.stop="swicthTab('deployer')"> ICTO deployer </a></li>
+                                            <li class="nav-item">
+                                            <a href="#" :class="`nav-link text-active-primary fw-bolder fs-6 me-1 ${tabSelected=='custom'?'active':''}`" @click.stop="swicthTab('custom')"> Custom Wasm </a></li>
+                                    </ul>
+                                    <div class="separator mb-5"></div>
+                                    <div class="w-100" v-if="tabSelected=='custom'">
+                                        <div class="row mb-5">
+                                            <div class="col-md-12 fv-row">
+                                                <label class="required fs-6 fw-bold form-label mb-2">Remote candid</label>
+                                                <div class="row fv-row">
+                                                    <div class="col-12">
+                                                        <input type="text" class="form-control fw-normal" name="candid" required placeholder="https://raw.githubusercontent.com/dfinity/ic/d87954601e4b22972899e9957e800406a0a6b929/rs/rosetta-api/icrc1/ledger/ledger.did"/>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                        <div class="row mb-5">
+                                            <div class="col-md-12 fv-row">
+                                                <label class="required fs-6 fw-bold form-label mb-2">Remote wasm</label>
+                                                <div class="row fv-row">
+                                                    <div class="col-12">
+                                                        <input type="text" class="form-control fw-normal" name="wasm" required placeholder="https://download.dfinity.systems/ic/d87954601e4b22972899e9957e800406a0a6b929/canisters/ic-icrc1-ledger.wasm.gz"/>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                        <div class="alert bg-light-warning mb-5"> 
+                                            <div>Make sure you use official candid and wasm from Dfinity, Refer: <a href="">https://internetcomputer.org/docs/current/developer-docs/integrations/icrc-1/icrc1-ledger-setup</a></div>
+                                        </div>
+                                        <div class="d-flex flex-column gap-7 gap-md-10">
+                                            <button type="button" class="btn btn-primary" @click.stop="deployCustom">Continue</button>
+                                        </div>
+                                    </div>
+                                    <div class="w-100" v-if="tabSelected=='deployer'">
                                         <div class="row mb-5">
                                             <div class="col-md-6 fv-row">
                                                 <label class="required fs-6 fw-bold form-label mb-2">Token Name</label>

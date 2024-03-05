@@ -1,0 +1,46 @@
+type TransferRecord = 
+ record {
+   from: principal;
+   method: text;
+   positionId: nat;
+   time: Time;
+   to: principal;
+ };
+type Time = int;
+type Result = 
+ variant {
+   err: text;
+   ok: bool;
+ };
+type LockContract = 
+ record {
+   contractId: opt text;
+   created: Time;
+   durationTime: nat;
+   durationUnit: nat;
+   lockedTime: opt Time;
+   meta: vec text;
+   poolId: text;
+   poolName: text;
+   positionId: nat;
+   positionOwner: principal;
+   provider: text;
+   status: text;
+   unlockedTime: opt Time;
+ };
+type Contract = 
+ service {
+   checkTransaction: (principal, nat) -> (Result);
+   claim: () -> (Result);
+   cycleBalance: () -> (nat) query;
+   getContract: () -> (LockContract) query;
+   getDeployer: () -> (principal) query;
+   getInitContract: () -> (LockContract) query;
+   getLockedPosition: () -> (nat) query;
+   getTransactions: () -> (vec record {
+                                 principal;
+                                 TransferRecord;
+                               });
+   send: (principal, nat) -> (Result);
+ };
+service : (LockContract) -> Contract

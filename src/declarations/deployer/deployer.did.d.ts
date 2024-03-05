@@ -2,16 +2,18 @@ import type { Principal } from '@dfinity/principal';
 import type { ActorMethod } from '@dfinity/agent';
 
 export interface LockContract {
-  'status' : { 'locked' : null } |
-    { 'unlocked' : null },
+  'status' : string,
   'durationTime' : bigint,
   'durationUnit' : bigint,
   'created' : Time,
   'provider' : string,
+  'lockedTime' : [] | [Time],
   'meta' : Array<string>,
   'positionId' : bigint,
   'positionOwner' : Principal,
+  'unlockedTime' : [] | [Time],
   'poolName' : string,
+  'contractId' : [] | [string],
   'poolId' : string,
 }
 export interface LockContractInit {
@@ -24,8 +26,9 @@ export interface LockContractInit {
   'poolId' : string,
 }
 export type Time = bigint;
-export interface _SERVICE {
+export interface anon_class_33_1 {
   'addAdmin' : ActorMethod<[string], undefined>,
+  'cancelContract' : ActorMethod<[Principal], undefined>,
   'createContract' : ActorMethod<[LockContractInit], string>,
   'cycleBalance' : ActorMethod<[], bigint>,
   'getAllAdmins' : ActorMethod<[], Array<string>>,
@@ -37,5 +40,7 @@ export interface _SERVICE {
   'getUserContracts' : ActorMethod<[string, bigint], Array<LockContract>>,
   'getUserTotalTokens' : ActorMethod<[string], bigint>,
   'removeAdmin' : ActorMethod<[string], undefined>,
+  'updateContractStatus' : ActorMethod<[string, string], undefined>,
   'updateInitCycles' : ActorMethod<[bigint], undefined>,
 }
+export interface _SERVICE extends anon_class_33_1 {}

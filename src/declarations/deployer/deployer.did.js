@@ -10,19 +10,23 @@ export const idlFactory = ({ IDL }) => {
   });
   const Time = IDL.Int;
   const LockContract = IDL.Record({
-    'status' : IDL.Variant({ 'locked' : IDL.Null, 'unlocked' : IDL.Null }),
+    'status' : IDL.Text,
     'durationTime' : IDL.Nat,
     'durationUnit' : IDL.Nat,
     'created' : Time,
     'provider' : IDL.Text,
+    'lockedTime' : IDL.Opt(Time),
     'meta' : IDL.Vec(IDL.Text),
     'positionId' : IDL.Nat,
     'positionOwner' : IDL.Principal,
+    'unlockedTime' : IDL.Opt(Time),
     'poolName' : IDL.Text,
+    'contractId' : IDL.Opt(IDL.Text),
     'poolId' : IDL.Text,
   });
-  return IDL.Service({
+  const anon_class_33_1 = IDL.Service({
     'addAdmin' : IDL.Func([IDL.Text], [], []),
+    'cancelContract' : IDL.Func([IDL.Principal], [], []),
     'createContract' : IDL.Func([LockContractInit], [IDL.Text], []),
     'cycleBalance' : IDL.Func([], [IDL.Nat], ['query']),
     'getAllAdmins' : IDL.Func([], [IDL.Vec(IDL.Text)], ['query']),
@@ -42,7 +46,9 @@ export const idlFactory = ({ IDL }) => {
       ),
     'getUserTotalTokens' : IDL.Func([IDL.Text], [IDL.Nat], ['query']),
     'removeAdmin' : IDL.Func([IDL.Text], [], []),
+    'updateContractStatus' : IDL.Func([IDL.Text, IDL.Text], [], []),
     'updateInitCycles' : IDL.Func([IDL.Nat], [], []),
   });
+  return anon_class_33_1;
 };
 export const init = ({ IDL }) => { return []; };
