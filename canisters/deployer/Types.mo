@@ -5,6 +5,7 @@ import Nat "mo:base/Nat";
 
 module {
     public type LockContract = {
+        contractId: ?Text;//This contract id
         poolId : Text;//Pool canister id
         provider: Text;//CEX, DEX Provider: ICPswap, Sonic, etc
         positionId: Nat;//Position ID

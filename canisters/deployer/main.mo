@@ -29,13 +29,13 @@ import IC "../backend/IC";
 import TokenLock "contracts/TokenLock";
 import Types "./Types";
 
-actor Deployer {
-
+// shared ({ caller = deployer }) actor Deployer {
+shared ({ caller }) actor class () = self {
     //Stable Memory
-    private func deployer() : Principal = Principal.fromActor(Deployer);
+    private func deployer() : Principal = caller;
     private stable var _contracts : Trie.Trie<Text, Types.LockContract> = Trie.empty(); //mapping of token_canister_id -> Token details
     private stable var _owners : Trie.Trie<Text, Text> = Trie.empty(); //mapping  token_canister_id -> owner principal id
-    private stable var _admins : [Text] = [];
+    private stable var _admins : [Text] = [Principal.toText(caller)];
     private stable var _initCycles: Nat = 300_000_000_000;//1T 1_000_000_000_000, 0.3T
 
 
@@ -129,6 +129,7 @@ actor Deployer {
             created = Time.now();
             lockedTime = null;
             unlockedTime = null;
+            contractId = null;
             status = "created";
         };
         let contractId = await TokenLock.Contract(_contract);
@@ -274,6 +275,7 @@ actor Deployer {
         );
         let _contract = {
             contract with
+            contractId = ?canister_id;
             positionOwner = msg.caller;
             created = Time.now();
             lockedTime = null;
@@ -311,4 +313,10 @@ actor Deployer {
         return Buffer.toArray(b);
     };
 
+    //Add to beta test - remove unused canister
+    public shared ({caller}) func cancelContract(canister_id: Principal) : async (){
+        // assert (_isAdmin(Principal.toText(caller)));
+        await ic.stop_canister({ canister_id = canister_id });
+        await ic.delete_canister({ canister_id = canister_id });
+    };
 };

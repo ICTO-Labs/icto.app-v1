@@ -23,6 +23,10 @@
       "main": "canisters/deployer/main.mo",
       "type": "motoko"
     },
+    "lock_contract": {
+      "main": "canisters/deployer/contracts/TokenLock.mo",
+      "type": "motoko"
+    },
     "frontend": {
       "dependencies": [
         "backend"

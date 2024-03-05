@@ -112,7 +112,7 @@ shared ({ caller = deployer }) actor class Contract(contract: DeployerTypes.Lock
         }
         
     };
-    func updateStatus(status: Text):(){
+    func updateStatus(status: Text): async (){
         switch(status){
             case ("locked"){
                 _contract := {
@@ -120,6 +120,7 @@ shared ({ caller = deployer }) actor class Contract(contract: DeployerTypes.Lock
                     lockedTime = ?Time.now();
                     status = status;
                 };
+                await updateDeployerStatus(status);//send status back to deployer
             };
             case ("unlocked"){
                 _contract := {
@@ -127,6 +128,7 @@ shared ({ caller = deployer }) actor class Contract(contract: DeployerTypes.Lock
                     unlockedTime = ?Time.now();
                     status = status;
                 };
+                await updateDeployerStatus(status);//send status back to deployer
             };
             case _ {
                 
@@ -135,13 +137,14 @@ shared ({ caller = deployer }) actor class Contract(contract: DeployerTypes.Lock
     };
     //Check transaction.
     public shared ({ caller }) func checkTransaction(to: Principal, positionId: Nat) : async Result.Result<Bool, Text>{
-        assert(Principal.equal(caller, contract.positionOwner));
-        assert(Principal.equal(to, cid()));
+        if(Principal.isAnonymous(caller)) return #err("Illegal anonymous call");
+        if(Principal.notEqual(caller, contract.positionOwner)) return #err("Unauthorized: Called is different the position owner!");
+        if(Principal.notEqual(to, cid())) return #err("Unauthorized: Receiver is different this canister id!");
         if(_isStarted == false){//One time check
             let isOwner = await isOwnerOfPosition(positionId);
             if(isOwner == true){
                 _isStarted := true;
-                updateStatus("locked");//Update status and time
+                await updateStatus("locked");//Update status and time
                 await addTransaction(caller, to, positionId, "deposit");
             }else{
                 return #err("Transaction not found. Please ensure that you have transferred the positionID to the canister ID: "#Principal.toText(cid()));
@@ -168,13 +171,40 @@ shared ({ caller = deployer }) actor class Contract(contract: DeployerTypes.Lock
     public query func getDeployer(): async Principal{
         deployer;
     };
+
+    ///For testing onlyyyy!!!!!!!!!!!!!!!
+    public shared ({caller}) func send(to: Principal, positionId: Nat): async Result.Result<Bool, Text> {
+        let result = await transferPosition(cid(), to, positionId);
+        switch(result){
+            case(#ok(true)){
+                await updateStatus("unlocked");//Update status and time
+                await addTransaction(cid(), contract.positionOwner, contract.positionId, "claim");
+            };
+            case(#err(e)){
+                #err(debug_show(e));
+            };
+            case _ {
+                #err("An unexpected error occurred, please try again!");
+            };
+        }
+    };
+
     public shared ({ caller }) func claim() : async Result.Result<Bool, Text> {
         if(isOvertimeAllowed() == true){
             //TODO: Transfer the locked amount to the caller
-            updateStatus("unlocked");//Update status and time
-            let _cid = Principal.toText(cid());
-            await Deployer.updateContractStatus(_cid, "unlocked");
-            #ok(true);
+            let transfer = await transferPosition(cid(), contract.positionOwner, contract.positionId);
+            switch(transfer){
+                case(#ok(true)){
+                    await updateStatus("unlocked");//Update status and time
+                    await addTransaction(cid(), contract.positionOwner, contract.positionId, "claim");
+                };
+                case(#err(e)){
+                    #err(debug_show(e))
+                };
+                case _ {
+                    #err("An unexpected error occurred, please try again!");
+                };
+            }
         }else{
             #err("Cannot claim yet. Please wait until the unlock time is reached!");
         };
