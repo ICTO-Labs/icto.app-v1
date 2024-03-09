@@ -35,6 +35,9 @@ export const validatePrincipal = (p) => {
 const isPrincipal = (p)=>{
     return !!p && p._isPrincipal;
 }
+export const isAnonymous = (p)=>{
+    return p == "2vxsx-fae";
+}
 const principalToText = (p)=>{
     if(isPrincipal(p)){
         return p.toText();

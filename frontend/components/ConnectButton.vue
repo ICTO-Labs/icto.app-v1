@@ -2,10 +2,10 @@
 import { watchEffect } from "vue";
 import walletStore from "@/store";
 import LoadingLabel from "@/components/LoadingLabel.vue"
-import { showModal, shortPrincipal, shortAccount } from '@/utils/common';
+import { showModal, isAnonymous } from '@/utils/common';
 import Arrow from "./icons/Arrow.vue";
 watchEffect(() => {
-	if(walletStore.isLogged && !walletStore.principal){
+	if(walletStore.isLogged && !walletStore.principal && isAnonymous(walletStore.principal)){
 		walletStore.logout();
 	}
 });
