@@ -6,6 +6,12 @@ type TransferRecord =
    time: Time;
    to: principal;
  };
+type TokenInfo = 
+ record {
+   address: text;
+   name: text;
+   standard: text;
+ };
 type Time = int;
 type Result = 
  variant {
@@ -26,13 +32,15 @@ type LockContract =
    positionOwner: principal;
    provider: text;
    status: text;
+   token0: TokenInfo;
+   token1: TokenInfo;
    unlockedTime: opt Time;
+   version: text;
  };
 type Contract = 
  service {
-   checkTransaction: (principal, nat) -> (Result);
-   claim: () -> (Result);
    cycleBalance: () -> (nat) query;
+   fallback_send: (principal, nat) -> (Result);
    getContract: () -> (LockContract) query;
    getDeployer: () -> (principal) query;
    getInitContract: () -> (LockContract) query;
@@ -41,6 +49,9 @@ type Contract =
                                  principal;
                                  TransferRecord;
                                });
-   send: (principal, nat) -> (Result);
+   getVersion: () -> (text) query;
+   increaseDuration: (nat, nat) -> (Result);
+   verify: () -> (Result);
+   withdraw: () -> (Result);
  };
 service : (LockContract) -> Contract

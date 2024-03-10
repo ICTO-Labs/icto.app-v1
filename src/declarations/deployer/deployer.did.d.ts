@@ -10,6 +10,9 @@ export interface LockContract {
   'lockedTime' : [] | [Time],
   'meta' : Array<string>,
   'positionId' : bigint,
+  'version' : string,
+  'token0' : TokenInfo,
+  'token1' : TokenInfo,
   'positionOwner' : Principal,
   'unlockedTime' : [] | [Time],
   'poolName' : string,
@@ -22,14 +25,23 @@ export interface LockContractInit {
   'provider' : string,
   'meta' : Array<string>,
   'positionId' : bigint,
+  'token0' : TokenInfo,
+  'token1' : TokenInfo,
   'poolName' : string,
   'poolId' : string,
 }
+export type Result = { 'ok' : string } |
+  { 'err' : string };
 export type Time = bigint;
-export interface anon_class_33_1 {
+export interface TokenInfo {
+  'name' : string,
+  'address' : string,
+  'standard' : string,
+}
+export interface anon_class_34_1 {
   'addAdmin' : ActorMethod<[string], undefined>,
   'cancelContract' : ActorMethod<[Principal], undefined>,
-  'createContract' : ActorMethod<[LockContractInit], string>,
+  'createContract' : ActorMethod<[LockContractInit], Result>,
   'cycleBalance' : ActorMethod<[], bigint>,
   'getAllAdmins' : ActorMethod<[], Array<string>>,
   'getAllContracts' : ActorMethod<[], Array<[string, LockContract]>>,
@@ -43,4 +55,4 @@ export interface anon_class_33_1 {
   'updateContractStatus' : ActorMethod<[string, string], undefined>,
   'updateInitCycles' : ActorMethod<[bigint], undefined>,
 }
-export interface _SERVICE extends anon_class_33_1 {}
+export interface _SERVICE extends anon_class_34_1 {}

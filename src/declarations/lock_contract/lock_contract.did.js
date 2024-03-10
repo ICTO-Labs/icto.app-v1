@@ -1,5 +1,10 @@
 export const idlFactory = ({ IDL }) => {
   const Time = IDL.Int;
+  const TokenInfo = IDL.Record({
+    'name' : IDL.Text,
+    'address' : IDL.Text,
+    'standard' : IDL.Text,
+  });
   const LockContract = IDL.Record({
     'status' : IDL.Text,
     'durationTime' : IDL.Nat,
@@ -9,6 +14,9 @@ export const idlFactory = ({ IDL }) => {
     'lockedTime' : IDL.Opt(Time),
     'meta' : IDL.Vec(IDL.Text),
     'positionId' : IDL.Nat,
+    'version' : IDL.Text,
+    'token0' : TokenInfo,
+    'token1' : TokenInfo,
     'positionOwner' : IDL.Principal,
     'unlockedTime' : IDL.Opt(Time),
     'poolName' : IDL.Text,
@@ -24,9 +32,8 @@ export const idlFactory = ({ IDL }) => {
     'positionId' : IDL.Nat,
   });
   const Contract = IDL.Service({
-    'checkTransaction' : IDL.Func([IDL.Principal, IDL.Nat], [Result], []),
-    'claim' : IDL.Func([], [Result], []),
     'cycleBalance' : IDL.Func([], [IDL.Nat], ['query']),
+    'fallback_send' : IDL.Func([IDL.Principal, IDL.Nat], [Result], []),
     'getContract' : IDL.Func([], [LockContract], ['query']),
     'getDeployer' : IDL.Func([], [IDL.Principal], ['query']),
     'getInitContract' : IDL.Func([], [LockContract], ['query']),
@@ -36,12 +43,20 @@ export const idlFactory = ({ IDL }) => {
         [IDL.Vec(IDL.Tuple(IDL.Principal, TransferRecord))],
         [],
       ),
-    'send' : IDL.Func([IDL.Principal, IDL.Nat], [Result], []),
+    'getVersion' : IDL.Func([], [IDL.Text], ['query']),
+    'increaseDuration' : IDL.Func([IDL.Nat, IDL.Nat], [Result], []),
+    'verify' : IDL.Func([], [Result], []),
+    'withdraw' : IDL.Func([], [Result], []),
   });
   return Contract;
 };
 export const init = ({ IDL }) => {
   const Time = IDL.Int;
+  const TokenInfo = IDL.Record({
+    'name' : IDL.Text,
+    'address' : IDL.Text,
+    'standard' : IDL.Text,
+  });
   const LockContract = IDL.Record({
     'status' : IDL.Text,
     'durationTime' : IDL.Nat,
@@ -51,6 +66,9 @@ export const init = ({ IDL }) => {
     'lockedTime' : IDL.Opt(Time),
     'meta' : IDL.Vec(IDL.Text),
     'positionId' : IDL.Nat,
+    'version' : IDL.Text,
+    'token0' : TokenInfo,
+    'token1' : TokenInfo,
     'positionOwner' : IDL.Principal,
     'unlockedTime' : IDL.Opt(Time),
     'poolName' : IDL.Text,

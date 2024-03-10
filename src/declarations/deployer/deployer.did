@@ -1,8 +1,8 @@
-type anon_class_33_1 = 
+type anon_class_34_1 = 
  service {
    addAdmin: (text) -> ();
    cancelContract: (principal) -> ();
-   createContract: (LockContractInit) -> (text);
+   createContract: (LockContractInit) -> (Result);
    cycleBalance: () -> (nat) query;
    getAllAdmins: () -> (vec text) query;
    getAllContracts: () -> (vec record {
@@ -19,7 +19,18 @@ type anon_class_33_1 =
    updateContractStatus: (text, text) -> ();
    updateInitCycles: (nat) -> ();
  };
+type TokenInfo = 
+ record {
+   address: text;
+   name: text;
+   standard: text;
+ };
 type Time = int;
+type Result = 
+ variant {
+   err: text;
+   ok: text;
+ };
 type LockContractInit = 
  record {
    durationTime: nat;
@@ -29,6 +40,8 @@ type LockContractInit =
    poolName: text;
    positionId: nat;
    provider: text;
+   token0: TokenInfo;
+   token1: TokenInfo;
  };
 type LockContract = 
  record {
@@ -44,6 +57,9 @@ type LockContract =
    positionOwner: principal;
    provider: text;
    status: text;
+   token0: TokenInfo;
+   token1: TokenInfo;
    unlockedTime: opt Time;
+   version: text;
  };
-service : () -> anon_class_33_1
+service : () -> anon_class_34_1
