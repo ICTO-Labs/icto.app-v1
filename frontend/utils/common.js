@@ -75,11 +75,14 @@ export const showSuccess = (message, useSwal=false)=>{
     }
 }
 export const showLoading = (message)=>{
-    Swal.fire({
-        html: '<div class="spinner-grow spinner-grow-sm" role="status"></div> '+message,
+    window.Swal.fire({
+        html: message,
         allowEscapeKey: false,
         allowOutsideClick: false,
-        showConfirmButton: false
+        showConfirmButton: false,
+        didOpen: () => {
+            window.Swal.showLoading()
+        }
     });
 }
 export const closeMessage = ()=>{
@@ -181,6 +184,14 @@ export const getRandomBytes = () => {
     }
     return bs;
 };
+
+export const prettyValue = (value, replace)=>{
+    if(typeof value === "undefined"){
+        return replace;
+    }else{
+        return value;
+    }
+}
 export default {
     validateAddress,
     showError

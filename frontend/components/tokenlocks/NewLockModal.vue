@@ -16,10 +16,10 @@
 	const poolName = ref("");
     const showDetail = ref(false);
     const positionDetail = ref(null);
-    const timeNow = moment().utc();
-    const durationTime = ref(2628002);
-    const durationUnit = ref(30);
-    const unlockDate = ref(moment().utc().add(durationUnit.value*durationTime.value, 'seconds'));
+    const timeNow = moment();
+    const durationTime = ref(86400);
+    const durationUnit = ref(7);
+    const unlockDate = ref(moment().add(durationUnit.value*durationTime.value, 'seconds'));
     const unlockDays = ref(unlockDate.value.diff(timeNow, 'days'));
 	const isLoading = ref(false);
 	const poolMeta = ref(null);
@@ -91,8 +91,8 @@
     };
     
     const handleDate = ()=>{
-        let _now = moment().utc();
-        let _unlockDate = moment().utc().add(durationUnit.value*durationTime.value, 'seconds');
+        let _now = moment();
+        let _unlockDate = moment().add(durationUnit.value*durationTime.value, 'seconds');
         unlockDate.value = _unlockDate;
         unlockDays.value = _unlockDate.diff(_now, 'days');
     }
@@ -108,10 +108,6 @@
         })
     };
 
-    const _owner = "v57dj-hev4p-lsvdl-dckvv-zdcvg-ln2sb-tfqba-nzb4g-iddrv-4rsq3-mae";//call approve
-    const _spender = "lekqg-fvb6g-4kubt-oqgzu-rd5r7-muoce-kppfz-aaem3-abfaj-cxq7a-dqe";//call lock
-    const _target = "j7uqi-cn5of-nblr2-tc73a-2j3mw-pjdb7-5tdmo-imarq-pemzi-u6ht2-bae";
-
     const approvePosition = async (positionId) => {
         Swal.fire({
 		title: "Approve position "+positionId+"?",
@@ -124,34 +120,13 @@
         }).then(async (result) => {
             if(result.isConfirmed){
                 showLoading("Approving Position...");
-                console.log('start 1');
-                let _payload = {
-                    "positionId": 45,
-                    "durationTime": 60,
-                    "durationUnit": 1,
-                    "provider": "ICPSwap",
-                    "meta": [],
-                    "poolName": "XCANIC/ICP",
-                    "poolId": "z6v2h-2qaaa-aaaag-qblva-cai",
+                let _rs = await useApprovePosition(poolCanister.value, config.DEPLOYER_CANISTER_ID, positionId);
+                if(!_rs){
+                    showError("Approved failed, please try again later!");
+                }else{
+                    lockStep.value = 2;
+                    showSuccess("Approved success");
                 }
-                // let _payload = {
-                //     "positionId": Number(positionId),
-                //     "durationTime": durationTime.value,
-                //     "durationUnit": durationUnit.value,
-                //     "provider": "ICPSwap",
-                //     "meta": [],
-                //     "poolName": poolName.value,
-                //     "poolId": poolCanister.value,
-                // }
-                await useCreateLiquidLocker(_payload);
-                // let _rs = await useApprovePosition(poolCanister.value, _spender, positionId);
-                // console.log('start 2');
-                // if(!_rs){
-                //     showError("Approved failed, please try again later");
-                // }else{
-                //     lockStep.value = 2;
-                //     showSuccess("Approved success");
-                // }
                 closeMessage();
             }
         });
@@ -160,7 +135,7 @@
         console.log('unlockDays.value', unlockDate.value);
         Swal.fire({
             title: "Lock position "+positionId+"",
-            text: "Confirm lock this position, unlock date "+moment(unlockDate.value).format('MM/DD/YYYY, HH:mm')+"?",
+            text: "Confirm lock this position, unlock time: "+moment(unlockDate.value).format('YYYY-MM-DD hh:mm:ss')+"?",
             icon: "warning",
             showCancelButton: true,
             confirmButtonColor: "#3085d6",
@@ -170,23 +145,36 @@
 			if(result.isConfirmed){
                 //Step 2: Lock LP
                 showLoading("Creating a liquidity lock contract, please wait...");
-                let _transfer = await useTransferPosition(poolCanister.value, _owner, _target, positionId);
-                if(!_transfer){
-                    showError("Lock failed, please try again later");
-                    
-                    return;
-                }else{
+                let _payload = {
+                    "positionId": positionId,
+                    "durationTime": durationTime.value,
+                    "durationUnit": durationUnit.value,
+                    "provider": "ICPSwap",
+                    "meta": [],
+                    "poolName": poolName.value,
+                    "poolId": poolCanister.value,
+                    "token0": {
+                        "address": "qi26q-6aaaa-aaaap-qapeq-cai",
+                        "standard": "DIP20",
+                        "name": "XCANIC"
+                    },
+                    "token1": {
+                        "address": "ryjl3-tyaaa-aaaaa-aaaba-cai",
+                        "standard": "ICP",
+                        "name": "ICP"
+                    }
+                }
+                let _contract = await useCreateLiquidLocker(_payload);
+
+                if(_contract && "ok" in _contract){
                     lockStep.value = 3;
-                    showSuccess("Contract created successfully, your liquidity locks contract ID: be2us-64aaa-aaaaa-qaabq-cai", 'swal');
+                    showSuccess("Contract created successfully, your liquidity locks contract ID: "+_contract.ok, true);
                     goBack();
+                    getPoolMeta();
+                }else{
+                    showError(_contract.err);
                 }
                 closeMessage();
-                // setTimeout(()=>{
-                //     lockStep.value = 3;
-                //     showSuccess("Contract created successfully, your liquidity locks contract ID: be2us-64aaa-aaaaa-qaabq-cai", 'swal');
-                //     goBack();
-                //     // closeMessage()
-                // }, 3000);
 			}
 		});
     };
@@ -228,13 +216,13 @@
                                                 <label class="required fs-6 fw-bold form-label mb-2">ICPSwap Pair</label>
                                                 <div class="row fv-row">
                                                     <div class="col-10">
-                                                        <input type="text" class="form-control form-control-sm" v-model="poolCanister" required placeholder="Pool canister on ICPSwap, ie: XCANIC/ICP"/>
+                                                        <input type="text" class="form-control form-control-sm" v-model="poolCanister" disabled placeholder="Pool canister on ICPSwap, ie: XCANIC/ICP"/>
                                                     </div>
                                                     <div class="col-2">
                                                         <LoadingButton class="btn btn-primary btn-sm" type="button" @click="getPoolMeta" :disabled="isLoading">Check</LoadingButton>
                                                     </div>
 
-                                                    <button type="button" class="btn btn-sm btn-light-primary" @click="approvePosition(6)"> Create Contract</button>
+                                                    <!-- <button type="button" class="btn btn-sm btn-light-primary" @click="approvePosition(6)"> Create Contract</button> -->
                                                 </div>
                                                 <div class="form-text">Note: Currently we only support pools created from <strong>ICPSwap</strong>. Find your LP <a href="https://info.icpswap.com/swap" target="_blank">here</a> <i class="fas fa-link"></i> </div>
                                             </div>
@@ -325,23 +313,25 @@
                                             <div class="fs-6 justify-content-between mt-4">
                                                 <div class="row mb-2">
                                                     <div class="col-md-12 fv-row">
-                                                        <label class="required fs-6 fw-bold form-label mb-2"><i class="fas fa-unlock-alt"></i> Unlock Duration</label>
+                                                        <label class="required fs-6 fw-bold form-label mb-2"><i class="fas fa-unlock-alt"></i> Unlock duration</label>
                                                         <div class="row fv-row">
                                                             <div class="col-4">
                                                                 <input type="text" class="form-control" v-model="durationUnit" required placeholder="Number" @change="handleDate"/>
                                                             </div>
                                                             <div class="col-8">
                                                                 <select name="duration" class="form-select" data-hide-search="true" data-placeholder="Month" v-model="durationTime"  @change="handleDate">
+                                                                    <option value="60">Minute</option>
+                                                                    <option value="3600">Hour</option>
                                                                     <option value="86400">Day</option>
                                                                     <option value="604800">Week</option>
-                                                                    <option value="2628002" selected>Month</option>
+                                                                    <option value="2628002">Month</option>
                                                                     <option value="7884006">Quarter</option>
                                                                     <option value="31536000">Year</option>
                                                                 </select>
                                                             </div>
                                                         </div>
                                                         <div class="form-text text-danger">
-                                                            <i class="fas fa-warning text-danger"></i> Please carefully consider the unlock duration. You can only claim locked position after this time.
+                                                            <i class="fas fa-warning text-danger"></i> Please carefully consider the unlock duration. You can only withdraw locked position after this time.
                                                         </div>
                                                     </div>
                                                 </div>
@@ -352,7 +342,7 @@
                                                 </div>
                                                 <div class="fs-6 d-flex justify-content-between mb-4">
                                                     <div class="fw-bold">Unlock date</div>
-                                                    <div class="d-flex fw-bolder">{{ unlockDate?moment(unlockDate).format('MM/DD/YYYY, HH:mm'):0 }}</div>
+                                                    <div class="d-flex fw-bolder">{{ unlockDate?moment(unlockDate).format('YYYY-MM-DD hh:mm:ss'):0 }}</div>
                                                 </div>
                                                 <div class="fs-6 d-flex justify-content-between mb-4">
                                                     <div class="fw-bold">Days until unlock</div>

@@ -5,6 +5,7 @@ import Nat "mo:base/Nat";
 
 module {
     public type LockContract = {
+        version: Text;//Contract version
         contractId: ?Text;//This contract id
         poolId : Text;//Pool canister id
         provider: Text;//CEX, DEX Provider: ICPswap, Sonic, etc
@@ -18,7 +19,14 @@ module {
         lockedTime: ?Time.Time;//Locked time
         unlockedTime: ?Time.Time;//Unlocked time
         created: Time.Time;//Created time
+        token0: TokenInfo;
+        token1: TokenInfo;
         // owner: Principal;//Contract owner
+    };
+    public type TokenInfo = {
+        address: Text;
+        standard: Text;
+        name: Text;
     };
     public type LockStatus = {
         #created;
@@ -33,6 +41,8 @@ module {
         durationTime: Nat;//Duration unlock in second
         durationUnit: Nat;//Unit of duration. Time = durationTime*durationUnit
         meta: [Text];//Meta data
+        token0: TokenInfo;
+        token1: TokenInfo;
     };
     public type PoolError = {
         #CommonError;

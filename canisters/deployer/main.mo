@@ -24,6 +24,7 @@ import Result "mo:base/Result";
 import Text "mo:base/Text";
 import Time "mo:base/Time";
 import Trie "mo:base/Trie";
+import Debug "mo:base/Debug";
 import Trie2D "mo:base/Trie";
 import IC "../backend/IC";
 import TokenLock "contracts/TokenLock";
@@ -37,7 +38,7 @@ shared ({ caller }) actor class () = self {
     private stable var _owners : Trie.Trie<Text, Text> = Trie.empty(); //mapping  token_canister_id -> owner principal id
     private stable var _admins : [Text] = [Principal.toText(caller)];
     private stable var _initCycles: Nat = 300_000_000_000;//1T 1_000_000_000_000, 0.3T
-
+    private stable var CURRENT_LOCK_VERSION = "1.0.0";
 
     //IC Management Canister
     let ic: IC.Self = actor "aaaaa-aa";
@@ -122,20 +123,25 @@ shared ({ caller }) actor class () = self {
     };
     //Create canister with contract
     private func create_canister(owner: Principal, contract: Types.LockContractInit) : async (Text) {
-        Cycles.add(_initCycles);
-        let _contract = {
-            contract with
-            positionOwner = owner;
-            created = Time.now();
-            lockedTime = null;
-            unlockedTime = null;
-            contractId = null;
-            status = "created";
+        try{
+            Cycles.add(_initCycles);
+            let _contract = {
+                contract with
+                positionOwner = owner;
+                created = Time.now();
+                lockedTime = null;
+                unlockedTime = null;
+                contractId = null;
+                version = CURRENT_LOCK_VERSION;
+                status = "created";
+            };
+            let contractId = await TokenLock.Contract(_contract);
+            let _blackhole = await blackhole_canister(contractId);//Remove controller of canister - available in Mainnet
+            let canister_id = Principal.fromActor(contractId);
+            return Principal.toText(canister_id);
+        } catch (e) {
+            return Debug.trap("Canister creation failed " # debug_show Error.message(e));
         };
-        let contractId = await TokenLock.Contract(_contract);
-        //blackhole_canister(contractId);//Remove controller of canister - available in Mainnet
-        let canister_id = Principal.fromActor(contractId);
-        return Principal.toText(canister_id);
     };
 
     private func blackhole_canister(a : actor {}) : async () {
@@ -144,7 +150,7 @@ shared ({ caller }) actor class () = self {
             ic.update_settings({
                 canister_id = cid.canister_id;
                 settings = {
-                    controllers = ?[];
+                    controllers = ?[Principal.fromText("lekqg-fvb6g-4kubt-oqgzu-rd5r7-muoce-kppfz-aaem3-abfaj-cxq7a-dqe")];
                     compute_allocation = null;
                     memory_allocation = null;
                     freezing_threshold = ?31_540_000;
@@ -267,12 +273,9 @@ shared ({ caller }) actor class () = self {
 
     //Create Contract Canister
     //
-    public shared (msg) func createContract(contract : Types.LockContractInit) : async (Text) {
+    public shared (msg) func createContract(contract : Types.LockContractInit) : async Result.Result<Text, Text> {
         assert not Principal.isAnonymous(msg.caller);//reject anonymous
-        var canister_id : Text = await create_canister(
-            msg.caller,
-            contract
-        );
+        var canister_id : Text = await create_canister(msg.caller, contract);
         let _contract = {
             contract with
             contractId = ?canister_id;
@@ -280,6 +283,7 @@ shared ({ caller }) actor class () = self {
             created = Time.now();
             lockedTime = null;
             unlockedTime = null;
+            version = CURRENT_LOCK_VERSION;
             status = "created";
         };
         _contracts := Trie.put(
@@ -288,9 +292,57 @@ shared ({ caller }) actor class () = self {
             Text.equal,
             _contract,
         ).0;
-
         _owners := Trie.put(_owners, keyT(canister_id), Text.equal, Principal.toText(msg.caller)).0;
-        return canister_id;
+        //Transfer position to contract
+        let _transfered = await transferPosition(contract.poolId, msg.caller, Principal.fromText(canister_id), contract.positionId);
+        if(_transfered == false){
+            return #err("Failed to transfer position. You can manually transfer position to the contract canister: " # canister_id);
+        };
+        ignore await checkTransaction(Principal.fromText(canister_id), contract.positionId);//Trigger check balance from smartcontract
+        return #ok(canister_id);
+    };
+
+    //Transfer from
+    private func transferPosition(poolId: Text, from: Principal, to: Principal, positionId: Nat) : async Bool{
+        let POOL = actor(poolId) : actor {
+            transferPosition : shared (Principal, Principal, Nat) -> async { #ok : Bool; #err : Types.PoolError };
+        };
+        switch(await POOL.transferPosition(from, to, positionId)){
+            case (#ok(true)){
+                return true;
+            };
+            case (#ok(false)){
+                return false;
+            };
+            case (#err(err)){
+                return false;
+            }
+        };
+    };
+
+    //Remote check transaction from created contract.
+    private func checkTransaction(contractId: Principal, positionId: Nat): async Result.Result<Bool, Text>{
+        let SmartContract = actor(Principal.toText(contractId)) : actor {
+            verify : shared (Nat) -> async { #ok : Bool; #err : Text };
+        };
+        await SmartContract.verify(positionId);
+    };
+
+    private func isOwnerOfPosition(poolId: Text, owner: Principal, positionId: Nat) : async Bool {
+        let POOL = actor(poolId) : actor {
+            checkOwnerOfUserPosition: shared query (Principal, Nat) -> async { #ok : Bool; #err : Types.PoolError };
+        };
+        switch(await POOL.checkOwnerOfUserPosition(owner, positionId)){
+            case (#ok(true)){
+                return true;
+            };
+            case (#ok(false)){
+                return false;
+            };
+            case (#err(err)){
+                return false;
+            }
+        };
     };
 
     //Queries
