@@ -235,6 +235,7 @@ shared ({ caller = deployer }) actor class Contract(contract: DeployerTypes.Lock
             return #err("Unauthorized: You are not the owner of the position!");
         };
         if(isOvertimeAllowed() == true){
+            if(_contract.status == "withdrawn") return #err("The position already withdrawn!");
             //TODO: Transfer the locked amount to the caller
             let transfer = await transferPosition(cid(), contract.positionOwner, contract.positionId);
             switch(transfer){
