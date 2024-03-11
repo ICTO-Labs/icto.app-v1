@@ -19,9 +19,9 @@ export const useWithdrawPosition = async (canisterId) =>{
     }
 }
 
-export const useGetTransaction = async (canisterId, page=0) =>{
+export const useGetTransaction = async (canisterId) =>{
     try{
-        return await Connect.canister(canisterId, 'lock_contract').getTransactions(page);
+        return await Connect.canister(canisterId, 'lock_contract').getTransactions();
     }catch(e){
         console.log('useGetTransaction', e);
         return {err: 'An unexpected error occurred, please check the console log!'}
@@ -33,6 +33,15 @@ export const useIncreaseDuration = async (canisterId, durationUnit, durationTime
         return await Connect.canister(canisterId, 'lock_contract').increaseDuration(durationUnit, durationTime);
     }catch(e){
         console.log('useIncreaseDuration', e);
+        return {err: 'An unexpected error occurred, please check the console log!'}
+    }
+}
+
+export const useCheckOvertime = async (canisterId) =>{
+    try{
+        return await Connect.canister(canisterId, 'lock_contract').checkOvertime();
+    }catch(e){
+        console.log('useCheckOvertime', e);
         return {err: 'An unexpected error occurred, please check the console log!'}
     }
 }

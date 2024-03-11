@@ -76,7 +76,7 @@
             currentTick.value = Number(poolMeta.value.tick);
             //Step2. get Token meta
             if(config.ENV != "dev"){
-                _tokenMeta = await useGetTokenMeta(poolCanister.value);
+                // _tokenMeta = await useGetTokenMeta(poolCanister.value);
             }
             if(_tokenMeta == null){
                 isLoading.value = false;
@@ -146,9 +146,9 @@
                 //Step 2: Lock LP
                 showLoading("Creating a liquidity lock contract, please wait...");
                 let _payload = {
-                    "positionId": positionId,
-                    "durationTime": durationTime.value,
-                    "durationUnit": durationUnit.value,
+                    "positionId": Number(positionId),
+                    "durationTime": Number(durationTime.value),
+                    "durationUnit": Number(durationUnit.value),
                     "provider": "ICPSwap",
                     "meta": [],
                     "poolName": poolName.value,
@@ -170,11 +170,14 @@
                     lockStep.value = 3;
                     showSuccess("Contract created successfully, your liquidity locks contract ID: "+_contract.ok, true);
                     goBack();
-                    getPoolMeta();
+                    // getPoolMeta();
                 }else{
-                    showError(_contract.err);
+                    if(_contract && "err" in _contract){
+                        showError(_contract.err, true);
+                    }else{
+                        showError("Create contract failed, check console log for further information!", true);
+                    }
                 }
-                closeMessage();
 			}
 		});
     };

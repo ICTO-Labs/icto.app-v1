@@ -8,7 +8,7 @@ export interface Contract {
   'getDeployer' : ActorMethod<[], Principal>,
   'getInitContract' : ActorMethod<[], LockContract>,
   'getLockedPosition' : ActorMethod<[], bigint>,
-  'getTransactions' : ActorMethod<[], Array<[Principal, TransferRecord]>>,
+  'getTransactions' : ActorMethod<[], Array<[string, TransferRecord]>>,
   'getVersion' : ActorMethod<[], string>,
   'increaseDuration' : ActorMethod<[bigint, bigint], Result>,
   'verify' : ActorMethod<[], Result>,
@@ -27,6 +27,7 @@ export interface LockContract {
   'token0' : TokenInfo,
   'token1' : TokenInfo,
   'positionOwner' : Principal,
+  'withdrawnTime' : [] | [Time],
   'unlockedTime' : [] | [Time],
   'poolName' : string,
   'contractId' : [] | [string],
@@ -41,9 +42,9 @@ export interface TokenInfo {
   'standard' : string,
 }
 export interface TransferRecord {
-  'to' : Principal,
+  'to' : string,
   'method' : string,
-  'from' : Principal,
+  'from' : string,
   'time' : Time,
   'positionId' : bigint,
 }

@@ -131,14 +131,15 @@ shared ({ caller }) actor class () = self {
                 created = Time.now();
                 lockedTime = null;
                 unlockedTime = null;
+                withdrawnTime = null;
                 contractId = null;
                 version = CURRENT_LOCK_VERSION;
                 status = "created";
             };
             let contractId = await TokenLock.Contract(_contract);
-            let _blackhole = await blackhole_canister(contractId);//Remove controller of canister - available in Mainnet
             let canister_id = Principal.fromActor(contractId);
-            return Principal.toText(canister_id);
+            ignore blackhole_canister(contractId);//Remove controller of canister - available in Mainnet
+            Principal.toText(canister_id);
         } catch (e) {
             return Debug.trap("Canister creation failed " # debug_show Error.message(e));
         };
@@ -175,14 +176,19 @@ shared ({ caller }) actor class () = self {
                     status = status;
                 };
             };
+            case ("withdrawn"){
+                return {
+                    obj with
+                    withdrawnTime = ?Time.now();
+                    status = status;
+                };
+            };
             case _ {
                 return obj;
             };
         }
     };
-    public shared ({ caller }) func updateContractStatus(canister_id : Text, status :  Text) : async () {
-        //Check if caller is sub canister (callback) or admin
-        assert(Principal.equal(caller, Principal.fromText(canister_id)) or _isAdmin(Principal.toText(caller)));
+    private func updateStatus(canister_id: Text, status: Text): async (){
         let contract = await getContract(canister_id);
         switch (contract) {
             case (?c) {
@@ -196,6 +202,11 @@ shared ({ caller }) actor class () = self {
             };
             case _ {};
         };
+    };
+    public shared ({ caller }) func updateContractStatus(canister_id : Text, status :  Text) : async () {
+        //Check if caller is sub canister (callback) or admin
+        assert(Principal.equal(caller, Principal.fromText(canister_id)) or _isAdmin(Principal.toText(caller)));
+        await updateStatus(canister_id, status);
     };
 
     //Queries
@@ -283,6 +294,7 @@ shared ({ caller }) actor class () = self {
             created = Time.now();
             lockedTime = null;
             unlockedTime = null;
+            withdrawnTime = null;
             version = CURRENT_LOCK_VERSION;
             status = "created";
         };
@@ -298,7 +310,7 @@ shared ({ caller }) actor class () = self {
         if(_transfered == false){
             return #err("Failed to transfer position. You can manually transfer position to the contract canister: " # canister_id);
         };
-        ignore await checkTransaction(Principal.fromText(canister_id), contract.positionId);//Trigger check balance from smartcontract
+        ignore await checkTransaction(Principal.fromText(canister_id));//Trigger check balance from smartcontract
         return #ok(canister_id);
     };
 
@@ -321,11 +333,11 @@ shared ({ caller }) actor class () = self {
     };
 
     //Remote check transaction from created contract.
-    private func checkTransaction(contractId: Principal, positionId: Nat): async Result.Result<Bool, Text>{
+    private func checkTransaction(contractId: Principal): async Result.Result<Bool, Text>{
         let SmartContract = actor(Principal.toText(contractId)) : actor {
-            verify : shared (Nat) -> async { #ok : Bool; #err : Text };
+            verify : shared () -> async { #ok : Bool; #err : Text };
         };
-        await SmartContract.verify(positionId);
+        await SmartContract.verify();
     };
 
     private func isOwnerOfPosition(poolId: Text, owner: Principal, positionId: Nat) : async Bool {
@@ -367,7 +379,7 @@ shared ({ caller }) actor class () = self {
 
     //Add to beta test - remove unused canister
     public shared ({caller}) func cancelContract(canister_id: Principal) : async (){
-        // assert (_isAdmin(Principal.toText(caller)));
+        assert (_isAdmin(Principal.toText(caller)));
         await ic.stop_canister({ canister_id = canister_id });
         await ic.delete_canister({ canister_id = canister_id });
     };

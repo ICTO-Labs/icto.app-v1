@@ -1,13 +1,14 @@
 <script setup>
     import { onMounted, ref } from 'vue';
     import { useRoute } from 'vue-router';
-    import { useGetContract, useWithdrawPosition, useGetTransaction, useIncreaseDuration } from "@/services/Locks";
+    import { useGetContract, useWithdrawPosition, useGetTransaction, useIncreaseDuration, useCheckOvertime } from "@/services/Locks";
     import { shortPrincipal, shortAccount } from '@/utils/common';
     import { useGetPoolMeta, useGetPosition, useGetPoolValue } from '@/services/SwapPool';
     import { currencyFormat } from "@/utils/token";
     import { showSuccess, showError, showLoading, closeMessage, prettyValue } from "@/utils/common";
     import { VueFinalModal } from 'vue-final-modal';
     import moment from "moment";
+    import walletStore from "@/store";
     const route = useRoute();
     const contractId = ref(route.params.contractId);
 
@@ -36,8 +37,9 @@
         isLoading.value = true;
         contract.value = await useGetContract(contractId.value);
         console.log('contract.value', contract.value);
-        if(contract.value){
-            contract.value.status = "locked";
+        if(isOverdue() && contract.value.status == 'locked'){
+            contract.value.status = 'unlocked';
+            await useCheckOvertime(contractId.value);//update status
         }
         isLoading.value = false;
         await getPoolMeta();
@@ -45,6 +47,13 @@
         await getTransaction();
         handleDate();
         console.log(contract.value);
+    }
+
+    const isOverdue = ()=>{
+        if(!contract.value) return false;
+        let _created = Number(contract.value.created)/1000000;
+        let _unlockDate = moment(_created).add((Number(contract.value.durationTime)*Number(contract.value.durationUnit)), 'seconds');
+        return moment().isAfter(_unlockDate);
     }
 
     const getTransaction = async()=>{
@@ -89,9 +98,9 @@
             if(result.isConfirmed){
                 showLoading('Withdrawing position '+contract.value.positionId+'...');
                 let _rs = await useWithdrawPosition(contractId.value);
-                closeMessage();
                 console.log('object', _rs);
                 if(_rs && "ok" in _rs && _rs.ok == true){
+                    getContract();
                     showSuccess('You position have been successfully withdrawn!', true);
                 }else{
                     if(_rs) showError(_rs.err, true);
@@ -143,9 +152,10 @@
         }).then(async (result) => {
             if(result.isConfirmed){
                 showLoading('Increasing unlock time...');
-                let _rs = await useIncreaseDuration(contractId.value, increaseLock.value.durationUnit, increaseLock.value.durationTime);
+                let _rs = await useIncreaseDuration(contractId.value, Number(increaseLock.value.durationUnit), Number(increaseLock.value.durationTime));
                 console.log('_rs', _rs);
                 if(_rs && "ok" in _rs){
+                    getContract();
                     showSuccess("Unlock time has been increased successfull", true);
                 }else{
                     if(_rs){
@@ -182,21 +192,25 @@
             <!--begin::Body-->
             <div class="card-body p-0">
                 <!--begin::Header-->
-                <div :class="`px-9 pt-7 card-rounded h-275px w-100 bg-${contract?.status=='locked'?'success':contract?.status=='unlocked'?'danger':'info'}`">
+                <div :class="`px-9 pt-7 card-rounded h-275px w-100 bg-${contract?.status=='locked'?'success':contract?.status=='unlocked'?'danger':contract?.status=='withdrawn'?'secondary':'info'}`">
                     <div class="d-flex flex-stack">
-                        <h3 class="m-0 text-white fw-bolder fs-3">Liquidity Lock</h3>
+                        <h3 class="m-0 text-white fw-bolder fs-3">
+                            <span class="btn btn-sm btn-light-success fw-bold fs-6 btn-disabled" v-if="contract?.status =='locked'">Liquidity {{ contract?.status }} <i class="fas fa-lock "></i></span>
+                            <span class="btn btn-sm btn-light-danger fw-bold fs-6 btn-disabled" v-else-if="contract?.status =='unlocked'">Contract Unlocked <i class="fas fa-lock-open "></i></span>
+                            <span class="btn btn-sm btn-light-info fw-bold fs-6 btn-disabled" v-else-if="contract?.status == 'created'">Contract Created <i class="fas fa-lock-open "></i></span>
+                            <span class="btn btn-sm btn-light-dark fw-bold fs-6 btn-disabled" v-else-if="contract?.status == 'withdrawn'">Position Withdrawn <i class="fas fa-anchor "></i></span>
+                            <span class="btn btn-sm btn-light-dark fw-bold fs-6 btn-disabled" v-else>Loading...</span>
+                        </h3>
                         <div class="ms-1">
-                            <button type="button" class="btn btn-sm btn-light-danger border-0 me-n3" @click.stop="withdraw"><i class="fas fa-donate"></i> Withdraw</button>
+                            <button type="button" class="btn btn-sm btn-light-primary border-0 me-n3" @click.stop="withdraw"><i class="fas fa-donate"></i> Withdraw</button>
                         </div>
                     </div>
                     <!--begin::Balance-->
                     <div class="d-flex text-center flex-column text-white pt-3">
-                        <span class="fw-bold fs-4" v-if="contract?.status =='locked'">Liquidity {{ contract?.status }} <i class="fas fa-lock text-white"></i></span>
-                        <span class="fw-bold fs-4" v-else-if="contract?.status =='unlocked'">Contract Unlocked <i class="fas fa-unlock text-white"></i></span>
-                        <span class="fw-bold fs-4" v-else-if="contract?.status == 'created'">Contract Created <i class="fas fa-waiting text-white"></i></span>
-                        <span class="fw-bold fs-4" v-else>Lock Contract</span>
+                        <span class="fw-bold fs-4" v-if="contract?.status=='locked'">Total Value Locked</span>
+                        <span class="fw-bold fs-4" v-else>Position Value</span>
                         <span class="fw-bolder fs-3x pt-1">${{poolValue?.totalValueInUSD?.toFixed(2) || '0'}}</span>
-                        <span class="fw-bold fs-7 pt-1">Locked by: <span class="fw-bold">{{ contract?.positionOwner }}</span> <Copy :text="contract.positionOwner" v-if="contract" class="btn-color-white"></Copy></span>
+                        <span class="fw-bold fs-7 pt-1">Created by: <span class="fw-bold">{{ contract?.positionOwner || '---' }}</span> <Copy :text="contract.positionOwner" v-if="contract" class="btn-color-white"></Copy></span>
                     </div>
                     <!--end::Balance-->
                 </div>
@@ -208,8 +222,8 @@
                             <div class="symbol symbol-125px symbol-circle mb-5">
                                 <img src="https://psh4l-7qaaa-aaaap-qasia-cai.raw.icp0.io/qi26q-6aaaa-aaaap-qapeq-cai.png" alt="image">
                             </div>
-                            <a href="#" class="fs-4 text-gray-800 text-hover-primary fw-bolder mb-0">{{ poolMeta?.token0?.name || '---' }}</a>
-                            <span class="text-primary">{{ poolMeta?.token0?.address || '---' }} <Copy :text="poolMeta.token0.address"  v-if="poolMeta"/></span>
+                            <a href="#" class="fs-4 text-gray-800 text-hover-primary fw-bolder mb-0">{{ contract?.token0?.name || '---' }}</a>
+                            <span class="text-primary">{{ contract?.token0?.address || '---' }} <Copy :text="contract?.token0?.address" v-if="contract"/></span>
                             <span class="fs-4 fw-bold">{{ currencyFormat(poolValue?.amount0 || 0) }}</span>
 
                         </div>
@@ -233,7 +247,7 @@
                                                         <span class="fs-7 fw-bold text-dark d-block"><i class="fas fa-chevron-down text-danger"></i> Min Price</span>
                                                         <div class="fs-1hx fw-bolder text-gray-900 counted">{{ poolValue?.minprice || '---' }}</div>
                                                         <div class="fw-normal fs-7 text-gray-400">
-                                                            <span class="fw-bold">{{ poolMeta?.token1?.name || '---' }}</span> per <span class="fw-bold">{{ poolMeta?.token0?.name || '---' }}</span>
+                                                            <span class="fw-bold">{{ contract?.token1?.name || '---' }}</span> per <span class="fw-bold">{{ contract?.token0?.name || '---' }}</span>
                                                         </div>
                                                     </div>
                                                 </div>
@@ -242,7 +256,7 @@
                                                         <span class="fs-7 fw-bold text-dark d-block"> <i class="fas fa-chevron-up text-success"></i> Max Price</span>
                                                         <div class="fs-1hx fw-bolder text-gray-900 counted">{{ poolValue?.maxprice || '---' }}</div>
                                                         <div class="fw-normal fs-7 text-gray-400">
-                                                            <span class="fw-bold">{{ poolMeta?.token1?.name||'---' }}</span> per <span class="fw-bold">{{ poolMeta?.token0?.name||'---' }}</span>
+                                                            <span class="fw-bold">{{ contract?.token1?.name||'---' }}</span> per <span class="fw-bold">{{ contract?.token0?.name||'---' }}</span>
                                                         </div>
                                                     </div>
                                                 </div>
@@ -251,9 +265,9 @@
                                                 <div class="col">
                                                     <div class="border border-dashed border-primary bg-white text-center rounded pt-2 pb-2">
                                                         <span class="fs-7 fw-bold text-primary d-block">Current Price</span>
-                                                        <div class="fs-1hx fw-bolder text-gray-900 counted">{{ poolValue?.price || '---' }}</div>
+                                                        <div class="fs-1hx fw-bolder text-gray-900 counted">{{ poolValue?.price || '---' }} <span class="text-gray-600" v-if="poolValue">≈${{ (poolValue.price*walletStore.icpPrice).toFixed(6) }}</span></div>
                                                         <div class="fw-normal fs-7 text-gray-400">
-                                                            <span class="fw-bold">{{ poolMeta?.token1?.name || '---' }}</span> per <span class="fw-bold">{{ poolMeta?.token0?.name || '---' }}</span>
+                                                            <span class="fw-bold">{{ contract?.token1?.name || '---' }}</span> per <span class="fw-bold">{{ contract?.token0?.name || '---' }}</span>
                                                         </div>
                                                     </div>
                                                 </div>
@@ -267,7 +281,7 @@
                                         <td class="text-start fw-bold w-50 text-danger">Lock expires</td>
                                         <td>
                                             {{ contract?moment(Number(contract.created)/1000000).add(Number(contract.durationTime)*Number(contract.durationUnit), 'seconds').fromNow():'---' }}
-                                            <a href="#" class="badge badge-light-primary ms-5" @click="showIncreaseModal">+ Increase</a>
+                                            <a href="#" class="badge badge-light-primary" @click="showIncreaseModal">Increase</a>
 
                                         </td>
                                     </tr>
@@ -290,8 +304,8 @@
                             <div class="symbol symbol-125px symbol-circle mb-5">
                                 <img src="https://psh4l-7qaaa-aaaap-qasia-cai.raw.icp0.io/ryjl3-tyaaa-aaaaa-aaaba-cai.png" alt="image">
                             </div>
-                            <a href="#" class="fs-4 text-gray-800 text-hover-primary fw-bolder mb-0">{{ poolMeta?.token1?.name || '---' }}</a>
-                            <span class="text-primary">{{ poolMeta?.token1?.address || '---' }} <Copy :text="poolMeta.token1.address" v-if="poolMeta"/></span>
+                            <a href="#" class="fs-4 text-gray-800 text-hover-primary fw-bolder mb-0">{{ contract?.token1?.name || '---' }}</a>
+                            <span class="text-primary">{{ contract?.token1?.address || '---' }} <Copy :text="contract?.token1?.address" v-if="contract"/></span>
                             <span class="fs-4 fw-bold">{{ currencyFormat(poolValue?.amount1 || 0) }}</span>
                         </div>
                     </div>
@@ -309,7 +323,7 @@
                 <!--begin::Header-->
                 <div class="card-header border-0 pt-5">
                     <h3 class="card-title align-items-start flex-column">
-                        <span class="card-label fw-bolder fs-3 mb-1">Histories</span>
+                        <span class="card-label fw-bolder fs-3 mb-1">Transactions</span>
                     </h3>
                     <div class="card-toolbar">
                         <button type="button" class="btn btn-sm btn-bg-light btn-active-dark" @click="getTransaction()" :disabled="isLoading">{{isLoading?'Loading...':'Refresh'}}</button>
@@ -340,15 +354,16 @@
                                     <tbody>
                                         <tr v-for="transaction in transactions" v-if="transactions && transactions.length>0">
                                             <td>
-                                                <span class="badge badge-light-info"><i class="fas fa-arrow-right text-info"></i> {{ transaction[1].method }}</span>
+                                                <span class="badge badge-light-primary" v-if="transaction[1].method =='deposit'">{{ transaction[1].method }} <i class="fas fa-arrow-up text-primary"></i></span>
+                                                <span class="badge badge-light-danger" v-if="transaction[1].method =='withdraw'">{{ transaction[1].method }} <i class="fas fa-arrow-down text-danger"></i></span>
                                             </td>
                                             <td class="text-muted"> 
-                                                <span class="text-dark fw-bolder text-hover-primary">{{ transaction[1].from }}</span> <Copy :text="contract.positionOwner"></Copy>
+                                                <span class="text-dark fw-bold text-primary fs-7">{{ transaction[1].from }}</span> <Copy :text="contract.positionOwner"></Copy>
                                             </td>
                                             <td>
-                                                <span class="text-dark fw-bolder text-hover-primary mb-1 fs-6">{{ transaction[1].to }}</span> <Copy :text="transaction[1].to"></Copy>
+                                                <span class="text-dark fw-bold text-primary mb-1 fs-7">{{ transaction[1].to }}</span> <Copy :text="transaction[1].to"></Copy>
                                             </td>
-                                            <td class="text-center fw-bold">6</td>
+                                            <td class="text-center fw-bold">{{ Number(transaction[1].positionId) }}</td>
                                             <td class="text-muted ">
                                                 <span class="text-muted d-block">{{ moment(Number(transaction[1].time)/1000000).format("YYYY-MM-DD hh:mm:ss") }}</span>
                                             </td>

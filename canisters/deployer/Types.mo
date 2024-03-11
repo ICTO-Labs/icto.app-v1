@@ -18,6 +18,7 @@ module {
         status : Text;//created/locked/unlocked
         lockedTime: ?Time.Time;//Locked time
         unlockedTime: ?Time.Time;//Unlocked time
+        withdrawnTime: ?Time.Time;//withdrawn time
         created: Time.Time;//Created time
         token0: TokenInfo;
         token1: TokenInfo;

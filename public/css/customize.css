@@ -443,3 +443,7 @@ fieldset[disabled] .multiselect {
   padding-top: 10px !important;
   padding-bottom: 10px !important;
 }
+
+.btn-disabled{
+  pointer-events: none !important;
+}

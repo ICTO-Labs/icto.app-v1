@@ -1,3 +1,4 @@
+import canisters from '../../canister_ids.json';
 const NETWORK = {
     "dev": {
         canister_id: "aax3a-h4aaa-aaaaa-qaahq-cai",
@@ -17,10 +18,10 @@ const NETWORK = {
         scan: "https://dashboard.internetcomputer.org/canister/"
     },
     "ic": {
-        canister_id: "y3yam-6aaaa-aaaap-qb7aq-cai",
-        deployer_id: "p7bu5-uyaaa-aaaap-qca3q-cai",
-        token_deployer_id: "p7bu5-uyaaa-aaaap-qca3q-cai",
-        backend_id: "ys3lq-iiaaa-aaaap-qb7ba-cai",
+        canister_id: canisters.frontend.ic,//"y3yam-6aaaa-aaaap-qb7aq-cai",
+        deployer_id: canisters.deployer.ic,//"p7bu5-uyaaa-aaaap-qca3q-cai",
+        token_deployer_id: canisters.token_deployer.ic,//"p7bu5-uyaaa-aaaap-qca3q-cai",
+        backend_id: canisters.backend.ic, //"ys3lq-iiaaa-aaaap-qb7ba-cai",
         host: "https://icp-api.io",
         scan: "https://dashboard.internetcomputer.org/canister/",
         identityProvider: "https://identity.ic0.app/#authorize"

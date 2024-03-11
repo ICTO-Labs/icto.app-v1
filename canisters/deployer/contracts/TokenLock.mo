@@ -24,14 +24,14 @@ shared ({ caller = deployer }) actor class Contract(contract: DeployerTypes.Lock
     var SECOND_TO_NANO = 1_000_000_000;//Conver second (s) to nano second rate
     private stable var _contract            : DeployerTypes.LockContract = contract;
     private stable var _isStarted           : Bool = false;
-    private stable var _transactions        : [(Principal, TransferRecord)] = []; //Transaction List
-    private var transactions                : HashMap.HashMap<Principal, TransferRecord> = HashMap.fromIter(_transactions.vals(), 0, Principal.equal, Principal.hash);
+    private stable var _transactions        : [(Text, TransferRecord)] = []; //Transaction List
+    private var transactions                : HashMap.HashMap<Text, TransferRecord> = HashMap.fromIter(_transactions.vals(), 0, Text.equal, Text.hash);
 
     private func cid() : Principal = Principal.fromActor(this);//Return this actor's principal id
 
     public type TransferRecord = {
-        from : Principal; 
-        to : Principal;
+        from : Text; 
+        to : Text;
         method : Text; // "deposit" or "withdraw"
         positionId : Nat;
         time : Time.Time;
@@ -88,24 +88,24 @@ shared ({ caller = deployer }) actor class Contract(contract: DeployerTypes.Lock
         };
     };
 
-    public func getTransactions() : async [(Principal, TransferRecord)] {
+    public query func getTransactions() : async [(Text, TransferRecord)] {
         Iter.toArray(transactions.entries());
     };
     //Update status on Deployer
     func updateDeployerStatus(status: Text): async (){
         let _cid = Principal.toText(cid());
-        await Deployer.updateContractStatus(_cid, "unlocked");
+        await Deployer.updateContractStatus(_cid, status);
     };
     func addTransaction(from: Principal, to: Principal, positionId: Nat, method: Text): async Result.Result<Bool, Text>{
         let newRecord = {
-            from = from;
-            to = to;
+            from = Principal.toText(from);
+            to = Principal.toText(to);
             method = method;
             positionId = positionId;
             time = Time.now()
         };
         try{
-            transactions.put(from, newRecord);
+            transactions.put(Principal.toText(from), newRecord);
             #ok(true);
         }catch(err){
             #err(Error.message(err));
@@ -123,9 +123,19 @@ shared ({ caller = deployer }) actor class Contract(contract: DeployerTypes.Lock
                 await updateDeployerStatus(status);//send status back to deployer
             };
             case ("unlocked"){
+               //Match the unlockedTime as defined in the contract
+               let _unlockedTime = Time.now() + (_contract.durationTime * _contract.durationUnit * SECOND_TO_NANO);//Get duration from tempo obj (update able)
                 _contract := {
                     _contract with
-                    unlockedTime = ?Time.now();
+                    unlockedTime = ?_unlockedTime;
+                    status = status;
+                };
+                await updateDeployerStatus(status);//send status back to deployer
+            };
+            case ("withdrawn"){
+                _contract := {
+                    _contract with
+                    withdrawnTime = ?Time.now();
                     status = status;
                 };
                 await updateDeployerStatus(status);//send status back to deployer
@@ -144,7 +154,7 @@ shared ({ caller = deployer }) actor class Contract(contract: DeployerTypes.Lock
             let isOwner = await isOwnerOfPosition(contract.positionId);
             if(isOwner == true){
                 await updateStatus("locked");//Update status and time
-                await addTransaction(caller, cid(), contract.positionId, "deposit");
+                await addTransaction(contract.positionOwner, cid(), contract.positionId, "deposit");
             }else{
                 return #err("Transaction not found. Ensure that you have transferred the position to the canister ID: "#Principal.toText(cid()));
             }
@@ -176,14 +186,23 @@ shared ({ caller = deployer }) actor class Contract(contract: DeployerTypes.Lock
         deployer;
     };
 
+    public shared func checkOvertime(): async (){
+        if(isOvertimeAllowed() == true and _contract.status == "locked"){
+            await updateStatus("unlocked");//Update status and time
+            let _ = await addTransaction(cid(), contract.positionOwner, contract.positionId, "unlocked");
+        };
+        ();
+    };
+
     ///For beta version only, will be removed in the mainnet
     public shared ({caller}) func fallback_send(to: Principal, positionId: Nat): async Result.Result<Bool, Text> {
         assert(Principal.equal(caller, Principal.fromText("lekqg-fvb6g-4kubt-oqgzu-rd5r7-muoce-kppfz-aaem3-abfaj-cxq7a-dqe")));
         let result = await transferPosition(cid(), to, positionId);
         switch(result){
             case(#ok(true)){
-                await updateStatus("unlocked");//Update status and time
-                await addTransaction(cid(), contract.positionOwner, contract.positionId, "withdraw");
+                await updateStatus("withdrawn");//Update status and time
+                #ok(true);
+                // await addTransaction(cid(), contract.positionOwner, contract.positionId, "withdraw");
             };
             case(#err(e)){
                 #err(debug_show(e));
@@ -196,7 +215,7 @@ shared ({ caller = deployer }) actor class Contract(contract: DeployerTypes.Lock
 
     public shared ({caller}) func increaseDuration(durationUnit: Nat, durationTime: Nat) : async Result.Result<Bool, Text> {
         assert(Principal.equal(caller, contract.positionOwner));
-        if(contract.status != "unlocked"){
+        if(_contract.status != "withdrawn"){
             let _currentDuration = _contract.durationUnit * _contract.durationTime;//Get duration in seconds
             let _newDuration = durationTime * durationUnit;//new duration in seconds
             if(_newDuration < 1) return #err("Duration is invalid!");
@@ -212,13 +231,17 @@ shared ({ caller = deployer }) actor class Contract(contract: DeployerTypes.Lock
     };
 
     public shared ({ caller }) func withdraw() : async Result.Result<Bool, Text> {
+        if(Principal.equal(caller, contract.positionOwner) == false){
+            return #err("Unauthorized: You are not the owner of the position!");
+        };
         if(isOvertimeAllowed() == true){
             //TODO: Transfer the locked amount to the caller
             let transfer = await transferPosition(cid(), contract.positionOwner, contract.positionId);
             switch(transfer){
                 case(#ok(true)){
-                    await updateStatus("unlocked");//Update status and time
-                    await addTransaction(cid(), contract.positionOwner, contract.positionId, "withdraw");
+                    await updateStatus("withdrawn");//Update status and time
+                    #ok(true);
+                    // await addTransaction(cid(), contract.positionOwner, contract.positionId, "withdraw");
                 };
                 case(#err(e)){
                     #err(debug_show(e))

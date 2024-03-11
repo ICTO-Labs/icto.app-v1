@@ -30,6 +30,7 @@ export const idlFactory = ({ IDL }) => {
     'token0' : TokenInfo,
     'token1' : TokenInfo,
     'positionOwner' : IDL.Principal,
+    'withdrawnTime' : IDL.Opt(Time),
     'unlockedTime' : IDL.Opt(Time),
     'poolName' : IDL.Text,
     'contractId' : IDL.Opt(IDL.Text),

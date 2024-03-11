@@ -18,6 +18,7 @@ export const idlFactory = ({ IDL }) => {
     'token0' : TokenInfo,
     'token1' : TokenInfo,
     'positionOwner' : IDL.Principal,
+    'withdrawnTime' : IDL.Opt(Time),
     'unlockedTime' : IDL.Opt(Time),
     'poolName' : IDL.Text,
     'contractId' : IDL.Opt(IDL.Text),
@@ -25,9 +26,9 @@ export const idlFactory = ({ IDL }) => {
   });
   const Result = IDL.Variant({ 'ok' : IDL.Bool, 'err' : IDL.Text });
   const TransferRecord = IDL.Record({
-    'to' : IDL.Principal,
+    'to' : IDL.Text,
     'method' : IDL.Text,
-    'from' : IDL.Principal,
+    'from' : IDL.Text,
     'time' : Time,
     'positionId' : IDL.Nat,
   });
@@ -40,8 +41,8 @@ export const idlFactory = ({ IDL }) => {
     'getLockedPosition' : IDL.Func([], [IDL.Nat], ['query']),
     'getTransactions' : IDL.Func(
         [],
-        [IDL.Vec(IDL.Tuple(IDL.Principal, TransferRecord))],
-        [],
+        [IDL.Vec(IDL.Tuple(IDL.Text, TransferRecord))],
+        ['query'],
       ),
     'getVersion' : IDL.Func([], [IDL.Text], ['query']),
     'increaseDuration' : IDL.Func([IDL.Nat, IDL.Nat], [Result], []),
@@ -70,6 +71,7 @@ export const init = ({ IDL }) => {
     'token0' : TokenInfo,
     'token1' : TokenInfo,
     'positionOwner' : IDL.Principal,
+    'withdrawnTime' : IDL.Opt(Time),
     'unlockedTime' : IDL.Opt(Time),
     'poolName' : IDL.Text,
     'contractId' : IDL.Opt(IDL.Text),

@@ -61,5 +61,6 @@ type LockContract =
    token1: TokenInfo;
    unlockedTime: opt Time;
    version: text;
+   withdrawnTime: opt Time;
  };
 service : () -> anon_class_34_1

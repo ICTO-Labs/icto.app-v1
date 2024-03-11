@@ -14,6 +14,7 @@ export interface LockContract {
   'token0' : TokenInfo,
   'token1' : TokenInfo,
   'positionOwner' : Principal,
+  'withdrawnTime' : [] | [Time],
   'unlockedTime' : [] | [Time],
   'poolName' : string,
   'contractId' : [] | [string],

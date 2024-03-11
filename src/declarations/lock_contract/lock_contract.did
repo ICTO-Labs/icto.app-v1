@@ -1,10 +1,10 @@
 type TransferRecord = 
  record {
-   from: principal;
+   from: text;
    method: text;
    positionId: nat;
    time: Time;
-   to: principal;
+   to: text;
  };
 type TokenInfo = 
  record {
@@ -36,6 +36,7 @@ type LockContract =
    token1: TokenInfo;
    unlockedTime: opt Time;
    version: text;
+   withdrawnTime: opt Time;
  };
 type Contract = 
  service {
@@ -46,9 +47,9 @@ type Contract =
    getInitContract: () -> (LockContract) query;
    getLockedPosition: () -> (nat) query;
    getTransactions: () -> (vec record {
-                                 principal;
+                                 text;
                                  TransferRecord;
-                               });
+                               }) query;
    getVersion: () -> (text) query;
    increaseDuration: (nat, nat) -> (Result);
    verify: () -> (Result);
