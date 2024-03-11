@@ -99,12 +99,8 @@
     const getPoolLP = async ()=> {
         userLP.value = [];
         userLP.value = await useGetPoolLP(poolCanister.value);
-
-        console.log('p dataaaaaaaaaaaa',userLP.value);
-        //"sqrtPriceX96":"821791359623004272717526187","tick":"-91377"
         userLP.value.forEach((pos)=>{
             pos.value = useGetPoolValue(sqrtPriceX96.value, Number(pos.tickLower), Number(pos.tickUpper), Number(pos.liquidity), currentTick.value);
-            console.log(pos, 'pos value');
         })
     };
 
@@ -170,7 +166,7 @@
                     lockStep.value = 3;
                     showSuccess("Contract created successfully, your liquidity locks contract ID: "+_contract.ok, true);
                     goBack();
-                    // getPoolMeta();
+                    await getPoolLP();
                 }else{
                     if(_contract && "err" in _contract){
                         showError(_contract.err, true);
