@@ -37,7 +37,8 @@ shared ({ caller }) actor class () = self {
     private stable var _contracts : Trie.Trie<Text, Types.LockContract> = Trie.empty(); //mapping of token_canister_id -> Token details
     private stable var _owners : Trie.Trie<Text, Text> = Trie.empty(); //mapping  token_canister_id -> owner principal id
     private stable var _admins : [Text] = [Principal.toText(caller)];
-    private stable var _initCycles: Nat = 300_000_000_000;//1T 1_000_000_000_000, 0.3T
+    private stable var CYCLES_FOR_INSTALL: Nat = 300_000_000_000;//1T 1_000_000_000_000, 0.3T
+    private stable var MIN_CYCLES_IN_DEPLOYER: Nat = 3_000_000_000_000;//3T
     private stable var CURRENT_LOCK_VERSION = "1.0.0";
 
     //IC Management Canister
@@ -82,7 +83,11 @@ shared ({ caller }) actor class () = self {
     //Update Initial cycles for new token canister
     public shared ({ caller }) func updateInitCycles(i : Nat) : async () {
         assert (_isAdmin(Principal.toText(caller)));
-        _initCycles := i;
+        CYCLES_FOR_INSTALL := i;
+    };
+    public shared ({ caller }) func updateMinDeployerCycles(i : Nat) : async () {
+        assert (_isAdmin(Principal.toText(caller)));
+        MIN_CYCLES_IN_DEPLOYER := i;
     };
     public shared ({ caller }) func addAdmin(p : Text) : async () {
         assert (_isAdmin(Principal.toText(caller)));
@@ -124,7 +129,7 @@ shared ({ caller }) actor class () = self {
     //Create canister with contract
     private func create_canister(owner: Principal, contract: Types.LockContractInit) : async (Text) {
         try{
-            Cycles.add(_initCycles);
+            Cycles.add(CYCLES_FOR_INSTALL);
             let _contract = {
                 contract with
                 positionOwner = owner;
@@ -286,6 +291,9 @@ shared ({ caller }) actor class () = self {
     //
     public shared (msg) func createContract(contract : Types.LockContractInit) : async Result.Result<Text, Text> {
         assert not Principal.isAnonymous(msg.caller);//reject anonymous
+        let _balance = Cycles.balance();
+        if (_balance < CYCLES_FOR_INSTALL + MIN_CYCLES_IN_DEPLOYER) return #err("Not enough cycles in deployer");
+
         var canister_id : Text = await create_canister(msg.caller, contract);
         let _contract = {
             contract with
@@ -380,6 +388,7 @@ shared ({ caller }) actor class () = self {
     //Add to beta test - remove unused canister
     public shared ({caller}) func cancelContract(canister_id: Principal) : async (){
         assert (_isAdmin(Principal.toText(caller)));
+        _contracts := Trie.remove(_contracts, keyT(Principal.toText(canister_id)), Text.equal).0;
         await ic.stop_canister({ canister_id = canister_id });
         await ic.delete_canister({ canister_id = canister_id });
     };

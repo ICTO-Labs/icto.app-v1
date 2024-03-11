@@ -60,6 +60,7 @@ export const idlFactory = ({ IDL }) => {
     'removeAdmin' : IDL.Func([IDL.Text], [], []),
     'updateContractStatus' : IDL.Func([IDL.Text, IDL.Text], [], []),
     'updateInitCycles' : IDL.Func([IDL.Nat], [], []),
+    'updateMinDeployerCycles' : IDL.Func([IDL.Nat], [], []),
   });
   return anon_class_34_1;
 };

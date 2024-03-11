@@ -101,7 +101,7 @@
                                             <td class="">
                                                 <span class="badge badge-light-success" v-if="contract.status == 'locked'">Locked <i class="fas fa-lock text-success"></i></span>
                                                 <span class="badge badge-light-danger" v-else-if="contract.status == 'unlocked'">Unlocked <i class="fas fa-lock-open text-danger"></i></span>
-                                                <span class="badge badge-light-danger" v-else-if="contract.status == 'withdrawn'">Withdrawn <i class="fas fa-anchor"></i></span>
+                                                <span class="badge badge-secondary" v-else-if="contract.status == 'withdrawn'">Withdrawn <i class="fas fa-anchor"></i></span>
                                                 <span class="badge badge-light-info" v-else>Created <i class="fas fa-unlock-art text-info"></i></span>
                                             </td>
                                         </tr>

@@ -240,8 +240,7 @@ shared ({ caller = deployer }) actor class Contract(contract: DeployerTypes.Lock
             switch(transfer){
                 case(#ok(true)){
                     await updateStatus("withdrawn");//Update status and time
-                    #ok(true);
-                    // await addTransaction(cid(), contract.positionOwner, contract.positionId, "withdraw");
+                    await addTransaction(cid(), contract.positionOwner, contract.positionId, "withdraw");
                 };
                 case(#err(e)){
                     #err(debug_show(e))

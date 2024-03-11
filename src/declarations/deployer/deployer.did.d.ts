@@ -55,5 +55,6 @@ export interface anon_class_34_1 {
   'removeAdmin' : ActorMethod<[string], undefined>,
   'updateContractStatus' : ActorMethod<[string, string], undefined>,
   'updateInitCycles' : ActorMethod<[bigint], undefined>,
+  'updateMinDeployerCycles' : ActorMethod<[bigint], undefined>,
 }
 export interface _SERVICE extends anon_class_34_1 {}

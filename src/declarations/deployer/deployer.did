@@ -18,6 +18,7 @@ type anon_class_34_1 =
    removeAdmin: (text) -> ();
    updateContractStatus: (text, text) -> ();
    updateInitCycles: (nat) -> ();
+   updateMinDeployerCycles: (nat) -> ();
  };
 type TokenInfo = 
  record {
