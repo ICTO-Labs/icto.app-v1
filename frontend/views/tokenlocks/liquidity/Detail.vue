@@ -1,7 +1,7 @@
 <script setup>
     import { onMounted, ref } from 'vue';
     import { useRoute } from 'vue-router';
-    import { useGetContract, useWithdrawPosition, useGetTransaction, useIncreaseDuration, useCheckOvertime } from "@/services/Locks";
+    import { useGetContract, useWithdrawPosition, useGetTransaction, useIncreaseDuration, useCheckOvertime, useGetCyclesBalance } from "@/services/Locks";
     import { shortPrincipal, shortAccount } from '@/utils/common';
     import { useGetPoolMeta, useGetPosition, useGetPoolValue } from '@/services/SwapPool';
     import { currencyFormat } from "@/utils/token";
@@ -13,6 +13,7 @@
     const contractId = ref(route.params.contractId);
 
     const contract = ref({});
+    const cyclesBalance = ref(0);
     const transactions = ref([]);
     const increaseLock = ref({
         durationTime: 86400,
@@ -45,6 +46,7 @@
         await getPoolMeta();
         await getPosition();
         await getTransaction();
+        getCylesBalance();
         handleDate();
         console.log(contract.value);
     }
@@ -56,6 +58,9 @@
         return moment().isAfter(_unlockDate);
     }
 
+    const getCylesBalance = async()=>{
+        cyclesBalance.value = await useGetCyclesBalance(contractId.value);
+    }
     const getTransaction = async()=>{
         isLoading.value = true;
         let _rs = await useGetTransaction(contractId.value);
@@ -202,7 +207,7 @@
                             <span class="btn btn-sm btn-light-dark fw-bold fs-6 btn-disabled" v-else>Loading...</span>
                         </h3>
                         <div class="ms-1">
-                            <button type="button" class="btn btn-sm btn-light-primary border-0 me-n3" @click.stop="withdraw"><i class="fas fa-donate"></i> Withdraw</button>
+                            <button type="button" class="btn btn-sm btn-light-primary border-0 me-n3" @click.stop="withdraw" v-if="contract?.status != 'withdrawn'"><i class="fas fa-donate"></i> Withdraw</button>
                         </div>
                     </div>
                     <!--begin::Balance-->
@@ -218,16 +223,34 @@
                 <!--begin::Items-->
                 <div class="bg-body shadow-sm card-rounded mx-9 mb-9 px-6 py-2 position-relative z-index-1" style="margin-top: -60px">
                     <div class="row g-0">
-                        <div class="col-md px-6 py-5 rounded-2 me-3 mb-7 d-flex flex-center flex-column">
+                        <div class="col-md px-6 py-1 rounded-2 me-3 mb-5 d-flex flex-center flex-column">
                             <div class="symbol symbol-125px symbol-circle mb-5">
                                 <img src="https://psh4l-7qaaa-aaaap-qasia-cai.raw.icp0.io/qi26q-6aaaa-aaaap-qapeq-cai.png" alt="image">
                             </div>
                             <a href="#" class="fs-4 text-gray-800 text-hover-primary fw-bolder mb-0">{{ contract?.token0?.name || '---' }}</a>
                             <span class="text-primary">{{ contract?.token0?.address || '---' }} <Copy :text="contract?.token0?.address" v-if="contract"/></span>
-                            <span class="fs-4 fw-bold">{{ currencyFormat(poolValue?.amount0 || 0) }}</span>
+                            
+                            <div class="w-100 pt-5">
+                                <table class="w-100">
+                                    <tr>
+                                        <td class="text-start text-gray-600 fw-bold w-50">Balance: </td>
+                                        <td class="text-end">
+                                            <span class="badge badge-light fw-bolder fs-7">{{ currencyFormat(poolValue?.amount0 || 0) }}</span>
+                                        </td>
+                                    </tr>
+                                    <tr>
+                                        <td class="text-start text-gray-600 fw-bold w-50">Price in {{ contract?.token1?.name || '---' }}: </td>
+                                        <td class="text-end"><span class="badge badge-light fw-bolder fs-7">{{ poolValue?.price || '---' }}</span></td>
+                                    </tr>
+                                    <tr>
+                                        <td class="text-start text-gray-600 fw-bold w-50">Price in USD: </td>
+                                        <td class="text-end"><span class="badge badge-light fw-bolder fs-7" v-if="poolValue">≈${{ (poolValue.price*walletStore.icpPrice).toFixed(6) }}</span></td>
+                                    </tr>
+                                </table>
+                            </div>
 
                         </div>
-                        <div class="col-md px-6 py-1 rounded-2 d-flex flex-column flex-center bg-light">
+                        <div class="col-md px-6 py-2 rounded-2 d-flex flex-column flex-center bg-light">
                             <div class="w-100">
                                 <table class="table table-sm">
                                     <tr>
@@ -261,7 +284,7 @@
                                                     </div>
                                                 </div>
                                             </div>
-                                            <div class="row pt-3 p-0">
+                                            <!-- <div class="row pt-3 p-0">
                                                 <div class="col">
                                                     <div class="border border-dashed border-primary bg-white text-center rounded pt-2 pb-2">
                                                         <span class="fs-7 fw-bold text-primary d-block">Current Price</span>
@@ -271,14 +294,14 @@
                                                         </div>
                                                     </div>
                                                 </div>
-                                            </div>
+                                            </div> -->
                                         </td>
                                     </tr>
                                     <tr>
                                         <td class="text-start fw-bold text-gray-400 pt-3" colspan="2">CONTRACT DATA</td>
                                     </tr>
                                     <tr>
-                                        <td class="text-start fw-bold w-50 text-danger">Lock expires</td>
+                                        <td class="text-start fw-bold w-50 text-danger">Lock expires:</td>
                                         <td>
                                             {{ contract?moment(Number(contract.created)/1000000).add(Number(contract.durationTime)*Number(contract.durationUnit), 'seconds').fromNow():'---' }}
                                             <a href="#" class="badge badge-light-primary" @click="showIncreaseModal">Increase</a>
@@ -286,27 +309,61 @@
                                         </td>
                                     </tr>
                                     <tr>
-                                        <td class="text-start fw-bold w-50">Positon Id</td>
-                                        <td>{{ contract?.positionId||'---' }}</td>
+                                        <td class="text-start fw-bold w-50">Positon ID:</td>
+                                        <td class="text-primary fw-bold">{{ contract?.positionId||'---' }}</td>
                                     </tr>
                                     <tr>
-                                        <td class="text-start fw-bold">Created at</td>
+                                        <td class="text-start fw-bold w-50">Contract status:</td>
+                                        <td class="fw-bold text-start" v-if="contract">
+                                            <span class="badge badge-light-success fs-7" v-if="contract.status == 'locked'">Locked <i class="fas fa-lock text-success"></i></span>
+                                            <span class="badge badge-light-danger fs-7" v-else-if="contract.status == 'unlocked'">Unlocked <i class="fas fa-lock-open text-danger"></i></span>
+                                            <span class="badge badge-secondary fs-7" v-else-if="contract.status == 'withdrawn'">Withdrawn <i class="fas fa-anchor"></i></span>
+                                            <span class="badge badge-light-info fs-7" v-else>Created <i class="fas fa-unlock-art text-info"></i></span>
+                                        </td>
+                                    </tr>
+                                    <tr>
+                                        <td class="text-start fw-bold">Created at:</td>
                                         <td>{{ contract?moment(Number(contract.created)/1000000).format("YYYY-MM-DD hh:mm:ss"):'---' }}</td>
                                     </tr>
                                     <tr>
-                                        <td class="text-start fw-bold">Unlock at</td>
+                                        <td class="text-start fw-bold">Unlock at:</td>
                                         <td>{{ contract?moment(Number(contract.created)/1000000).add(Number(contract.durationTime)*Number(contract.durationUnit), 'seconds').format("YYYY-MM-DD hh:mm:ss"):'---' }}</td>
+                                    </tr>
+                                    <tr>
+                                        <td class="text-start fw-bold">Withdrawn at:</td>
+                                        <td>{{ contract&&contract.status=='withdrawn'?moment(Number(contract.withdrawnTime)/1000000).format("YYYY-MM-DD hh:mm:ss"):'---' }}</td>
+                                    </tr>
+                                    <tr>
+                                        <td class="text-start fw-bold">Cycles balance:</td>
+                                        <td>{{ Number(cyclesBalance) }} T</td>
                                     </tr>
                                 </table>
                             </div>
                         </div>
-                        <div class="col-md px-6 py-5 rounded-2 me-3 mb-7 d-flex flex-center flex-column">
+                        <div class="col-md px-6 py-1 rounded-2 me-3 mb-5 d-flex flex-center flex-column">
                             <div class="symbol symbol-125px symbol-circle mb-5">
                                 <img src="https://psh4l-7qaaa-aaaap-qasia-cai.raw.icp0.io/ryjl3-tyaaa-aaaaa-aaaba-cai.png" alt="image">
                             </div>
                             <a href="#" class="fs-4 text-gray-800 text-hover-primary fw-bolder mb-0">{{ contract?.token1?.name || '---' }}</a>
                             <span class="text-primary">{{ contract?.token1?.address || '---' }} <Copy :text="contract?.token1?.address" v-if="contract"/></span>
-                            <span class="fs-4 fw-bold">{{ currencyFormat(poolValue?.amount1 || 0) }}</span>
+                            <div class="w-100 pt-5">
+                                <table class="w-100">
+                                    <tr>
+                                        <td class="text-start text-gray-600 fw-bold w-50">Balance: </td>
+                                        <td class="text-end">
+                                            <span class="badge badge-light fw-bolder fs-7">{{ currencyFormat(poolValue?.amount1 || 0) }}</span>
+                                        </td>
+                                    </tr>
+                                    <tr>
+                                        <td class="text-start text-gray-600 fw-bold w-50">Price in {{ contract?.token0?.name || '---' }}: </td>
+                                        <td class="text-end"><span class="badge badge-light fw-bolder fs-7">{{ poolValue?.price1 || '---' }}</span></td>
+                                    </tr>
+                                    <tr>
+                                        <td class="text-start text-gray-600 fw-bold w-50">Price in USD: </td>
+                                        <td class="text-end"><span class="badge badge-light fw-bolder fs-7">${{ walletStore.icpPrice }}</span></td>
+                                    </tr>
+                                </table>
+                            </div>
                         </div>
                     </div>
                 </div>

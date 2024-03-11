@@ -12,6 +12,7 @@ export const useGetPoolValue = (sqrtPriceX96, tickLower, tickUpper, liquidity, t
     );
     
     const price = univ3prices.tickPrice([8, 8], tick).toAuto({reverse: true});
+    const price1 = univ3prices.tickPrice([8, 8], tick).toAuto({reverse: false});
     const minprice = univ3prices.tickPrice([8, 8], tickLower).toAuto({reverse: true});
     const maxprice = univ3prices.tickPrice([8, 8], tickUpper).toAuto({reverse: true});
     const amount0 = Number(amount0Raw) / 100_000_000;
@@ -20,7 +21,7 @@ export const useGetPoolValue = (sqrtPriceX96, tickLower, tickUpper, liquidity, t
     const isInrange = isInRange(tick, tickLower, tickUpper);
     
     const totalValueInUSD = totalValueInICP*13.01;//x ICP Price
-    return {amount0, amount1, totalValueInICP, totalValueInUSD, price, minprice, maxprice, isInrange};
+    return {amount0, amount1, totalValueInICP, totalValueInUSD, price, minprice, maxprice, isInrange, price1};
 }
 const isInRange = (tick, tickLower, tickUpper) => {
     return tick >= tickLower && tick <= tickUpper;

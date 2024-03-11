@@ -45,3 +45,13 @@ export const useCheckOvertime = async (canisterId) =>{
         return {err: 'An unexpected error occurred, please check the console log!'}
     }
 }
+export const useGetCyclesBalance = async (canisterId) =>{
+    try{
+        let _balance = await Connect.canister(canisterId, 'lock_contract').cycleBalance();
+        console.log('balance', _balance);
+        return Number(_balance)/config.CYCLES;
+    }catch(e){
+        console.log('useGetCyclesBalance', e);
+        return {err: 'An unexpected error occurred, please check the console log!'}
+    }
+}
