@@ -143,7 +143,7 @@ shared ({ caller }) actor class () = self {
             };
             let contractId = await TokenLock.Contract(_contract);
             let canister_id = Principal.fromActor(contractId);
-            ignore blackhole_canister(contractId);//Remove controller of canister - available in Mainnet
+            // ignore blackhole_canister(contractId);//Remove controller of canister - available in Mainnet
             Principal.toText(canister_id);
         } catch (e) {
             return Debug.trap("Canister creation failed " # debug_show Error.message(e));
@@ -156,7 +156,7 @@ shared ({ caller }) actor class () = self {
             ic.update_settings({
                 canister_id = cid.canister_id;
                 settings = {
-                    controllers = ?[Principal.fromText("lekqg-fvb6g-4kubt-oqgzu-rd5r7-muoce-kppfz-aaem3-abfaj-cxq7a-dqe")];
+                    controllers = ?[];
                     compute_allocation = null;
                     memory_allocation = null;
                     freezing_threshold = ?31_540_000;
