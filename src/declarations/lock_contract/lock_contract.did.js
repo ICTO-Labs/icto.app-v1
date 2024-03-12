@@ -33,6 +33,7 @@ export const idlFactory = ({ IDL }) => {
     'positionId' : IDL.Nat,
   });
   const Contract = IDL.Service({
+    'checkOvertime' : IDL.Func([], [], []),
     'cycleBalance' : IDL.Func([], [IDL.Nat], ['query']),
     'fallback_send' : IDL.Func([IDL.Principal, IDL.Nat], [Result], []),
     'getContract' : IDL.Func([], [LockContract], ['query']),

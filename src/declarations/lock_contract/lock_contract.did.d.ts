@@ -2,6 +2,7 @@ import type { Principal } from '@dfinity/principal';
 import type { ActorMethod } from '@dfinity/agent';
 
 export interface Contract {
+  'checkOvertime' : ActorMethod<[], undefined>,
   'cycleBalance' : ActorMethod<[], bigint>,
   'fallback_send' : ActorMethod<[Principal, bigint], Result>,
   'getContract' : ActorMethod<[], LockContract>,

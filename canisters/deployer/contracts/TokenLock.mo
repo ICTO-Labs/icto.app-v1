@@ -224,6 +224,7 @@ shared ({ caller = deployer }) actor class Contract(contract: DeployerTypes.Lock
                 durationTime = _currentDuration + _newDuration;
                 durationUnit = 1;
             };
+            await updateStatus("locked");//Change status back to locked
             #ok(true);
         }else{
             #err("The contract is already unlocked, you can't increase the duration, please create a new contract!");

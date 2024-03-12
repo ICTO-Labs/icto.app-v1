@@ -315,10 +315,10 @@
                                     <tr>
                                         <td class="text-start fw-bold w-50">Contract status:</td>
                                         <td class="fw-bold text-start" v-if="contract">
-                                            <span class="badge badge-light-success fs-7" v-if="contract.status == 'locked'">Locked <i class="fas fa-lock text-success"></i></span>
-                                            <span class="badge badge-light-danger fs-7" v-else-if="contract.status == 'unlocked'">Unlocked <i class="fas fa-lock-open text-danger"></i></span>
-                                            <span class="badge badge-secondary fs-7" v-else-if="contract.status == 'withdrawn'">Withdrawn <i class="fas fa-anchor"></i></span>
-                                            <span class="badge badge-light-info fs-7" v-else>Created <i class="fas fa-unlock-art text-info"></i></span>
+                                            <span class="badge badge-light-success fs-7 ps-0" v-if="contract.status == 'locked'">Locked <i class="fas fa-lock text-success"></i></span>
+                                            <span class="badge badge-light-danger fs-7 ps-0" v-else-if="contract.status == 'unlocked'">Unlocked <i class="fas fa-lock-open text-danger"></i></span>
+                                            <span class="badge badge-secondary fs-7 ps-0" v-else-if="contract.status == 'withdrawn'">Withdrawn <i class="fas fa-anchor"></i></span>
+                                            <span class="badge badge-light-info fs-7 ps-0" v-else>Created <i class="fas fa-unlock-art text-info"></i></span>
                                         </td>
                                     </tr>
                                     <tr>

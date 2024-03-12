@@ -40,6 +40,7 @@ type LockContract =
  };
 type Contract = 
  service {
+   checkOvertime: () -> ();
    cycleBalance: () -> (nat) query;
    fallback_send: (principal, nat) -> (Result);
    getContract: () -> (LockContract) query;
