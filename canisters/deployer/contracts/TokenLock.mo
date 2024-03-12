@@ -97,12 +97,16 @@ shared ({ caller = deployer }) actor class Contract(contract: DeployerTypes.Lock
         await Deployer.updateContractStatus(_cid, status);
     };
     func addTransaction(from: Principal, to: Principal, positionId: Nat, method: Text): async Result.Result<Bool, Text>{
+        var _time = Time.now();
+        if(method == "unlocked"){
+            _time := _contract.created + (_contract.durationTime * _contract.durationUnit * SECOND_TO_NANO);//Get duration from tempo obj (update able)
+        };
         let newRecord = {
             from = Principal.toText(from);
             to = Principal.toText(to);
             method = method;
             positionId = positionId;
-            time = Time.now()
+            time = _time;
         };
         try{
             transactions.put(Principal.toText(from), newRecord);
@@ -227,7 +231,7 @@ shared ({ caller = deployer }) actor class Contract(contract: DeployerTypes.Lock
             await updateStatus("locked");//Change status back to locked
             #ok(true);
         }else{
-            #err("The contract is already unlocked, you can't increase the duration, please create a new contract!");
+            #err("The contract is already withdrawn, you can't increase the duration. Please create a new contract!");
         }
     };
 

@@ -252,7 +252,7 @@
                         </div>
                         <div class="col-md px-6 py-2 rounded-2 d-flex flex-column flex-center bg-light">
                             <div class="w-100">
-                                <table class="table table-sm">
+                                <table class="table table-sm mb-0">
                                     <tr>
                                         <td class="text-start fw-bold text-gray-400 pt-0" colspan="2">LIQUIDITY PRICE RANGE 
                                             <span :class="`text-end fw-normal badge badge-light-${poolValue.isInrange ? 'success' : 'warning'}`" v-if="poolValue">
@@ -400,9 +400,9 @@
                                     <thead class="fs-7 text-gray-400 text-uppercase">
                                         <tr class="border-0 fw-bolder">
                                             <th class="w-100px">Method</th>
-                                            <th class="min-w-110px">From</th>
+                                            <th class="min-w-150px">From</th>
                                             <th class="min-w-150px">To</th>
-                                            <th class="min-w-80px">Position Id</th>
+                                            <th class="min-w-80px">Position</th>
                                             <th class="min-w-80px">Time</th>
                                         </tr>
                                     </thead>
@@ -413,6 +413,7 @@
                                             <td>
                                                 <span class="badge badge-light-primary" v-if="transaction[1].method =='deposit'">{{ transaction[1].method }} <i class="fas fa-arrow-up text-primary"></i></span>
                                                 <span class="badge badge-light-danger" v-if="transaction[1].method =='withdraw'">{{ transaction[1].method }} <i class="fas fa-arrow-down text-danger"></i></span>
+                                                <span class="badge badge-light-danger" v-if="transaction[1].method =='unlocked'">{{ transaction[1].method }} <i class="fas fa-unlock text-danger"></i></span>
                                             </td>
                                             <td class="text-muted"> 
                                                 <span class="text-dark fw-bold text-primary fs-7">{{ transaction[1].from }}</span> <Copy :text="contract.positionOwner"></Copy>
