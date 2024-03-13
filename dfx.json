@@ -16,7 +16,7 @@
       "type": "motoko"
     },
     "token_deployer": {
-      "main": "canisters/tokens/main.mo",
+      "main": "canisters/token_deployer/main.mo",
       "type": "motoko"
     },
     "deployer": {
