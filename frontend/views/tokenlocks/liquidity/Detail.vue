@@ -9,6 +9,7 @@
     import { VueFinalModal } from 'vue-final-modal';
     import moment from "moment";
     import walletStore from "@/store";
+    import config from '@/config';
     const route = useRoute();
     const contractId = ref(route.params.contractId);
 
@@ -215,17 +216,18 @@
                         <span class="fw-bold fs-4" v-if="contract?.status=='locked'">Total Value Locked</span>
                         <span class="fw-bold fs-4" v-else>Position Value</span>
                         <span class="fw-bolder fs-3x pt-1">${{poolValue?.totalValueInUSD?.toFixed(2) || '0'}}</span>
-                        <span class="fw-bold fs-7 pt-1">Created by: <span class="fw-bold">{{ contract?.positionOwner || '---' }}</span> <Copy :text="contract.positionOwner" v-if="contract" class="btn-color-white"></Copy></span>
+                        <div class="fw-bold fs-7 pt-1"><span class="badge badge-light fs-7 py-1 text-wrap">Created by: <span class="fw-bold">{{ contract?.positionOwner || '---' }}</span> <Copy :text="contract.positionOwner" v-if="contract"></Copy></span></div>
+                        <div class="fw-bold fs-7 pt-2"><span class="badge badge-light fs-7 py-1">Pool ID: <a :href="`https://info.icpswap.com/swap/pool/details/${contract?.poolId}`" target="_blank" class="fw-bold">{{ contract?.poolId || '---' }}</a> <Copy :text="contract.poolId" v-if="contract"></Copy></span></div>
                     </div>
                     <!--end::Balance-->
                 </div>
                 <!--end::Header-->
                 <!--begin::Items-->
-                <div class="bg-body shadow-sm card-rounded mx-9 mb-9 px-6 py-2 position-relative z-index-1" style="margin-top: -60px">
+                <div class="bg-body shadow-sm card-rounded mx-9 mb-9 px-6 py-2 position-relative z-index-1" style="margin-top: -40px">
                     <div class="row g-0">
                         <div class="col-md px-6 py-1 rounded-2 me-3 mb-5 d-flex flex-center flex-column">
                             <div class="symbol symbol-125px symbol-circle mb-5">
-                                <img src="https://psh4l-7qaaa-aaaap-qasia-cai.raw.icp0.io/qi26q-6aaaa-aaaap-qapeq-cai.png" alt="image">
+                                <img :src="`https://${config.CANISTER_STORAGE_ID}.raw.icp0.io/${contract?.token0?.address}.png`" alt="Token0">
                             </div>
                             <a href="#" class="fs-4 text-gray-800 text-hover-primary fw-bolder mb-0">{{ contract?.token0?.name || '---' }}</a>
                             <span class="text-primary">{{ contract?.token0?.address || '---' }} <Copy :text="contract?.token0?.address" v-if="contract"/></span>
@@ -240,7 +242,7 @@
                                     </tr>
                                     <tr>
                                         <td class="text-start text-gray-600 fw-bold w-50">Price in {{ contract?.token1?.name || '---' }}: </td>
-                                        <td class="text-end"><span class="badge badge-light fw-bolder fs-7">{{ poolValue?.price || '---' }}</span></td>
+                                        <td class="text-end"><span class="badge badge-light fw-bolder fs-7">{{ currencyFormat(poolValue?.price) || '---' }}</span></td>
                                     </tr>
                                     <tr>
                                         <td class="text-start text-gray-600 fw-bold w-50">Price in USD: </td>
@@ -309,10 +311,6 @@
                                         </td>
                                     </tr>
                                     <tr>
-                                        <td class="text-start fw-bold w-50">Positon ID:</td>
-                                        <td class="text-primary fw-bold">{{ contract?.positionId||'---' }}</td>
-                                    </tr>
-                                    <tr>
                                         <td class="text-start fw-bold w-50">Contract status:</td>
                                         <td class="fw-bold text-start" v-if="contract">
                                             <span class="badge badge-light-success fs-7 ps-0" v-if="contract.status == 'locked'">Locked <i class="fas fa-lock text-success"></i></span>
@@ -320,6 +318,10 @@
                                             <span class="badge badge-secondary fs-7 ps-0" v-else-if="contract.status == 'withdrawn'">Withdrawn <i class="fas fa-anchor"></i></span>
                                             <span class="badge badge-light-info fs-7 ps-0" v-else>Created <i class="fas fa-unlock-art text-info"></i></span>
                                         </td>
+                                    </tr>
+                                    <tr>
+                                        <td class="text-start fw-bold w-50">Position ID:</td>
+                                        <td class="text-primary fw-bold">{{ contract?.positionId||'---' }}</td>
                                     </tr>
                                     <tr>
                                         <td class="text-start fw-bold">Created at:</td>
@@ -342,7 +344,7 @@
                         </div>
                         <div class="col-md px-6 py-1 rounded-2 me-3 mb-5 d-flex flex-center flex-column">
                             <div class="symbol symbol-125px symbol-circle mb-5">
-                                <img src="https://psh4l-7qaaa-aaaap-qasia-cai.raw.icp0.io/ryjl3-tyaaa-aaaaa-aaaba-cai.png" alt="image">
+                                <img :src="`https://${config.CANISTER_STORAGE_ID}.raw.icp0.io/${contract?.token1?.address}.png`" alt="Token1">
                             </div>
                             <a href="#" class="fs-4 text-gray-800 text-hover-primary fw-bolder mb-0">{{ contract?.token1?.name || '---' }}</a>
                             <span class="text-primary">{{ contract?.token1?.address || '---' }} <Copy :text="contract?.token1?.address" v-if="contract"/></span>
@@ -356,7 +358,7 @@
                                     </tr>
                                     <tr>
                                         <td class="text-start text-gray-600 fw-bold w-50">Price in {{ contract?.token0?.name || '---' }}: </td>
-                                        <td class="text-end"><span class="badge badge-light fw-bolder fs-7">{{ poolValue?.price1 || '---' }}</span></td>
+                                        <td class="text-end"><span class="badge badge-light fw-bolder fs-7">{{ currencyFormat(poolValue?.price1) || '---' }}</span></td>
                                     </tr>
                                     <tr>
                                         <td class="text-start text-gray-600 fw-bold w-50">Price in USD: </td>

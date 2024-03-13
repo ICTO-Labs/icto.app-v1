@@ -1,8 +1,7 @@
 import Connect from "@/ic/actor/Connect";
 import { txtToPrincipal } from "@/utils/common";
-import { walletStore } from "@/store/";
 import univ3prices from "@thanpolas/univ3prices";
-
+import walletStore from "@/store/";
 export const useGetPoolValue = (sqrtPriceX96, tickLower, tickUpper, liquidity, tick) => {
     const [amount0Raw, amount1Raw] = univ3prices.getAmountsForLiquidityRange(
         sqrtPriceX96, // generate sqrt price for range
@@ -20,7 +19,7 @@ export const useGetPoolValue = (sqrtPriceX96, tickLower, tickUpper, liquidity, t
     const totalValueInICP = amount0 * price + amount1;
     const isInrange = isInRange(tick, tickLower, tickUpper);
     
-    const totalValueInUSD = totalValueInICP*13.01;//x ICP Price
+    const totalValueInUSD = totalValueInICP*walletStore.icpPrice;//x ICP Price
     return {amount0, amount1, totalValueInICP, totalValueInUSD, price, minprice, maxprice, isInrange, price1};
 }
 const isInRange = (tick, tickLower, tickUpper) => {

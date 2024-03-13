@@ -3,6 +3,7 @@
     import { useRoute } from 'vue-router';
     import { useGetContracts } from "@/services/Deployer";
     import { shortPrincipal, shortAccount, principalToAccountId } from '@/utils/common';
+    import config from '@/config';
     import moment from "moment";
     const contracts = ref([]);
     const isLoading = ref(false);
@@ -58,8 +59,8 @@
                                     <!--begin::Table head-->
                                     <thead class="fs-7 text-gray-400 text-uppercase">
                                         <tr class="border-0 fw-bolder">
-                                            <th class="w-100px"></th>
-                                            <th class="min-w-110px">Pair Name</th>
+                                            <th class="min-w-80px"></th>
+                                            <th class="min-w-175px">Pair Name</th>
                                             <th class="min-w-150px">Created By</th>
                                             <th class="min-w-100px">Created Time</th>
                                             <th class="min-w-100px">Unlock Time</th>
@@ -72,12 +73,12 @@
                                         <tr v-for="contract in contracts" v-if="contracts.length>0">
                                             <td>
                                                 <div class="d-flex flex-wrap justify-content-start">
-                                                    <div class="symbol-group symbol-hover mb-3">
+                                                    <div class="symbol-group symbol-hover mb-0">
                                                         <div class="symbol symbol-35px symbol-circle">
-                                                            <img src="https://psh4l-7qaaa-aaaap-qasia-cai.raw.icp0.io/qi26q-6aaaa-aaaap-qapeq-cai.png" alt="XCANIC">
+                                                            <img :src="`https://${config.CANISTER_STORAGE_ID}.raw.icp0.io/${contract?.token0?.address}.png`" alt="Token0">
                                                         </div>
                                                         <div class="symbol symbol-35px symbol-circle">
-                                                            <img src="https://psh4l-7qaaa-aaaap-qasia-cai.raw.icp0.io/ryjl3-tyaaa-aaaaa-aaaba-cai.png" alt="ICP">
+                                                            <img :src="`https://${config.CANISTER_STORAGE_ID}.raw.icp0.io/${contract?.token1?.address}.png`" alt="Token1">
                                                         </div>
                                                     </div>
                                                 </div>

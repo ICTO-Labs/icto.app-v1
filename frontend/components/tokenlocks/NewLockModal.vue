@@ -11,6 +11,7 @@
     import walletStore from '@/store/';
     import moment from 'moment';
     import config from '@/config';
+    import { getTokenInfo } from '@/utils/token';
     const newLockModal = ref(false);
 	const poolCanister = ref("z6v2h-2qaaa-aaaag-qblva-cai");///z6v2h-2qaaa-aaaag-qblva-cai
 	const poolName = ref("");
@@ -78,12 +79,19 @@
             if(config.ENV != "dev"){
                 // _tokenMeta = await useGetTokenMeta(poolCanister.value);
             }
-            if(_tokenMeta == null){
+            tokenMeta.value = {
+                token0: getTokenInfo(poolMeta.value.token0.address),
+                token1: getTokenInfo(poolMeta.value.token1.address)
+            };
+            console.log(tokenMeta.value);
+            if(tokenMeta.value == null){
                 isLoading.value = false;
                 showError("Token not found, please check your pool canister");
                 return;
             }
-            tokenMeta.value = formatTokenMeta(_tokenMeta);//formatPoolMeta(_tokenMeta);
+
+            // tokenMeta.value = formatTokenMeta(_tokenMeta);//formatPoolMeta(_tokenMeta);
+            // tokenMeta.value = formatTokenMeta(_tokenMeta);//formatPoolMeta(_tokenMeta);
             poolName.value = `${tokenMeta.value.token0.symbol}/${tokenMeta.value.token1.symbol}`;
             await getPoolLP(poolCanister.value);
             isLoading.value = false;
@@ -150,14 +158,14 @@
                     "poolName": poolName.value,
                     "poolId": poolCanister.value,
                     "token0": {
-                        "address": "qi26q-6aaaa-aaaap-qapeq-cai",
-                        "standard": "DIP20",
-                        "name": "XCANIC"
+                        "address": tokenMeta.value.token0.canisterId,
+                        "standard": tokenMeta.value.token0.standard,
+                        "name": tokenMeta.value.token0.symbol
                     },
                     "token1": {
-                        "address": "ryjl3-tyaaa-aaaaa-aaaba-cai",
-                        "standard": "ICP",
-                        "name": "ICP"
+                        "address": tokenMeta.value.token1.canisterId,
+                        "standard": tokenMeta.value.token1.standard,
+                        "name": tokenMeta.value.token1.symbol
                     }
                 }
                 let _contract = await useCreateLiquidLocker(_payload);
@@ -214,11 +222,11 @@
                                             <div class="col-md-12 fv-row">
                                                 <label class="required fs-6 fw-bold form-label mb-2">ICPSwap Pair</label>
                                                 <div class="row fv-row">
-                                                    <div class="col-10">
-                                                        <input type="text" class="form-control form-control-sm" v-model="poolCanister" disabled placeholder="Pool canister on ICPSwap, ie: XCANIC/ICP"/>
+                                                    <div class="col-md-10">
+                                                        <input type="text" class="form-control form-control-sm" v-model="poolCanister" placeholder="Pool canister on ICPSwap, ie: XCANIC/ICP"/>
                                                     </div>
-                                                    <div class="col-2">
-                                                        <LoadingButton class="btn btn-primary btn-sm" type="button" @click="getPoolMeta" :disabled="isLoading">Check</LoadingButton>
+                                                    <div class="col-md-2">
+                                                        <LoadingButton class="btn btn-primary btn-sm w-100" type="button" @click="getPoolMeta" :disabled="isLoading">Check</LoadingButton>
                                                     </div>
 
                                                     <!-- <button type="button" class="btn btn-sm btn-light-primary" @click="approvePosition(6)"> Create Contract</button> -->
@@ -241,7 +249,7 @@
 
                                                         <div class="d-flex d-flex-column align-items-center bg-light-primary rounded mb-5 p-2 border border-primary border-hover">
                                                             <div class="symbol symbol-65px symbol-circle me-5" title="Position" >
-                                                                <span :class="`symbol-label bg-${position.isInrange ? 'success' : 'warning'} text-inverse-primary fw-bold fs-1`">{{position.id}}</span>
+                                                                <span :class="`symbol-label bg-${position.value.isInrange ? 'success' : 'warning'} text-inverse-primary fw-bold fs-1`">{{position.id}}</span>
                                                             </div>
                                                             <div class="flex-grow-1 me-2">
                                                                 <div class="d-flex d-flex-column p-0 min-h-auto">
@@ -251,10 +259,10 @@
                                                                         </a>
                                                                     </div>
                                                                     <div class="flex-grow-1 text-end">
-                                                                        <span :class="`fw-normal badge badge-light-${position.isInrange ? 'success' : 'warning'}`">
-                                                                            <i class="bullet bullet-dot bg-success h-8px w-8px me-1" v-if="position.isInrange"></i>
+                                                                        <span :class="`fw-normal badge badge-light-${position.value.isInrange ? 'success' : 'warning'}`">
+                                                                            <i class="bullet bullet-dot bg-success h-8px w-8px me-1" v-if="position.value.isInrange"></i>
                                                                             <i class="fas fa-exclamation-circle text-warning fs-1x" v-else></i>
-                                                                            {{ position.isInrange ? "In range": "Out of range" }}
+                                                                            {{ position.value.isInrange ? "In range": "Out of range" }}
                                                                         </span>
                                                                         <!-- <span :class="`fw-normal badge badge-light-${isInRange(currentTick, position.tickLower, position.tickUpper) ? 'success' : 'warning'}`">
                                                                             <i class="bullet bullet-dot bg-success h-8px w-8px me-1" v-if="isInRange(currentTick, position.tickLower, position.tickUpper)"></i>
@@ -280,7 +288,7 @@
                                                                 </div>
 
                                                                 <div class="d-flex flex-column gap-7 gap-md-10 mt-2 mb-2">
-                                                                    <button href="#" class="btn btn-sm btn-danger badge " @click.stop="showLPDetail(position)"><i class="fas fa-lock"></i> Create liquidity lock</button>
+                                                                    <button href="#" class="btn btn-sm btn-danger badge" @click.stop="showLPDetail(position)"><i class="fas fa-lock"></i> Create liquidity lock</button>
                                                                 </div>
 
                                                             </div>

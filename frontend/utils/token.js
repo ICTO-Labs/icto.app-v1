@@ -3,6 +3,7 @@ import { useWalletStore } from '@/store/wallet'
 import {Principal} from "@dfinity/principal";
 import { showError, principalToAccountId } from "./common";
 import config from "../config";
+import tokenList from "@/ic/tokenList";
 export const decodeTransaction = (transactions)=>{
   return transactions
       .map((transaction) => {
@@ -143,4 +144,11 @@ export const currencyFormat = (value, e8s)=>{
   return new Intl.NumberFormat('en-US', { maximumSignificantDigits: 6 }).format(value);
   // let val = (value/1).toFixed(6).replace(',', '.').replace(/[.,]000000$/, "")
   // return val.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ",")
+}
+
+export const getTokenInfo = (canisterId)=>{
+  console.log(canisterId);
+  const token = tokenList.find((token) => token.canisterId === canisterId);
+  console.log('token', token);
+  return token;
 }
