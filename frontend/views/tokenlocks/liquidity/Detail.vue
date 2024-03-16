@@ -5,6 +5,7 @@
     import { shortPrincipal, shortAccount } from '@/utils/common';
     import { useGetPoolMeta, useGetPosition, useGetPoolValue } from '@/services/SwapPool';
     import { currencyFormat } from "@/utils/token";
+    import { useGetTokenBalance } from "@/services/Token";
     import { showSuccess, showError, showLoading, closeMessage, prettyValue } from "@/utils/common";
     import { VueFinalModal } from 'vue-final-modal';
     import moment from "moment";
@@ -49,6 +50,7 @@
         await getTransaction();
         getCylesBalance();
         handleDate();
+        getPoolTVL();
         console.log(contract.value);
     }
 
@@ -59,6 +61,11 @@
         return moment().isAfter(_unlockDate);
     }
 
+    const getPoolTVL =  async()=>{
+        token0 = await useGetTokenBalance(contract.value.token0.address, contract.value.poolId);
+        token1 = await useGetTokenBalance(contract.value.token1.address, contract.value.poolId);
+        console.log('TVL', token0, token1);
+    }
     const getCylesBalance = async()=>{
         cyclesBalance.value = await useGetCyclesBalance(contractId.value);
     }
@@ -248,6 +255,17 @@
                                         <td class="text-start text-gray-600 fw-bold w-50">Price in USD: </td>
                                         <td class="text-end"><span class="badge badge-light fw-bolder fs-7" v-if="poolValue">≈${{ (poolValue.price*walletStore.icpPrice).toFixed(6) }}</span></td>
                                     </tr>
+                                    <tr><td colspan="2">
+                                        <div class="d-flex flex-column w-100 me-2">
+                                            <div class="d-flex flex-stack mb-2">
+                                                <span class="text-muted me-2 fs-7 fw-normal">---% locked</span>
+                                                <span class="text-muted me-2 fs-7 fw-normal">TVL: --- {{ contract?.token0?.name || '---' }}</span>
+                                            </div>
+                                            <div class="progress h-6px w-100">
+                                                <div class="progress-bar bg-primary" role="progressbar" style="width: 2%" aria-valuenow="50" aria-valuemin="0" aria-valuemax="100"></div>
+                                            </div>
+                                        </div>
+                                    </td></tr>
                                 </table>
                             </div>
 
@@ -268,7 +286,7 @@
                                         <td class="text-start fw-bold text-gray-400 pt-3" colspan="2">
                                             <div class="row p-0">
                                                 <div class="col">
-                                                    <div class="border border-dashed border-gray-300 bg-white text-center rounded pt-2 pb-2">
+                                                    <div class="border border-dashed border-gray-300 bg-white text-center rounded py-1">
                                                         <span class="fs-7 fw-bold text-dark d-block"><i class="fas fa-chevron-down text-danger"></i> Min Price</span>
                                                         <div class="fs-1hx fw-bolder text-gray-900 counted">{{ poolValue?.minprice || '---' }}</div>
                                                         <div class="fw-normal fs-7 text-gray-400">
@@ -277,7 +295,7 @@
                                                     </div>
                                                 </div>
                                                 <div class="col">
-                                                    <div class="border border-dashed border-gray-300 bg-white text-center rounded pt-2 pb-2">
+                                                    <div class="border border-dashed border-gray-300 bg-white text-center rounded py-1">
                                                         <span class="fs-7 fw-bold text-dark d-block"> <i class="fas fa-chevron-up text-success"></i> Max Price</span>
                                                         <div class="fs-1hx fw-bolder text-gray-900 counted">{{ poolValue?.maxprice || '---' }}</div>
                                                         <div class="fw-normal fs-7 text-gray-400">
@@ -299,24 +317,24 @@
                                             </div> -->
                                         </td>
                                     </tr>
-                                    <tr>
+                                    <!-- <tr>
                                         <td class="text-start fw-bold text-gray-400 pt-3" colspan="2">CONTRACT DATA</td>
-                                    </tr>
-                                    <tr>
-                                        <td class="text-start fw-bold w-50 text-danger">Lock expires:</td>
+                                    </tr> -->
+                                    <tr >
+                                        <td class="text-start fw-bold w-50 text-danger pt-2">Lock expires:</td>
                                         <td>
                                             {{ contract?moment(Number(contract.created)/1000000).add(Number(contract.durationTime)*Number(contract.durationUnit), 'seconds').fromNow():'---' }}
-                                            <a href="#" class="badge badge-light-primary" @click="showIncreaseModal">Increase</a>
+                                            <a href="#" class="badge badge-light-primary py-1" @click="showIncreaseModal">Increase</a>
 
                                         </td>
                                     </tr>
                                     <tr>
                                         <td class="text-start fw-bold w-50">Contract status:</td>
                                         <td class="fw-bold text-start" v-if="contract">
-                                            <span class="badge badge-light-success fs-7 ps-0" v-if="contract.status == 'locked'">Locked <i class="fas fa-lock text-success"></i></span>
-                                            <span class="badge badge-light-danger fs-7 ps-0" v-else-if="contract.status == 'unlocked'">Unlocked <i class="fas fa-lock-open text-danger"></i></span>
-                                            <span class="badge badge-secondary fs-7 ps-0" v-else-if="contract.status == 'withdrawn'">Withdrawn <i class="fas fa-anchor"></i></span>
-                                            <span class="badge badge-light-info fs-7 ps-0" v-else>Created <i class="fas fa-unlock-art text-info"></i></span>
+                                            <span class="badge badge-light-success fs-7 ps-0 py-1" v-if="contract.status == 'locked'">Locked <i class="fas fa-lock text-success"></i></span>
+                                            <span class="badge badge-light-danger fs-7 ps-0 py-1" v-else-if="contract.status == 'unlocked'">Unlocked <i class="fas fa-lock-open text-danger"></i></span>
+                                            <span class="badge badge-secondary fs-7 ps-0 py-1" v-else-if="contract.status == 'withdrawn'">Withdrawn <i class="fas fa-anchor"></i></span>
+                                            <span class="badge badge-light-info fs-7 ps-0 py-1" v-else>Created <i class="fas fa-unlock-art text-info"></i></span>
                                         </td>
                                     </tr>
                                     <tr>
@@ -337,7 +355,7 @@
                                     </tr>
                                     <tr>
                                         <td class="text-start fw-bold">Cycles balance:</td>
-                                        <td>{{ Number(cyclesBalance) }} T</td>
+                                        <td class="fw-bold">{{ Number(cyclesBalance).toFixed(3) }} T</td>
                                     </tr>
                                 </table>
                             </div>
@@ -364,6 +382,17 @@
                                         <td class="text-start text-gray-600 fw-bold w-50">Price in USD: </td>
                                         <td class="text-end"><span class="badge badge-light fw-bolder fs-7">${{ walletStore.icpPrice }}</span></td>
                                     </tr>
+                                    <tr><td colspan="2">
+                                        <div class="d-flex flex-column w-100 me-2">
+                                            <div class="d-flex flex-stack mb-2">
+                                                <span class="text-muted me-2 fs-7 fw-normal">---% locked</span>
+                                                <span class="text-muted me-2 fs-7 fw-normal">TVL: --- {{ contract?.token1?.name || '---' }}</span>
+                                            </div>
+                                            <div class="progress h-6px w-100">
+                                                <div class="progress-bar bg-primary" role="progressbar" style="width: 2%" aria-valuenow="50" aria-valuemin="0" aria-valuemax="100"></div>
+                                            </div>
+                                        </div>
+                                    </td></tr>
                                 </table>
                             </div>
                         </div>

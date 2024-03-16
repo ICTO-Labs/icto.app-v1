@@ -5,7 +5,7 @@ import LoadingLabel from "@/components/LoadingLabel.vue"
 import { showModal, isAnonymous } from '@/utils/common';
 import Arrow from "./icons/Arrow.vue";
 watchEffect(() => {
-	if(walletStore.isLogged && !walletStore.principal && isAnonymous(walletStore.principal)){
+	if(walletStore.isLogged && (!walletStore.principal || isAnonymous(walletStore.principal))){
 		walletStore.logout();
 	}
 });

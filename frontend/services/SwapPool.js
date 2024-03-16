@@ -2,6 +2,18 @@ import Connect from "@/ic/actor/Connect";
 import { txtToPrincipal } from "@/utils/common";
 import univ3prices from "@thanpolas/univ3prices";
 import walletStore from "@/store/";
+
+export const useGetTotalPoolValue = async (sqrtPriceX96, liquidity, tick) => {
+    const [token0Reserves, token1Reserves] = univ3prices.getAmountsForCurrentLiquidity(
+        [8, 8],
+        liquidity, // Current liquidity value of the pool
+        sqrtPriceX96, // Current sqrt price value of the pool
+        60, // the tickSpacing value from the pool
+    );
+    return {token0Reserves, token1Reserves};
+
+
+}
 export const useGetPoolValue = (sqrtPriceX96, tickLower, tickUpper, liquidity, tick) => {
     const [amount0Raw, amount1Raw] = univ3prices.getAmountsForLiquidityRange(
         sqrtPriceX96, // generate sqrt price for range
