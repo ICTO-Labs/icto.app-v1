@@ -30,6 +30,7 @@ import SNSWasm "./SNSWasm";
 import Ledger "./Ledger";
 import IC "./IC";
 import ICRCLedger "./ICRCLedger";
+import Hex "./Hex";
 
 actor class Self() = this {
     private func deployer() : Principal = Principal.fromActor(this);
@@ -40,10 +41,11 @@ actor class Self() = this {
 
     private stable var CREATION_FEE : Nat = 1*100_000_000;//E8S in ICP
 
-    private stable var MIN_CYCLES_IN_DEPLOYER: Nat = 5_000_000_000_000;//Minimum cycles in deployer
+    private stable var MIN_CYCLES_IN_DEPLOYER: Nat = 2_000_000_000_000;//Minimum cycles in deployer
     private stable var CYCLES_FOR_INSTALL: Nat = 300_000_000_000;//1T 1_000_000_000_000, 0.3T, initial cycles for install
     private stable var CYCLES_FOR_ARCHIVE: Nat64 = 300_000_000_000;//
     private stable var SNS_WASM_VERSION : Blob = "af8fc1469e553ac90f704521a97a1e3545c2b68049b4618a6549171b4ea4fba8";//lastest version hash
+    private stable var SNS_WASM : Blob = "";//lastest wasm file
     //IC Services
     private let ic : IC.Self = actor ("aaaaa-aa");
     private let snsWasm : SNSWasm.Self = actor ("qaa6y-5yaaa-aaaaa-aaafa-cai");
@@ -55,6 +57,7 @@ actor class Self() = this {
         name : Text;
         symbol : Text;
         canister : Text;
+        wasm_version: Text;
         logo : Text;
     };
     type ReqArgsIncluded = {
@@ -116,14 +119,13 @@ actor class Self() = this {
         };
         return false;
     };
-
     private func create_canister() : async Principal {
         try {
             // Create canister
             Cycles.add(CYCLES_FOR_INSTALL);
             let { canister_id } = await ic.create_canister({
                 settings = ?{
-                    controllers = ?[];//blackhole
+                    controllers = ?[deployer()];//
                     freezing_threshold = ?9331200; // 108 days
                     memory_allocation = null;
                     compute_allocation = null;
@@ -136,22 +138,46 @@ actor class Self() = this {
         };
     };
 
-    public shared({caller}) func get_lastest_version() : async () {
-        assert (_isAdmin(Principal.toText(caller)));
+    public shared({caller}) func get_lastest_version() : async Result.Result<Text, Text>{
+        // assert (_isAdmin(Principal.toText(caller)));
         let res = await snsWasm.get_latest_sns_version_pretty(null);
         for ((k) in res.vals()) {
             if (k.0 == "Ledger") {
-                SNS_WASM_VERSION := Text.encodeUtf8(k.1);//lastest version hash
+                let decode = Hex.decode(k.1);
+                switch (decode) {
+                    case (#ok(version)) {
+                        let _lastest_version: Blob = Blob.fromArray(version);
+                        if(Blob.equal(SNS_WASM_VERSION, _lastest_version) == true){
+                            SNS_WASM_VERSION := _lastest_version;
+                            let _saved = await save_wasm_version(SNS_WASM_VERSION);
+                            return #ok("New version saved" # debug_show(_saved));
+                        }else{
+                            return #err("No new version found");
+                        }
+                    };
+                    case (#err(err)) {
+                        return #err("Error decoding version");
+                    };
+                };
             };
         };
+        #ok("No version found");
+    };
+
+    //Save wasm version to stable memory
+    private func save_wasm_version(version : Blob) : async Result.Result<Text, Text>{
+        let wasm_resp = await snsWasm.get_wasm({ hash = SNS_WASM_VERSION });
+        let ?wasm_ver = wasm_resp.wasm else return #err("No blessed wasm available");
+        SNS_WASM := wasm_ver.wasm;
+        return #ok("Wasm saved successfully");
     };
 
     public shared ({ caller }) func install(req_args : InitArgsRequested) : async Result.Result<Principal, Text> {
 
-        if (Text.size(req_args.token_symbol) > 7) return #err("Token symbol too long");
-        if (Text.size(req_args.token_name) > 32) return #err("Token name too long");
+        if (Text.size(req_args.token_symbol) > 8) return #err("Token symbol too long, max 8 characters");
+        if (Text.size(req_args.token_name) > 32) return #err("Token name too long, max 32 characters");
         if (Text.size(req_args.logo) < 100) return #err("Logo too small");
-        if (Text.size(req_args.logo) > 30000) return #err("Logo has to be at most 30000 chars encoded");
+        if (Text.size(req_args.logo) > 30_000) return #err("Max logo size is 20 KB");
 
         let init_args : InitArgsSimplified = {
             req_args with
@@ -162,10 +188,10 @@ actor class Self() = this {
             metadata= [("icrc1:logo", #Text(req_args.logo))];
         };
 
-        // Get latest wasm
-        let wasm_resp = await snsWasm.get_wasm({ hash = SNS_WASM_VERSION });
-        let ?wasm_ver = wasm_resp.wasm else return #err("No blessed wasm available");
-        let wasm = wasm_ver.wasm;
+        // // Get latest wasm
+        // let wasm_resp = await snsWasm.get_wasm({ hash = SNS_WASM_VERSION });
+        // let ?wasm_ver = wasm_resp.wasm else return #err("No blessed wasm available");
+        // let wasm = wasm_ver.wasm;
 
         // Make ledger initial arguments
         // Ledgers won't show some of its options, so we will not allow them to be set, which will guarantee they are good.
@@ -205,7 +231,7 @@ actor class Self() = this {
 
         // Check if this canister has enough cycles
         let balance = Cycles.balance();
-        if (balance < CYCLES_FOR_INSTALL + MIN_CYCLES_IN_DEPLOYER) return #err("Not enough cycles in deployer");
+        if (balance < CYCLES_FOR_INSTALL + MIN_CYCLES_IN_DEPLOYER) return #err("Not enough cycles in deployer. Balance: "# debug_show(balance) #"T");
 
         if (not _isAdmin(Principal.toText(caller))) switch (await icrcLedger.icrc2_transfer_from({ from = { owner = caller; subaccount = null }; spender_subaccount = null; to = { owner = deployer(); subaccount = null }; fee = null; memo = null; from_subaccount = null; created_at_time = null; amount = CREATION_FEE })) {
             case (#Ok(_)) ();
@@ -218,7 +244,7 @@ actor class Self() = this {
         try {
             await ic.install_code({
                 arg = to_candid (args);
-                wasm_module = wasm;
+                wasm_module = SNS_WASM;
                 mode = #install;
                 canister_id;
                 sender_canister_version = null;
@@ -227,6 +253,7 @@ actor class Self() = this {
             return #err("Canister installation failed " # debug_show (Error.message(e)));
         };
 
+        let _version = Hex.encode(Blob.toArray(SNS_WASM_VERSION));
         _tokens := Trie.put(
             _tokens,
             keyT(Principal.toText(canister_id)),
@@ -235,6 +262,7 @@ actor class Self() = this {
                 name = req_args.token_name;
                 symbol = req_args.token_symbol;
                 canister = Principal.toText(canister_id);
+                wasm_version = _version;
                 logo = req_args.logo;
             },
         ).0;
@@ -247,6 +275,10 @@ actor class Self() = this {
     public query func cycleBalance() : async Nat {
         Cycles.balance();
     };
+    //Get current SNS Wasm version  
+    public query func getCurrentWasmVersion() : async Text {
+        Hex.encode(Blob.toArray(SNS_WASM_VERSION));
+    };
     //Get deployer ICP balance
     public shared ({ caller }) func balance() : async Nat {
         await icrcLedger.icrc1_balance_of({ owner = deployer(); subaccount = null });
@@ -256,6 +288,11 @@ actor class Self() = this {
     public shared ({ caller }) func updateInitCycles(i : Nat) : async () {
         assert (_isAdmin(Principal.toText(caller)));
         CYCLES_FOR_INSTALL := i;
+    };
+    //Update Initial cycles for new token canister
+    public shared ({ caller }) func updateMinCycles(i : Nat) : async () {
+        assert (_isAdmin(Principal.toText(caller)));
+        MIN_CYCLES_IN_DEPLOYER := i;
     };
     //Update Creation Fee for new token
     public shared ({ caller }) func updateCreationFee(i : Nat) : async () {
