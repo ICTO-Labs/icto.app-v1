@@ -1,51 +1,58 @@
-type headerField = 
- record {
-   text;
-   text;
- };
 type Token = 
  record {
    canister: text;
-   cover: text;
-   description: text;
+   logo: text;
    name: text;
    symbol: text;
+   wasm_version: text;
+ };
+type Subaccount = blob;
+type Self = 
+ service {
+   addAdmin: (text) -> ();
+   balance: () -> (nat);
+   cycleBalance: () -> (nat) query;
+   getAllAdmins: () -> (vec text) query;
+   getCurrentWasmVersion: () -> (text) query;
+   getOwner: (text) -> (opt text) query;
+   getTokenDetails: (text) -> (opt Token) query;
+   getTokens: (nat) -> (vec Token) query;
+   getTotalTokens: () -> (nat) query;
+   getUserTokens: (text, nat) -> (vec Token) query;
+   getUserTotalTokens: (text) -> (nat) query;
+   get_lastest_version: () -> (Result_1);
+   install: (InitArgsRequested) -> (Result);
+   removeAdmin: (text) -> ();
+   updateCreationFee: (nat) -> ();
+   updateInitCycles: (nat) -> ();
+   updateMinCycles: (nat) -> ();
+ };
+type Result_1 = 
+ variant {
+   err: text;
+   ok: text;
  };
 type Result = 
  variant {
    err: text;
-   ok;
+   ok: principal;
  };
-type HttpResponse = 
+type InitArgsRequested = 
  record {
-   body: blob;
-   headers: vec headerField;
-   status_code: nat16;
+   fee_collector_account: opt Account;
+   initial_balances: vec record {
+                           Account;
+                           nat;
+                         };
+   logo: text;
+   minting_account: Account;
+   token_name: text;
+   token_symbol: text;
+   transfer_fee: nat;
  };
-type HttpRequest = 
+type Account = 
  record {
-   body: blob;
-   headers: vec headerField;
-   method: text;
-   url: text;
+   owner: principal;
+   subaccount: opt Subaccount;
  };
-service : {
-  addAdmin: (text) -> ();
-  createTokenCanister: (text, text, text, nat, text, nat8, nat) -> (text);
-  cycleBalance: () -> (nat) query;
-  getAllAdmins: () -> (vec text) query;
-  getAllTokens: () -> (vec record {
-                             text;
-                             text;
-                           }) query;
-  getOwner: (text) -> (opt text) query;
-  getTokenDetails: (text) -> (opt Token) query;
-  getTokens: (nat) -> (vec Token) query;
-  getTotalTokens: () -> (nat) query;
-  getUserTokens: (text, nat) -> (vec Token) query;
-  getUserTotalTokens: (text) -> (nat) query;
-  http_request: (HttpRequest) -> (HttpResponse) query;
-  removeAdmin: (text) -> ();
-  updateInitCycles: (nat) -> ();
-  updateTokenCover: (text, text) -> (Result);
-}
+service : () -> Self

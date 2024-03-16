@@ -1,38 +1,33 @@
 export const idlFactory = ({ IDL }) => {
   const Token = IDL.Record({
+    'logo' : IDL.Text,
     'name' : IDL.Text,
-    'cover' : IDL.Text,
-    'description' : IDL.Text,
+    'wasm_version' : IDL.Text,
     'canister' : IDL.Text,
     'symbol' : IDL.Text,
   });
-  const headerField = IDL.Tuple(IDL.Text, IDL.Text);
-  const HttpRequest = IDL.Record({
-    'url' : IDL.Text,
-    'method' : IDL.Text,
-    'body' : IDL.Vec(IDL.Nat8),
-    'headers' : IDL.Vec(headerField),
+  const Result_1 = IDL.Variant({ 'ok' : IDL.Text, 'err' : IDL.Text });
+  const Subaccount = IDL.Vec(IDL.Nat8);
+  const Account = IDL.Record({
+    'owner' : IDL.Principal,
+    'subaccount' : IDL.Opt(Subaccount),
   });
-  const HttpResponse = IDL.Record({
-    'body' : IDL.Vec(IDL.Nat8),
-    'headers' : IDL.Vec(headerField),
-    'status_code' : IDL.Nat16,
+  const InitArgsRequested = IDL.Record({
+    'token_symbol' : IDL.Text,
+    'transfer_fee' : IDL.Nat,
+    'minting_account' : Account,
+    'logo' : IDL.Text,
+    'initial_balances' : IDL.Vec(IDL.Tuple(Account, IDL.Nat)),
+    'fee_collector_account' : IDL.Opt(Account),
+    'token_name' : IDL.Text,
   });
-  const Result = IDL.Variant({ 'ok' : IDL.Null, 'err' : IDL.Text });
-  return IDL.Service({
+  const Result = IDL.Variant({ 'ok' : IDL.Principal, 'err' : IDL.Text });
+  const Self = IDL.Service({
     'addAdmin' : IDL.Func([IDL.Text], [], []),
-    'createTokenCanister' : IDL.Func(
-        [IDL.Text, IDL.Text, IDL.Text, IDL.Nat, IDL.Text, IDL.Nat8, IDL.Nat],
-        [IDL.Text],
-        [],
-      ),
+    'balance' : IDL.Func([], [IDL.Nat], []),
     'cycleBalance' : IDL.Func([], [IDL.Nat], ['query']),
     'getAllAdmins' : IDL.Func([], [IDL.Vec(IDL.Text)], ['query']),
-    'getAllTokens' : IDL.Func(
-        [],
-        [IDL.Vec(IDL.Tuple(IDL.Text, IDL.Text))],
-        ['query'],
-      ),
+    'getCurrentWasmVersion' : IDL.Func([], [IDL.Text], ['query']),
     'getOwner' : IDL.Func([IDL.Text], [IDL.Opt(IDL.Text)], ['query']),
     'getTokenDetails' : IDL.Func([IDL.Text], [IDL.Opt(Token)], ['query']),
     'getTokens' : IDL.Func([IDL.Nat], [IDL.Vec(Token)], ['query']),
@@ -43,10 +38,13 @@ export const idlFactory = ({ IDL }) => {
         ['query'],
       ),
     'getUserTotalTokens' : IDL.Func([IDL.Text], [IDL.Nat], ['query']),
-    'http_request' : IDL.Func([HttpRequest], [HttpResponse], ['query']),
+    'get_lastest_version' : IDL.Func([], [Result_1], []),
+    'install' : IDL.Func([InitArgsRequested], [Result], []),
     'removeAdmin' : IDL.Func([IDL.Text], [], []),
+    'updateCreationFee' : IDL.Func([IDL.Nat], [], []),
     'updateInitCycles' : IDL.Func([IDL.Nat], [], []),
-    'updateTokenCover' : IDL.Func([IDL.Text, IDL.Text], [Result], []),
+    'updateMinCycles' : IDL.Func([IDL.Nat], [], []),
   });
+  return Self;
 };
 export const init = ({ IDL }) => { return []; };

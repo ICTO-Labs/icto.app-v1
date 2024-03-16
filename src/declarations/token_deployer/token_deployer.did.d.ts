@@ -1,44 +1,48 @@
 import type { Principal } from '@dfinity/principal';
 import type { ActorMethod } from '@dfinity/agent';
 
-export interface HttpRequest {
-  'url' : string,
-  'method' : string,
-  'body' : Uint8Array | number[],
-  'headers' : Array<headerField>,
+export interface Account {
+  'owner' : Principal,
+  'subaccount' : [] | [Subaccount],
 }
-export interface HttpResponse {
-  'body' : Uint8Array | number[],
-  'headers' : Array<headerField>,
-  'status_code' : number,
+export interface InitArgsRequested {
+  'token_symbol' : string,
+  'transfer_fee' : bigint,
+  'minting_account' : Account,
+  'logo' : string,
+  'initial_balances' : Array<[Account, bigint]>,
+  'fee_collector_account' : [] | [Account],
+  'token_name' : string,
 }
-export type Result = { 'ok' : null } |
+export type Result = { 'ok' : Principal } |
   { 'err' : string };
-export interface Token {
-  'name' : string,
-  'cover' : string,
-  'description' : string,
-  'canister' : string,
-  'symbol' : string,
-}
-export type headerField = [string, string];
-export interface _SERVICE {
+export type Result_1 = { 'ok' : string } |
+  { 'err' : string };
+export interface Self {
   'addAdmin' : ActorMethod<[string], undefined>,
-  'createTokenCanister' : ActorMethod<
-    [string, string, string, bigint, string, number, bigint],
-    string
-  >,
+  'balance' : ActorMethod<[], bigint>,
   'cycleBalance' : ActorMethod<[], bigint>,
   'getAllAdmins' : ActorMethod<[], Array<string>>,
-  'getAllTokens' : ActorMethod<[], Array<[string, string]>>,
+  'getCurrentWasmVersion' : ActorMethod<[], string>,
   'getOwner' : ActorMethod<[string], [] | [string]>,
   'getTokenDetails' : ActorMethod<[string], [] | [Token]>,
   'getTokens' : ActorMethod<[bigint], Array<Token>>,
   'getTotalTokens' : ActorMethod<[], bigint>,
   'getUserTokens' : ActorMethod<[string, bigint], Array<Token>>,
   'getUserTotalTokens' : ActorMethod<[string], bigint>,
-  'http_request' : ActorMethod<[HttpRequest], HttpResponse>,
+  'get_lastest_version' : ActorMethod<[], Result_1>,
+  'install' : ActorMethod<[InitArgsRequested], Result>,
   'removeAdmin' : ActorMethod<[string], undefined>,
+  'updateCreationFee' : ActorMethod<[bigint], undefined>,
   'updateInitCycles' : ActorMethod<[bigint], undefined>,
-  'updateTokenCover' : ActorMethod<[string, string], Result>,
+  'updateMinCycles' : ActorMethod<[bigint], undefined>,
 }
+export type Subaccount = Uint8Array | number[];
+export interface Token {
+  'logo' : string,
+  'name' : string,
+  'wasm_version' : string,
+  'canister' : string,
+  'symbol' : string,
+}
+export interface _SERVICE extends Self {}
