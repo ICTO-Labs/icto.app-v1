@@ -67,7 +67,7 @@ const config = {
     },
     SERVICE_CANISTER_ID: NETWORK[ENV]['gov_token_id'], 
     SERVICE_FEES: {
-        "DEPLOY_TOKEN": 0,
+        "DEPLOY_TOKEN": 1*100_000_000,//1 ICP
         "PAYMENT_CONTRACT": 10,
         "VESTING_CONTRACT": 10,
         "LOCKS_CONTRACT": 10,
