@@ -24,6 +24,17 @@ export const useGetMyBalance = async(tokenId) => {
         }
     }
 }
+export const useGetTokenBalance = async(tokenId, principal)=>{
+    try{
+        let _balance = await Connect.canister(tokenId, 'icrc1').icrc1_balance_of({
+            owner: txtToPrincipal(principal),
+            subaccount: []
+        });
+        return Number(_balance)/config.E8S
+    }catch(e){
+        return 0;
+    }
+}
 export const useTransferFrom = async(tokenId, payload, standard="icrc2")=>{
     console.log('payload', payload);
     const _amount = BigInt(parseInt(payload.amount) * config.E8S);
@@ -65,18 +76,19 @@ export const useTokenApprove = async(tokenId, payload, standard="icrc2")=>{
         created_at_time: []
     });
     console.log(response);
+    return response;
 }
 export const useGetTransactions = (tokenId, standard, start, end)=>{
     return useQuery({
         queryKey: ['tokenTransactions', tokenId],
         queryFn: async () => {
             let _data = await Connect.canister(tokenId, standard).get_transactions({"start": start, "length": end});
+            console.log('_data transaction', _data);
             let _rs = {
                 transactions: decodeTransaction(_data.transactions),
                 first_index: _data.first_index,
                 log_length: _data.log_length
             }
-            console.log('transform', _rs);
             return _rs;
         },
         keepPreviousData: true,
@@ -112,7 +124,7 @@ export const useGetTokenOwner = (tokenId, standard)=>{
         keepPreviousData: true,
       })
 }
-export const usetGetMetadata = async(tokenId, standard="icrc3")=>{
+export const usetGetMetadata = async(tokenId, standard="icrc2")=>{
     try{
         let _tokenInfo =  await Connect.canister(tokenId, standard).icrc1_metadata();
         if(!_tokenInfo || "err" in _tokenInfo){
@@ -188,6 +200,15 @@ export const useCreateToken = async (payload)=>{
             _decimals,
             _fee
         );
+        return canisterId;
+    } catch (error) {
+        throw error;
+    }
+}
+
+export const useInstallToken = async (payload)=>{
+    try {
+        const canisterId = await Connect.canister(config.TOKEN_DEPLOYER_CANISTER_ID, 'token_deployer').install(payload);
         return canisterId;
     } catch (error) {
         throw error;

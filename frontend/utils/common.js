@@ -48,13 +48,13 @@ const principalToText = (p)=>{
 export const validateAddress = (a) => {
     return (isHex(a) && a.length === 64)
 }
-export const showError = (message, useSwal=false)=>{
+export const showError = (message, useSwal=false, useHTML=false)=>{
     if(useSwal){
-        Swal.fire({
-            icon: 'error',
-            title: 'Error!',
-            text: message
-        })
+        var _obj = {icon: 'error', title: 'Error!', text: message};
+        if(useHTML){
+            _obj = {icon: 'error', title: 'Error!', html: message};
+        }
+        Swal.fire(_obj);
     }else{
         toast.error(message);
     }

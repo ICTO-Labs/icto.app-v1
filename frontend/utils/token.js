@@ -6,10 +6,10 @@ import config from "../config";
 import tokenList from "@/ic/tokenList";
 export const decodeTransaction = (transactions)=>{
   return transactions
-      .map((transaction) => {
+      .map((transaction, txId) => {
         console.log('transaction', transaction);
         const timestamp = Math.round(Number(transaction.timestamp) / 1_000_000_000) // ns to s
-        const txId = Number(transaction.index);
+        // const txId = Number(transaction.index);
         if (transaction.kind === 'transfer' && transaction.transfer[0]) {
           const transfer = transaction.transfer[0]
           const from = principalToAccountId(transfer.from.owner, transfer.from.subaccount[0])
@@ -98,6 +98,8 @@ export const decodeICRCMetadata = (tokenId, metadata)=>{
       meta.standard = first.split(":")[0];//get standard
     } else if (first.includes('fee')) {
       meta.fee = Number(second.Nat);
+    } else if (first.includes('logo')) {
+      meta.logo = second.Text;
     }
   });
   return meta;

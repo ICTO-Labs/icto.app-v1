@@ -14,7 +14,7 @@
 	const isLoading = ref(false);
 	const { data: tokenSupply, refetch: refetchSupply } = useGetTokenSupply(tokenId, 'icrc1');
 	const { data: tokenOwner, refetch: refetchOwner } = useGetTokenOwner(tokenId, 'icrc1');
-	const { data: tokenTransactions, isError, error, isLoading: isTransLoading, isRefetching: isTransRefetching, refetch: refreshTransactions } = useGetTransactions(tokenId, 'icrc2', 0, 10);
+	const { data: tokenTransactions, isError, error, isLoading: isTransLoading, isRefetching: isTransRefetching, refetch: refreshTransactions } = useGetTransactions(tokenId, 'icrc2', 0, 100);
 
 	const getTokenInfo = async()=>{
 		let _tokenInfo = await usetGetMetadata(tokenId);
@@ -69,18 +69,18 @@
 						<!--begin::Details-->
 						<div class="d-flex align-items-center" v-if="tokenInfo">
 							<div class="symbol symbol-50px symbol-circle me-3">
-								<img src="https://psh4l-7qaaa-aaaap-qasia-cai.raw.icp0.io/6ytv5-fqaaa-aaaap-qblcq-cai.png" />
+								<img :src="tokenInfo.logo" />
 								<!-- <span class="symbol-label fs-2x fw-bold text-primary bg-light-primary">{{ tokenInfo?tokenInfo.symbol.charAt(0):'IC' }}</span> -->
 							</div>
 							<!--begin::Info-->
 							<div class="d-flex flex-column">
 								<!--begin::Name-->
 								<div class="fs-4 fw-bolder text-gray-900 text-hover-primary me-2">{{ tokenInfo.name }}
-									<div class="badge badge-light-primary ms-auto">{{tokenInfo.standard.toUpperCase()}}</div>
+									
 								</div>
 								<!--end::Name-->
 								<!--begin::Email-->
-								<div class="fs-7 text-gray-600 text-hover-primary">{{tokenInfo.symbol }}</div>
+								<div class="fs-7 text-gray-600 text-hover-primary">{{tokenInfo.symbol }} <div class="badge badge-light-primary ms-auto">{{tokenInfo.standard.toUpperCase()}}</div></div>
 								<!--end::Email-->
 							</div>
 							<!--end::Info-->
@@ -118,7 +118,7 @@
 							</tr>
 							<tr class="">
 								<td class="text-gray-400">Holders:</td>
-								<td class="text-gray-800 w-50"><span v-if="tokenInfo">2</span></td>
+								<td class="text-gray-800 w-50"><span v-if="tokenInfo">---</span></td>
 							</tr>
 							</tbody>
 						</table>
@@ -130,12 +130,12 @@
 							<tbody>
 								<tr class="">
 									<td class="text-gray-400">Cycles:</td>
-									<td class="text-gray-800">3T</td>
+									<td class="text-gray-800">--T</td>
 								</tr>
 								<tr class="">
 									<td class="text-gray-400">Memory Size:</td>
 									<td class="w-50">
-										<span v-if="tokenInfo">102 MB</span>
+										<span v-if="tokenInfo">--- MB</span>
 									</td>
 								</tr>
 							</tbody>
@@ -153,7 +153,7 @@
 						<h2 class="fw-bolder">Token overview</h2>
 					</div>
 					<div class="card-toolbar">
-						<button type="button" class="btn btn-sm btn-primary me-2">Swap <i class="fas fa-exchange-alt"></i></button>
+						<!-- <button type="button" class="btn btn-sm btn-primary me-2">Swap <i class="fas fa-exchange-alt"></i></button> -->
 						<button type="button" class="btn btn-sm btn-light-primary me-2" @click="transferToken('transfer')">Mint <i class="fas fa-paper-plane"></i></button>
 						<button type="button" class="btn btn-sm btn-light-danger" @click="transferToken('burn')">Burn <i class="fas fa-burn"></i></button>
 					</div>
@@ -165,19 +165,19 @@
 								<table class="table fs-6 fw-bold gs-0 gy-2 gx-2 m-0">
 									<tbody>
 										<tr>
-											<td class="text-gray-400 min-w-175px w-175px">Token Owner:</td>
+											<td class="text-gray-400 min-w-175px w-175px">Minting Account:</td>
 											<td class="text-gray-800 min-w-200px">
-												<a href="#" class="text-gray-800 text-hover-primary" v-if="tokenOwner">{{ tokenOwner.principal }}</a> <Copy  v-if="tokenOwner" :text="tokenOwner.principal"></Copy>
+												<span class="text-gray-800 text-hover-primary" v-if="tokenOwner">{{ tokenOwner.principal }}</span> <Copy  v-if="tokenOwner" :text="tokenOwner.principal"></Copy>
 											</td>
 										</tr>
 										<tr>
 											<td class="text-gray-400"></td>
-											<td class="text-gray-800"><a href="" class="text-gray-800 text-hover-primary" v-if="tokenOwner">{{ tokenOwner.subaccount }}</a> <Copy  v-if="tokenOwner" :text="tokenOwner.subaccount"></Copy></td>
+											<td class="text-gray-800"><span class="text-gray-800 text-hover-primary" v-if="tokenOwner">{{ tokenOwner.subaccount }}</span> <Copy  v-if="tokenOwner" :text="tokenOwner.subaccount"></Copy></td>
 										</tr>
-										<tr>
+										<!-- <tr>
 											<td class="text-gray-400">Controller(s):</td>
 											<td class="text-gray-800 text-hover-primary" v-if="tokenOwner">mcccp-fqaaa-aaaap-qanfq-cai  <Copy :text="tokenOwner.principal"></Copy></td>
-										</tr>
+										</tr> -->
 										<tr><td colspan="2">
 											<div class="separator separator-dashed mb-7"></div>
 										</td></tr>
@@ -193,7 +193,7 @@
 							</div>
 						</div>
 
-						<TokenChart />
+						<!-- <TokenChart /> -->
 						<!--end::Row-->
 					</div>
 				</div>

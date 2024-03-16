@@ -51,17 +51,18 @@
 					<tr v-for="token in myToken">
 						<td>
 							<div class="symbol symbol-65px symbol-circle">
-								<span class="symbol-label fs-2x fw-bold text-primary bg-light-primary" v-if="token && token.symbol">{{ token.symbol.charAt(0) }}</span>
+								<span class="symbol-label fs-2x fw-bold text-primary bg-light-primary" v-if="token && token.logo">
+									<img :src="tokenInfo.logo" />
+								</span>
 							</div>
 						</td>
 						<td>
 							<router-link :to="`/token/${token.canister}`" class="text-dark fw-bold text-hover-primary mb-1 fs-6">{{ token.name }}</router-link>
-							<span class="text-muted fw-bold d-block">{{ token.description }}</span>
 						</td>
 						<td class="text-dark fs-6 fw-bold">{{ token.symbol }}</td>
 						<td class="text-muted fw-bold">{{ token.canister }} <Copy :text="token.canister"></Copy></td>
 						<td class="">
-							<span class="badge badge-primary">ICRC3</span>
+							<span class="badge badge-primary">ICRC2</span>
 						</td>
 						<td class="">
 							
