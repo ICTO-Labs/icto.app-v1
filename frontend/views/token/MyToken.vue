@@ -50,24 +50,24 @@
 				<tbody>
 					<tr v-for="token in myToken">
 						<td>
-							<div class="symbol symbol-65px symbol-circle">
+							<div class="symbol symbol-45px symbol-circle">
 								<span class="symbol-label fs-2x fw-bold text-primary bg-light-primary" v-if="token && token.logo">
-									<img :src="tokenInfo.logo" />
+									<img :src="token?.logo" class="w-100"/>
 								</span>
 							</div>
 						</td>
 						<td>
-							<router-link :to="`/token/${token.canister}`" class="text-dark fw-bold text-hover-primary mb-1 fs-6">{{ token.name }}</router-link>
+							<router-link :to="`/token/${token.canister}`" class="text-dark fw-bold text-hover-primary mb-1 fs-6">{{ token?.name }}</router-link>
 						</td>
-						<td class="text-dark fs-6 fw-bold">{{ token.symbol }}</td>
-						<td class="text-muted fw-bold">{{ token.canister }} <Copy :text="token.canister"></Copy></td>
+						<td class="text-dark fs-6 fw-bold">{{ token?.symbol }}</td>
+						<td class="text-muted fw-bold">{{ token?.canister }} <Copy :text="token.canister"></Copy></td>
 						<td class="">
 							<span class="badge badge-primary">ICRC2</span>
 						</td>
 						<td class="">
 							
 							<a href="#" class="btn btn-sm btn-bg-light me-2 btn-active-color-primary" @click="mintToken(token)">Mint <i class="fas fa-paper-plane"></i></a>
-							<router-link :to="`/token/${token.canister}`" class="btn btn-sm btn-icon btn-bg-light btn-active-color-primary">
+							<router-link :to="`/token/${token?.canister}`" class="btn btn-sm btn-icon btn-bg-light btn-active-color-primary">
 								<i class="fas fa-arrow-right"></i>
 							</router-link>
 						</td>

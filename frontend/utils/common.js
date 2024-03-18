@@ -38,7 +38,7 @@ const isPrincipal = (p)=>{
 export const isAnonymous = (p)=>{
     return p == "2vxsx-fae";
 }
-const principalToText = (p)=>{
+export const principalToText = (p)=>{
     if(isPrincipal(p)){
         return p.toText();
     }else{

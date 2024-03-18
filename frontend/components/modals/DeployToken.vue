@@ -2,7 +2,7 @@
 	import {ref, onMounted} from "vue";
 	import { useCreateToken, useTokenApprove, useTransferFrom, useInstallToken  } from '@/services/Token';
 	import { useChargeFee  } from '@/services/Backend';
-	import { showError, showSuccess } from '@/utils/common';
+	import { showError, showSuccess, txtToPrincipal, principalToText, closeMessage, showLoading } from '@/utils/common';
 	const deployTokenModal = ref(false);
     import { VueFinalModal } from 'vue-final-modal'
     import EventBus from "@/services/EventBus";
@@ -14,7 +14,6 @@
     const isLoading = ref(false);
     const tabSelected = ref('deployer');//Options: deployer, custom
     import { useGetTotalPoolValue } from '@/services/SwapPool';
-import { showLoading } from "../../utils/common";
 
     const newToken = ref({
 		token_name: "",
@@ -66,20 +65,28 @@ import { showLoading } from "../../utils/common";
             if (result.isConfirmed) {
                 isLoading.value = true;
                 showLoading("Approving token deployer to charge service fee...");
-                newToken.value.minting_account = { owner: Principal.fromText(walletStore.principal), subaccount: []};//Add minting account
+                newToken.value.minting_account = { owner: txtToPrincipal(walletStore.principal), subaccount: []};//Add minting account
                 let _approved = await useTokenApprove(config.LEDGER_CANISTER_ID, {spender: config.TOKEN_DEPLOYER_CANISTER_ID, amount: config.SERVICE_FEES.DEPLOY_TOKEN*config.E8S});
-                if(_approved && "Err" in _approved){
+                if(_approved == null){
                     isLoading.value = false;
-                    showError("Approve not succeed, please see the console for further detail!", true);
+                    closeMessage();
                     return;
                 }
-                // console.log('_approve', _approve);
+                if(_approved && _approved.hasOwnProperty('Err')){
+                    isLoading.value = false;
+                    if (_approved.Err?.InsufficientFunds) {
+                        showError('Insufficient Funds', true);
+                    }else{
+                        showError("Approve not succeed, please see the console for further detail!", true);
+                    }
+                    return;
+                }
                 // return;
                 showLoading("Installing token...");
                 let response = await useInstallToken(newToken.value);
                 isLoading.value = false;
                 if(response && "ok" in response){
-                    showSuccess("Token deployed successfully! Your token ID: "+Principal.toText(response.ok), true);
+                    showSuccess("Token deployed successfully! Your token ID: "+principalToText(response.ok), true);
                 }else{
                     showError(response.err, true);
                 }

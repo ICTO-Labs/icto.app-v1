@@ -48,7 +48,7 @@ export const useGetTokenBalance = async(tokenId, principal, standard='icrc1')=>{
 export const useTransferFrom = async(tokenId, payload, standard="icrc2")=>{
     let _token = getTokenInfo(tokenId);
     const _amount = BigInt(parseInt(payload.amount) * _token ? Math.pow(10, _token.decimals) : config.E8S);
-    const _fee = BigInt(parseInt(_token.fee>0?_token.fee/Math.pow(10, _token.decimals):0));
+    const _fee = BigInt(_token?_token.fee:0);
     const _from = txtToPrincipal(payload.from);
     const _to = txtToPrincipal(payload.to);
     const response = await Connect.canister(tokenId, standard).icrc2_transfer_from({
@@ -71,25 +71,26 @@ export const useTransferFrom = async(tokenId, payload, standard="icrc2")=>{
 export const useTokenApprove = async(tokenId, payload, standard="icrc2")=>{
     let _token = getTokenInfo(tokenId);
     const _amount = BigInt(parseInt(payload.amount) * _token ? Math.pow(10, _token.decimals) : config.E8S);
-    const _fee = BigInt(parseInt(_token.fee>0?_token.fee/Math.pow(10, _token.decimals):0));
-    // const _amount = BigInt(parseInt(payload.amount) * config.E8S);
-    // const _fee = BigInt(parseInt(0));
+    const _fee = BigInt(_token?_token.fee:0);
     const _spender = txtToPrincipal(payload.spender);
-    const response =  await Connect.canister(tokenId, standard).icrc2_approve({
-        from_subaccount: [],
-        spender: {
-            owner: _spender,
-            subaccount: [],
-        },
-        amount: _amount,
-        expires_at: [],
-        expected_allowance: [],
-        memo: [],
-        fee: [_fee],
-        created_at_time: []
-    });
-    console.log(response);
-    return response;
+    try{
+        const response =  await Connect.canister(tokenId, standard).icrc2_approve({
+            from_subaccount: [],
+            spender: {
+                owner: _spender,
+                subaccount: [],
+            },
+            amount: _amount,
+            expires_at: [],
+            expected_allowance: [],
+            memo: [],
+            fee: [_fee],
+            created_at_time: []
+        });
+        return response;
+    }catch(e){
+        return null;
+    }
 }
 export const useGetTransactions = (tokenId, standard, start, end)=>{
     return useQuery({
@@ -155,7 +156,8 @@ export const useTransferToken = async(tokenId, to, amount)=>{
     const _p = txtToPrincipal(to);
     let _token = getTokenInfo(tokenId);
     const _amount = BigInt(parseInt(amount) * _token ? Math.pow(10, _token.decimals) : config.E8S);
-    const _fee = BigInt(parseInt(_token.fee>0?_token.fee/Math.pow(10, _token.decimals):0));
+    // const _fee = BigInt(_token.fee>0?parseInt(_token.fee)/Math.pow(10, _token.decimals):0);
+    const _fee = BigInt(_token?_token.fee:0);
 
     // const _amount = amount*config.E8S;
     try{
@@ -181,6 +183,7 @@ export const useTransferToken = async(tokenId, to, amount)=>{
             return true;
         }
     }catch(e){
+        return false;
         showError(e);
     }
 }
