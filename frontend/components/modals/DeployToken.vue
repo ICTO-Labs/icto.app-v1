@@ -67,7 +67,7 @@ import { showLoading } from "../../utils/common";
                 isLoading.value = true;
                 showLoading("Approving token deployer to charge service fee...");
                 newToken.value.minting_account = { owner: Principal.fromText(walletStore.principal), subaccount: []};//Add minting account
-                let _approved = await useTokenApprove(config.LEDGER_CANISTER_ID, {spender: config.TOKEN_DEPLOYER_CANISTER_ID, amount: config.SERVICE_FEES.DEPLOY_TOKEN});
+                let _approved = await useTokenApprove(config.LEDGER_CANISTER_ID, {spender: config.TOKEN_DEPLOYER_CANISTER_ID, amount: config.SERVICE_FEES.DEPLOY_TOKEN*config.E8S});
                 if(_approved && "Err" in _approved){
                     isLoading.value = false;
                     showError("Approve not succeed, please see the console for further detail!", true);

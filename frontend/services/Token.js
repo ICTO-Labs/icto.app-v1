@@ -1,7 +1,7 @@
 import { useQuery, useMutation } from "@tanstack/vue-query";
 import Connect from "@/ic/actor/Connect";
 import { useStorage } from '@vueuse/core'
-import { decodeICRCMetadata, decodeTransaction } from "@/utils/token";
+import { decodeICRCMetadata, decodeTransaction, getTokenInfo } from "@/utils/token";
 import RosettaApi from '@/services/RosettaApi';
 import config from '@/config';
 import walletStore from "@/store";
@@ -17,28 +17,38 @@ export const useGetMyBalance = async(tokenId) => {
                 owner: txtToPrincipal(walletStore.principal),
                 subaccount: []
             });
-            console.log(_balance);
-            return Number(_balance)/config.E8S
+            let _token = getTokenInfo(tokenId);
+            return Number(_balance)/ (_token ? Math.pow(10, _token.decimals) : config.E8S);
         }catch(e){
             return 0;
         }
     }
 }
-export const useGetTokenBalance = async(tokenId, principal)=>{
+export const useGetTokenBalance = async(tokenId, principal, standard='icrc1')=>{
     try{
-        let _balance = await Connect.canister(tokenId, 'icrc1').icrc1_balance_of({
-            owner: txtToPrincipal(principal),
-            subaccount: []
-        });
-        return Number(_balance)/config.E8S
+        let _token = getTokenInfo(tokenId);
+        let _decimals = _token ? Math.pow(10, _token.decimals) : config.E8S;
+        var _balance = 0;
+        let _standard = standard.toLowerCase();
+        if(_standard == 'icp' || _standard == 'icrc1' || _standard == 'icrc2'){
+            _balance = await Connect.canister(tokenId, 'icrc1').icrc1_balance_of({
+                owner: txtToPrincipal(principal),
+                subaccount: [] 
+            });
+            return Number(_balance)/_decimals
+        }else if(_standard == 'dip20'){
+            _balance = await Connect.canister(tokenId, 'dip20').balanceOf(txtToPrincipal(principal));
+            return Number(_balance)/_decimals;
+        }
     }catch(e){
+        console.log('useGetTokenBalance', e);
         return 0;
     }
 }
 export const useTransferFrom = async(tokenId, payload, standard="icrc2")=>{
-    console.log('payload', payload);
-    const _amount = BigInt(parseInt(payload.amount) * config.E8S);
-    const _fee = BigInt(parseInt(0));
+    let _token = getTokenInfo(tokenId);
+    const _amount = BigInt(parseInt(payload.amount) * _token ? Math.pow(10, _token.decimals) : config.E8S);
+    const _fee = BigInt(parseInt(_token.fee>0?_token.fee/Math.pow(10, _token.decimals):0));
     const _from = txtToPrincipal(payload.from);
     const _to = txtToPrincipal(payload.to);
     const response = await Connect.canister(tokenId, standard).icrc2_transfer_from({
@@ -59,8 +69,11 @@ export const useTransferFrom = async(tokenId, payload, standard="icrc2")=>{
     console.log('useTransferFrom', response);    
 }
 export const useTokenApprove = async(tokenId, payload, standard="icrc2")=>{
-    const _amount = BigInt(parseInt(payload.amount) * config.E8S);
-    const _fee = BigInt(parseInt(0));
+    let _token = getTokenInfo(tokenId);
+    const _amount = BigInt(parseInt(payload.amount) * _token ? Math.pow(10, _token.decimals) : config.E8S);
+    const _fee = BigInt(parseInt(_token.fee>0?_token.fee/Math.pow(10, _token.decimals):0));
+    // const _amount = BigInt(parseInt(payload.amount) * config.E8S);
+    // const _fee = BigInt(parseInt(0));
     const _spender = txtToPrincipal(payload.spender);
     const response =  await Connect.canister(tokenId, standard).icrc2_approve({
         from_subaccount: [],
@@ -140,7 +153,11 @@ export const usetGetMetadata = async(tokenId, standard="icrc2")=>{
 
 export const useTransferToken = async(tokenId, to, amount)=>{
     const _p = txtToPrincipal(to);
-    const _amount = amount*config.E8S;
+    let _token = getTokenInfo(tokenId);
+    const _amount = BigInt(parseInt(amount) * _token ? Math.pow(10, _token.decimals) : config.E8S);
+    const _fee = BigInt(parseInt(_token.fee>0?_token.fee/Math.pow(10, _token.decimals):0));
+
+    // const _amount = amount*config.E8S;
     try{
         let _payload = {
             from_subaccount: [],
@@ -149,7 +166,7 @@ export const useTransferToken = async(tokenId, to, amount)=>{
                 subaccount: [],
             },
             amount: _amount,
-            fee: [],
+            fee: [_fee],
             memo: [],
             created_at_time: [],
         }

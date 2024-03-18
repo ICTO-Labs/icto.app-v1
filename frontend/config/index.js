@@ -46,6 +46,9 @@ const config = {
     CUSTOM_DOMAIN_MAXLENGTH: 32,//Max length for custom domain
     CANISTER_WHITE_LIST: [
         NETWORK[ENV]['canister_id'],
+        NETWORK[ENV]['deployer_id'],
+        NETWORK[ENV]['token_deployer_id'],
+        NETWORK[ENV]['backend_id'],
         'ryjl3-tyaaa-aaaaa-aaaba-cai',
         'aaaaa-aa',
         'rkp4c-7iaaa-aaaaa-aaaca-cai',
@@ -67,7 +70,7 @@ const config = {
     },
     SERVICE_CANISTER_ID: NETWORK[ENV]['gov_token_id'], 
     SERVICE_FEES: {
-        "DEPLOY_TOKEN": 1*100_000_000,//1 ICP
+        "DEPLOY_TOKEN": 1,//1 ICP
         "PAYMENT_CONTRACT": 10,
         "VESTING_CONTRACT": 10,
         "LOCKS_CONTRACT": 10,

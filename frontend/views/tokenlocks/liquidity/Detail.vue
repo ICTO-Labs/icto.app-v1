@@ -4,7 +4,7 @@
     import { useGetContract, useWithdrawPosition, useGetTransaction, useIncreaseDuration, useCheckOvertime, useGetCyclesBalance } from "@/services/Locks";
     import { shortPrincipal, shortAccount } from '@/utils/common';
     import { useGetPoolMeta, useGetPosition, useGetPoolValue } from '@/services/SwapPool';
-    import { currencyFormat } from "@/utils/token";
+    import { currencyFormat, getPercentage } from "@/utils/token";
     import { useGetTokenBalance } from "@/services/Token";
     import { showSuccess, showError, showLoading, closeMessage, prettyValue } from "@/utils/common";
     import { VueFinalModal } from 'vue-final-modal';
@@ -15,6 +15,10 @@
     const contractId = ref(route.params.contractId);
 
     const contract = ref({});
+    const poolTVL = ref({
+        token0: 0,
+        token1: 0
+    });
     const cyclesBalance = ref(0);
     const transactions = ref([]);
     const increaseLock = ref({
@@ -45,12 +49,14 @@
             await useCheckOvertime(contractId.value);//update status
         }
         isLoading.value = false;
-        await getPoolMeta();
-        await getPosition();
-        await getTransaction();
-        getCylesBalance();
-        handleDate();
-        getPoolTVL();
+        await Promise.all([
+            getPoolMeta(),
+            getPosition(),
+            getTransaction(),
+            getCylesBalance(),
+            handleDate(),
+        ]);
+        await getPoolTVL(contract.value);
         console.log(contract.value);
     }
 
@@ -61,10 +67,21 @@
         return moment().isAfter(_unlockDate);
     }
 
-    const getPoolTVL =  async()=>{
-        token0 = await useGetTokenBalance(contract.value.token0.address, contract.value.poolId);
-        token1 = await useGetTokenBalance(contract.value.token1.address, contract.value.poolId);
-        console.log('TVL', token0, token1);
+    const getPoolTVL =  async(contract)=>{
+        let [token0, token1] = await Promise.all([
+            useGetTokenBalance(contract.token0.address, contract.poolId, contract.token0.standard),
+            useGetTokenBalance(contract.token1.address, contract.poolId, contract.token1.standard)
+        ]);
+
+        console.log('token0, token1', token0, token1);
+
+        poolTVL.value = {
+            token0: token0,
+            token0Percent: getPercentage(poolValue.value.amount0, token0),
+            token1: token1,
+            token1Percent: getPercentage(poolValue.value.amount1, token1)
+        }
+        console.log('TVL', lockedTVL.value);
     }
     const getCylesBalance = async()=>{
         cyclesBalance.value = await useGetCyclesBalance(contractId.value);
@@ -89,10 +106,8 @@
         // };
         if(contract.value){
             positionData.value = await useGetPosition(contract.value.poolId, contract.value.positionId);
-            console.log(positionData.value);
             if(poolMeta.value){
                 poolValue.value = useGetPoolValue(Number(poolMeta.value.sqrtPriceX96), Number(positionData.value.tickLower), Number(positionData.value.tickUpper), Number(positionData.value.liquidity), Number(poolMeta.value.tick));
-                console.log('pool poolValue', poolValue.value);
             }
         }
         
@@ -233,7 +248,7 @@
                 <div class="bg-body shadow-sm card-rounded mx-9 mb-9 px-6 py-2 position-relative z-index-1" style="margin-top: -40px">
                     <div class="row g-0">
                         <div class="col-md px-6 py-1 rounded-2 me-3 mb-5 d-flex flex-center flex-column">
-                            <div class="symbol symbol-125px symbol-circle mb-5">
+                            <div class="symbol symbol-100px symbol-circle mb-0">
                                 <img :src="`https://${config.CANISTER_STORAGE_ID}.raw.icp0.io/${contract?.token0?.address}.png`" alt="Token0">
                             </div>
                             <a href="#" class="fs-4 text-gray-800 text-hover-primary fw-bolder mb-0">{{ contract?.token0?.name || '---' }}</a>
@@ -256,13 +271,13 @@
                                         <td class="text-end"><span class="badge badge-light fw-bolder fs-7" v-if="poolValue">≈${{ (poolValue.price*walletStore.icpPrice).toFixed(6) }}</span></td>
                                     </tr>
                                     <tr><td colspan="2">
-                                        <div class="d-flex flex-column w-100 me-2">
+                                        <div class="d-flex flex-column w-100 pt-5">
                                             <div class="d-flex flex-stack mb-2">
-                                                <span class="text-muted me-2 fs-7 fw-normal">---% locked</span>
-                                                <span class="text-muted me-2 fs-7 fw-normal">TVL: --- {{ contract?.token0?.name || '---' }}</span>
+                                                <span class="text-muted me-2 fs-7 fw-normal">Value: {{poolTVL.token0Percent}}%</span>
+                                                <span class="text-muted me-2 fs-7 fw-normal">TVL: <span class="text-dark fw-bold">{{ currencyFormat(poolTVL.token0) }}</span> {{ contract?.token0?.name || '---' }}</span>
                                             </div>
                                             <div class="progress h-6px w-100">
-                                                <div class="progress-bar bg-primary" role="progressbar" style="width: 2%" aria-valuenow="50" aria-valuemin="0" aria-valuemax="100"></div>
+                                                <div class="progress-bar bg-danger" role="progressbar" :style="`width: ${poolTVL.token0Percent}%`" aria-valuenow="50" aria-valuemin="0" aria-valuemax="100"></div>
                                             </div>
                                         </div>
                                     </td></tr>
@@ -361,7 +376,7 @@
                             </div>
                         </div>
                         <div class="col-md px-6 py-1 rounded-2 me-3 mb-5 d-flex flex-center flex-column">
-                            <div class="symbol symbol-125px symbol-circle mb-5">
+                            <div class="symbol symbol-100px symbol-circle mb-0">
                                 <img :src="`https://${config.CANISTER_STORAGE_ID}.raw.icp0.io/${contract?.token1?.address}.png`" alt="Token1">
                             </div>
                             <a href="#" class="fs-4 text-gray-800 text-hover-primary fw-bolder mb-0">{{ contract?.token1?.name || '---' }}</a>
@@ -383,13 +398,13 @@
                                         <td class="text-end"><span class="badge badge-light fw-bolder fs-7">${{ walletStore.icpPrice }}</span></td>
                                     </tr>
                                     <tr><td colspan="2">
-                                        <div class="d-flex flex-column w-100 me-2">
+                                        <div class="d-flex flex-column w-100 pt-5">
                                             <div class="d-flex flex-stack mb-2">
-                                                <span class="text-muted me-2 fs-7 fw-normal">---% locked</span>
-                                                <span class="text-muted me-2 fs-7 fw-normal">TVL: --- {{ contract?.token1?.name || '---' }}</span>
+                                                <span class="text-muted me-2 fs-7 fw-normal">Value: {{poolTVL.token1Percent}}%</span>
+                                                <span class="text-muted me-2 fs-7 fw-normal">TVL: <span class="text-dark fw-bold">{{ currencyFormat(poolTVL.token1) }}</span> {{ contract?.token1?.name || '---' }}</span>
                                             </div>
                                             <div class="progress h-6px w-100">
-                                                <div class="progress-bar bg-primary" role="progressbar" style="width: 2%" aria-valuenow="50" aria-valuemin="0" aria-valuemax="100"></div>
+                                                <div class="progress-bar bg-danger" role="progressbar" :style="`width: ${poolTVL.token1Percent}%`" aria-valuenow="50" aria-valuemin="0" aria-valuemax="100"></div>
                                             </div>
                                         </div>
                                     </td></tr>

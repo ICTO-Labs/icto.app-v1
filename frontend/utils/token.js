@@ -1,4 +1,4 @@
-import _api from "@/ic/api";
+import BigNumber from "bignumber.js";
 import { useWalletStore } from '@/store/wallet'
 import {Principal} from "@dfinity/principal";
 import { showError, principalToAccountId } from "./common";
@@ -153,4 +153,22 @@ export const getTokenInfo = (canisterId)=>{
   const token = tokenList.find((token) => token.canisterId === canisterId);
   console.log('token', token);
   return token;
+}
+export const parseTokenAmount = (amount, decimals) => {
+  // return new BigNumber(amount).dividedBy(Math.pow(10, decimals)).toFormat();
+  if (amount !== 0 && !amount) return new BigNumber(0);
+  if (typeof amount === "bigint") amount = Number(amount);
+  if (typeof decimals === "bigint") decimals = Number(decimals);
+  if (Number.isNaN(Number(amount))) return new BigNumber(String(amount));
+  return new BigNumber(String(amount)).dividedBy(10 ** Number(decimals));
+
+}
+export const balanceActuallyToAccount = (amount, transferFee, decimals) => {
+  const _amount = new BigNumber(amount ?? 0).minus(parseTokenAmount(transferFee, decimals));
+  return _amount.isGreaterThan(0) ? _amount.toFormat() : 0;
+};
+
+export const getPercentage = (amount, total) => {
+  if(amount == 0 || total == 0 || amount > total) return 0;
+  return ((amount / total) * 100).toFixed(2);
 }
