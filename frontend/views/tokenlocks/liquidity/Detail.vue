@@ -17,7 +17,9 @@
     const contract = ref({});
     const poolTVL = ref({
         token0: 0,
-        token1: 0
+        token0Percent: 0,
+        token1: 0,
+        token1Percent: 0
     });
     const cyclesBalance = ref(0);
     const transactions = ref([]);
@@ -50,13 +52,13 @@
         }
         isLoading.value = false;
         await Promise.all([
-            getPoolMeta(),
-            getPosition(),
+            getPoolTVL(contract.value),
             getTransaction(),
             getCylesBalance(),
             handleDate(),
         ]);
-        await getPoolTVL(contract.value);
+        await getPoolMeta(),
+        await getPosition(),
         console.log(contract.value);
     }
 
@@ -72,16 +74,10 @@
             useGetTokenBalance(contract.token0.address, contract.poolId, contract.token0.standard),
             useGetTokenBalance(contract.token1.address, contract.poolId, contract.token1.standard)
         ]);
-
-        console.log('token0, token1', token0, token1);
-
         poolTVL.value = {
             token0: token0,
-            token0Percent: getPercentage(poolValue.value.amount0, token0),
             token1: token1,
-            token1Percent: getPercentage(poolValue.value.amount1, token1)
         }
-        console.log('TVL', lockedTVL.value);
     }
     const getCylesBalance = async()=>{
         cyclesBalance.value = await useGetCyclesBalance(contractId.value);
@@ -108,6 +104,10 @@
             positionData.value = await useGetPosition(contract.value.poolId, contract.value.positionId);
             if(poolMeta.value){
                 poolValue.value = useGetPoolValue(Number(poolMeta.value.sqrtPriceX96), Number(positionData.value.tickLower), Number(positionData.value.tickUpper), Number(positionData.value.liquidity), Number(poolMeta.value.tick));
+                //Set percent
+                poolTVL.value.token0Percent = getPercentage(poolValue.value.amount0, poolTVL.value.token0);
+                poolTVL.value.token1Percent = getPercentage(poolValue.value.amount1, poolTVL.value.token1);
+                console.log('set poolTVL', poolTVL.value, poolValue.value);
             }
         }
         
@@ -273,11 +273,11 @@
                                     <tr><td colspan="2">
                                         <div class="d-flex flex-column w-100 pt-5">
                                             <div class="d-flex flex-stack mb-2">
-                                                <span class="text-muted me-2 fs-7 fw-normal">Value: {{poolTVL.token0Percent}}%</span>
-                                                <span class="text-muted me-2 fs-7 fw-normal">TVL: <span class="text-dark fw-bold">{{ currencyFormat(poolTVL.token0) }}</span> {{ contract?.token0?.name || '---' }}</span>
+                                                <span class="text-muted me-2 fs-7 fw-normal">Value: {{poolTVL?.token0Percent}}%</span>
+                                                <span class="text-muted me-2 fs-7 fw-normal">TVL: <span class="text-dark fw-bold">{{ currencyFormat(poolTVL?.token0) }}</span> {{ contract?.token0?.name || '---' }}</span>
                                             </div>
                                             <div class="progress h-6px w-100">
-                                                <div class="progress-bar bg-danger" role="progressbar" :style="`width: ${poolTVL.token0Percent}%`" aria-valuenow="50" aria-valuemin="0" aria-valuemax="100"></div>
+                                                <div class="progress-bar bg-danger" role="progressbar" :style="`width: ${poolTVL?.token0Percent}%`" aria-valuenow="50" aria-valuemin="0" aria-valuemax="100"></div>
                                             </div>
                                         </div>
                                     </td></tr>
@@ -400,11 +400,11 @@
                                     <tr><td colspan="2">
                                         <div class="d-flex flex-column w-100 pt-5">
                                             <div class="d-flex flex-stack mb-2">
-                                                <span class="text-muted me-2 fs-7 fw-normal">Value: {{poolTVL.token1Percent}}%</span>
-                                                <span class="text-muted me-2 fs-7 fw-normal">TVL: <span class="text-dark fw-bold">{{ currencyFormat(poolTVL.token1) }}</span> {{ contract?.token1?.name || '---' }}</span>
+                                                <span class="text-muted me-2 fs-7 fw-normal">Value: {{poolTVL?.token1Percent}}%</span>
+                                                <span class="text-muted me-2 fs-7 fw-normal">TVL: <span class="text-dark fw-bold">{{ currencyFormat(poolTVL?.token1) }}</span> {{ contract?.token1?.name || '---' }}</span>
                                             </div>
                                             <div class="progress h-6px w-100">
-                                                <div class="progress-bar bg-danger" role="progressbar" :style="`width: ${poolTVL.token1Percent}%`" aria-valuenow="50" aria-valuemin="0" aria-valuemax="100"></div>
+                                                <div class="progress-bar bg-danger" role="progressbar" :style="`width: ${poolTVL?.token1Percent}%`" aria-valuenow="50" aria-valuemin="0" aria-valuemax="100"></div>
                                             </div>
                                         </div>
                                     </td></tr>
