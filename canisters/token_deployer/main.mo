@@ -126,7 +126,7 @@ actor class Self() = this {
             let { canister_id } = await ic.create_canister({
                 settings = ?{
                     controllers = ?[deployer()];//
-                    freezing_threshold = ?9331200; // 108 days
+                    freezing_threshold = ?9_331_200; // 108 days
                     memory_allocation = null;
                     compute_allocation = null;
                     reserved_cycles_limit = null;
@@ -136,6 +136,23 @@ actor class Self() = this {
         } catch (e) {
             return Debug.trap("Canister creation failed " # debug_show Error.message(e));
         };
+    };
+
+    //Deployer withdraw ownership from token canister and transfer to token owner
+    private func transfer_ownership(canister_id : Principal, to: Principal) : async () {
+        await (
+            ic.update_settings({
+                canister_id = canister_id;
+                settings = {
+                    controllers = ?[to];
+                    compute_allocation = null;
+                    memory_allocation = null;
+                    freezing_threshold = ?9_331_200;
+                    reserved_cycles_limit = null;
+                };
+                sender_canister_version = null;
+            })
+        );
     };
 
     public shared({caller}) func get_lastest_version() : async Result.Result<Text, Text>{
@@ -231,7 +248,7 @@ actor class Self() = this {
 
         // Check if this canister has enough cycles
         let balance = Cycles.balance();
-        if (balance < CYCLES_FOR_INSTALL + MIN_CYCLES_IN_DEPLOYER) return #err("Not enough cycles in deployer. Balance: "# debug_show(balance) #"T");
+        if (balance < CYCLES_FOR_INSTALL + MIN_CYCLES_IN_DEPLOYER) return #err("Not enough cycles in deployer, balance: "# debug_show(balance) #"T");
 
         if (not _isAdmin(Principal.toText(caller))) switch (await icrcLedger.icrc2_transfer_from({ from = { owner = caller; subaccount = null }; spender_subaccount = null; to = { owner = deployer(); subaccount = null }; fee = null; memo = null; from_subaccount = null; created_at_time = null; amount = CREATION_FEE })) {
             case (#Ok(_)) ();
@@ -251,6 +268,13 @@ actor class Self() = this {
             });
         } catch (e) {
             return #err("Canister installation failed " # debug_show (Error.message(e)));
+        };
+
+        //Transfer ownership
+        try{
+            await transfer_ownership(canister_id, caller);
+        }catch(e){
+            return #err("Can not transfer ownership " # debug_show (Error.message(e)));
         };
 
         let _version = Hex.encode(Blob.toArray(SNS_WASM_VERSION));
