@@ -13,7 +13,7 @@
 							<div class="text-dark order-2 order-md-1">
 								<span class="fw-bold text-gray-800 me-1">2024 ©</span>
 								<a href="https://icto.app" class="text-gray-800 text-hover-primary me-1 fw-bold me-2">ICTO.APP</a>
-								<span class="text-muted fs-7"><i class="fas fa-code"></i> build <span class="badge badge-light my-0">{{ sha.substring(0,7) }}</span></span>
+								<span class="text-muted fs-7"><i class="fas fa-code"></i> build <a target="_blank" :href="`https://github.com/ICTO-Labs/icto.app/commit/${sha}`" class="badge badge-light my-0" title="Github commit">{{ sha.substring(0,7) }}</a></span>
 								
 							</div>
 							<!--end::Copyright-->
