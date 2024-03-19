@@ -197,7 +197,18 @@ shared ({ caller }) actor class () = self {
         let contract = await getContract(canister_id);
         switch (contract) {
             case (?c) {
-                let _contract = genObject(c, status);
+                var _contract = genObject(c, status);
+                if(status == "increase"){
+                    let _remoteContract = await getRemoteContract(canister_id);
+                    _contract := {
+                        c with
+                        status = _remoteContract.status;
+                        unlockedTime = null;
+                        durationTime = _remoteContract.durationTime;
+                        durationUnit = _remoteContract.durationUnit;
+                    };
+                };
+                
                 _contracts := Trie.put(
                     _contracts,
                     keyT(canister_id),
@@ -346,6 +357,13 @@ shared ({ caller }) actor class () = self {
             verify : shared () -> async { #ok : Bool; #err : Text };
         };
         await SmartContract.verify();
+    };
+    //Getting remote contract data
+    private func getRemoteContract(canister_id: Text) : async Types.LockContract {
+        let SmartContract = actor(canister_id) : actor {
+            getContract : query () -> async Types.LockContract;
+        };
+        return await SmartContract.getContract();
     };
 
     private func isOwnerOfPosition(poolId: Text, owner: Principal, positionId: Nat) : async Bool {

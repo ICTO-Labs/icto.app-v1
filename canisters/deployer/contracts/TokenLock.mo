@@ -126,6 +126,13 @@ shared ({ caller = deployer }) actor class Contract(contract: DeployerTypes.Lock
                 };
                 await updateDeployerStatus(status);//send status back to deployer
             };
+            case ("increase"){
+                _contract := {
+                    _contract with
+                    status = "locked";
+                };
+                await updateDeployerStatus(status);//update increase method
+            };
             case ("unlocked"){
                //Match the unlockedTime as defined in the contract
                let _unlockedTime = Time.now() + (_contract.durationTime * _contract.durationUnit * SECOND_TO_NANO);//Get duration from tempo obj (update able)
@@ -228,7 +235,7 @@ shared ({ caller = deployer }) actor class Contract(contract: DeployerTypes.Lock
                 durationTime = _currentDuration + _newDuration;
                 durationUnit = 1;
             };
-            await updateStatus("locked");//Change status back to locked
+            await updateStatus("increase");//Change status back to locked
             #ok(true);
         }else{
             #err("The contract is already withdrawn, you can't increase the duration. Please create a new contract!");
