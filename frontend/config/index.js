@@ -1,13 +1,14 @@
 import canisters from '../../canister_ids.json';
+import local_canisters from '../../.dfx/local/canister_ids.json';
 const NETWORK = {
     "dev": {
-        canister_id: "aax3a-h4aaa-aaaaa-qaahq-cai",
-        deployer_id: "be2us-64aaa-aaaaa-qaabq-cai",
-        token_deployer_id: "c5kvi-uuaaa-aaaaa-qaaia-cai",
-        backend_id: "bd3sg-teaaa-aaaaa-qaaba-cai",
+        canister_id: local_canisters.frontend.local,//"aax3a-h4aaa-aaaaa-qaahq-cai",//Frontend canister id
+        deployer_id: local_canisters.deployer.local,//"be2us-64aaa-aaaaa-qaabq-cai",
+        token_deployer_id: local_canisters.token_deployer.local,//"c5kvi-uuaaa-aaaaa-qaaia-cai",
+        backend_id: local_canisters.backend.local,//"bd3sg-teaaa-aaaaa-qaaba-cai",
         gov_token_id: "ajuq4-ruaaa-aaaaa-qaaga-cai",//governance token, required for charges
         host: "http://127.0.0.1:8000",
-        identityProvider: "http://127.0.0.1:8000/?canisterId=br5f7-7uaaa-aaaaa-qaaca-cai#authorize",
+        identityProvider: "http://127.0.0.1:8000/?canisterId="+local_canisters.internet_identity.local+"#authorize",
         scan: "http://127.0.0.1:8000/?canisterId=bd3sg-teaaa-aaaaa-qaaba-cai&id="
     },
     "staging": {
