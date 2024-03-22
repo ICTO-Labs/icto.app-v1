@@ -52,6 +52,22 @@
     newObj.action = 'transfer';
     showModal("showTransferTokenModal", newObj)
   }
+  const resetAssets = ()=>{
+      Swal.fire({
+          title: "Are you sure?",
+          text: "Reset assets to the default list?",
+          icon: "warning",
+          showCancelButton: true,
+          confirmButtonColor: "#3085d6",
+          cancelButtonColor: "#d33",
+          confirmButtonText: "Yes, Reset it!"
+          }).then(async (result) => {
+              if(result.isConfirmed){
+                  await storeAssets.value.resetAssets();
+                  showSuccess("Assets reseted successfully!");
+              }
+          });
+  }
   const logout = ()=>{
       Swal.fire({
           title: "Are you sure?",
@@ -77,7 +93,7 @@
         <h3 class="card-title align-items-start flex-column">
             <span class="fw-bolder mb-2 text-primary"><i class="fas fa-wallet text-primary me-2"></i> My Wallet</span>
             <span class="text-muted fw-bold fs-7">Connected: <span class="fw-bold text-gray-800">{{walletStore?.account?.name}}</span>
-              <button class="btn btn-sm btn-light-danger fw-bolder fs-8 px-2 py-1 ms-2" @click.stop="() => logout()"><i class="fas fa-xmark"></i> Disconnect</button>
+              <button class="btn btn-sm btn-light-danger fw-bolder fs-8 px-2 py-1 ms-2" @click.stop="() => logout()">Disconnect</button>
             </span>
         </h3>
 
@@ -148,6 +164,9 @@
               </ul>
             </h3>
             <div class="card-toolbar">
+                <button type="button" @click="resetAssets" class="btn btn-sm btn-light-danger">
+                    <i class="fas fa-remove"></i> Reset
+                </button>
                 <button type="button"
                     class="btn btn-sm btn-light-primary ms-5"
                     @click="refreshBalance" :disabled="isLoading">

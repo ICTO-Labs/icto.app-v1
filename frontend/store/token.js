@@ -56,5 +56,8 @@ export const useAssetStore = defineStore({
         async removeAsset(canisterId) {
             this.assets = this.assets.filter((asset) => asset.canisterId !== canisterId);
         },
+        async resetAssets() {
+            this.assets = TOKEN_DATA;
+        }
     },
 });
