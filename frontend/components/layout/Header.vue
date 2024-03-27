@@ -12,7 +12,7 @@ const router = useRoute();
 							<!--begin::Aside mobile toggle-->
 							<!--end::Aside mobile toggle-->
 							<!--begin::Logo-->
-							<div class="d-flex align-items-center flex-grow-1 flex-lg-grow-0">
+							<div class="d-flex align-items-center flex-grow-1 flex-lg-grow-0 pe-10">
 								<router-link to="/">
 									<img alt="Logo" src="/media/logos/logo-vertical.png" class="h-30px h-lg-30px" />
 								</router-link>
@@ -28,17 +28,7 @@ const router = useRoute();
 										<div class="menu menu-lg-rounded menu-column menu-lg-row menu-state-bg menu-title-gray-700 menu-state-title-primary menu-state-icon-primary menu-state-bullet-primary menu-arrow-gray-400 fw-bold my-5 my-lg-0 align-items-stretch" id="#kt_header_menu" data-kt-menu="true">
 											<div :class="`menu-item menu-lg-down-accordion me-lg-1 ${router.name=='my-token' || router.name=='token-detail'?'here':''}`">
 												<router-link class="menu-link py-3" to="/my-token">
-													<span class="menu-title">My Tokens</span>
-                                                </router-link>
-											</div>
-											<div :class="`menu-item menu-lg-down-accordion me-lg-1 ${router.name=='contract' || router.name=='contract-detail' ?'here':''}`">
-												<router-link class="menu-link py-3" to="/payments">
-													<span class="menu-title">Payments</span>
-                                                </router-link>
-											</div>
-											<div class="menu-item menu-lg-down-accordion me-lg-1">
-												<router-link class="menu-link py-3" to="/vesting">
-													<span class="menu-title">Vesting</span>
+													<span class="menu-title">Token Manager</span>
                                                 </router-link>
 											</div>
 											<div data-kt-menu-trigger="click" data-kt-menu-placement="bottom-start" :class="`menu-item menu-lg-down-accordion me-lg-1 ${router.name=='token-locks' || router.name=='Liquidity' || router.name=='Token' || router.name=='nft-locks'  ?'here':''}`">
@@ -97,6 +87,22 @@ const router = useRoute();
 													</div>
 												</div>
 											</div>
+											<div :class="`menu-item menu-lg-down-accordion me-lg-1 ${router.name=='Airdrop' || router.name=='AirdropDetail' ?'here':''}`">
+												<router-link class="menu-link py-3" to="/airdrop">
+													<span class="menu-title  text-success"><i class="fas fa-rocket me-2 text-success"></i> Airdrop</span>
+                                                </router-link>
+											</div>
+											<div :class="`menu-item menu-lg-down-accordion me-lg-1 ${router.name=='contract' || router.name=='contract-detail' ?'here':''}`">
+												<router-link class="menu-link py-3" to="/payments">
+													<span class="menu-title">Payments</span>
+                                                </router-link>
+											</div>
+											<!-- <div class="menu-item menu-lg-down-accordion me-lg-1">
+												<router-link class="menu-link py-3" to="/vesting">
+													<span class="menu-title">Vesting</span>
+                                                </router-link>
+											</div>
+											-->
 											<div :class="`menu-item menu-lg-down-accordion me-lg-1 ${router.name=='launchpad' || router.name=='new-launchpad' ?'here':''}`">
 												<router-link class="menu-link py-3" to="/launchpad">
 													<span class="menu-title">Launchpad</span>

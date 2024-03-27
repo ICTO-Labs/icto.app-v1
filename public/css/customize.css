@@ -447,3 +447,6 @@ fieldset[disabled] .multiselect {
 .btn-disabled{
   pointer-events: none !important;
 }
+.codemirror-error-line{
+  background-color: #ffe8e8 !important;
+}

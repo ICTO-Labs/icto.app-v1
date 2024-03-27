@@ -5,20 +5,22 @@
 	const props = defineProps(['current', 'parents', 'showBtn']);
 	const router = useRoute();
 	import walletStore from "@/store";
-	const btnLabel = ref('');
-	const btnIcon = ref('');
-	const modalName = ref('');
+	const toolbarProps = ref({
+		label: '',
+		icon: '',
+		modal: '',
+		css: 'btn-danger'
+	});
 	if(props.showBtn){
-		btnLabel.value = props.showBtn.label;
-		btnIcon.value = props.showBtn.icon;
-		modalName.value = props.showBtn.modal;
+		toolbarProps.value = props.showBtn;
+		console.log('toolbarProps,', toolbarProps.value, props.showBtn);
 	}
 	const showWallet = ()=>{	
 		walletStore.isLogged ? showModal('showWalletModal', true) : showModal('showLoginModal', true);	
 	}
 	const showBtnModal = ()=>{
 		if(props.showBtn){
-			walletStore.isLogged ? showModal(''+modalName.value+'', true) : showModal('showLoginModal', true);
+			walletStore.isLogged ? showModal(''+toolbarProps.value.modal+'', true) : showModal('showLoginModal', true);
 		}
 		showModal('showLiquidityLocksModal', {status: true})
 	}
@@ -52,7 +54,7 @@
 			<!--end::Page title-->
 			<!--begin::Actions-->
 			<div class="d-flex align-items-center py-1">
-				<a href="#" @click.stop="showBtnModal" class="btn btn-sm btn-danger me-2" v-if="props.showBtn"><i :class="`fas ${btnIcon}`"></i> {{btnLabel}}</a> 
+				<a href="#" @click.stop="showBtnModal" :class="`btn btn-sm me-2 ${toolbarProps.css?toolbarProps.css:'btn-danger'}`" v-if="props.showBtn"><i :class="`fas ${toolbarProps.icon}`"></i> {{toolbarProps.label}}</a> 
 				<router-link to="/new-contract" class="btn btn-sm btn-danger me-2" v-if="router.name =='contract'">New Contract</router-link>
 				<!-- <a href="#" @click.stop="showWallet" class="btn btn-sm btn-primary me-2"><i class="fas fa-wallet"></i> My Wallet</a>  -->
 			</div>

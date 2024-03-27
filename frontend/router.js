@@ -16,6 +16,9 @@ import LiquidityLocks from './views/tokenlocks/liquidity/Index.vue'
 import LiquidityDetail from './views/tokenlocks/liquidity/Detail.vue'
 import TokenLocks from './views/tokenlocks/Token.vue'
 import NftLocks from './views/tokenlocks/Nft.vue'
+
+import Airdrop from './views/airdrop/Index.vue';
+import AirdropDetail from './views/airdrop/Detail.vue';
 const router = createRouter({
   history: createWebHistory(import.meta.env.BASE_URL),
   routes: [
@@ -90,6 +93,14 @@ const router = createRouter({
       meta: {title: 'My Tokens'},
       name: 'my-token',
       component: MyToken
+    },
+    {
+      path: '/airdrop',
+      meta: {title: 'Airdrop'},
+      children: [
+        { path: '', component: Airdrop, name: 'Airdrop' },
+        { path: ':airdropId', component: AirdropDetail, name: 'AirdropDetail'},
+      ],
     },
     {
       path: '/token/:tokenId',

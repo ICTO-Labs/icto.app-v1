@@ -19,7 +19,11 @@
         currentStep.value = index;
         for (let i = 0; i < steps.value.length; i++) {
             if (i !== index) {
-                steps.value[i] = "pending";
+                if(i < index){
+                    steps.value[i] = "completed";
+                }else{
+                    steps.value[i] = "pending";
+                }
             }
         }
     }          
@@ -374,7 +378,6 @@
                             <label class="d-flex align-items-center fs-6 fw-bold mb-2"><span class="required">Total <span v-if="tokenInfo" class="text-primary">{{tokenInfo.symbol }}</span> for sell</span></label>
                             <money3 v-model.number="launchpad.totalToken" class="form-control"  v-bind="money3Config" @change="calTokenPrice"></money3>
                         </div>
-                       
                     </div>
                     <div class="row mb-5">
                         <div class="col-md-3 fv-row">
