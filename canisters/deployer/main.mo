@@ -270,8 +270,8 @@ shared ({ caller }) actor class () = self {
     };
 
     public query func getContracts(_page : Nat) : async ([Types.LockContract]) {
-        var lower : Nat = _page * 9;
-        var upper : Nat = lower + 9;
+        var lower : Nat = _page * 29;
+        var upper : Nat = lower + 29;
         var b : Buffer.Buffer<Types.LockContract> = Buffer.Buffer<Types.LockContract>(0);
         for ((i, v) in Trie.iter(_owners)) {
             switch (Trie.find(_contracts, keyT(i), Text.equal)) {
