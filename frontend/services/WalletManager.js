@@ -63,6 +63,7 @@ class walletManager {
                             ]);
                             walletStore.setCurrentAccount({ name: "Plug Wallet", address: principalToAccountId(id.getPrincipal().toText(), 0)});
                             walletStore.setLoginState('plug');
+                            walletStore.setLastLogged();
                         }else {
                             console.log("Plug not connected");
                             await this.plugWallet()
