@@ -43,7 +43,7 @@ const isInRange = (tick, tickLower, tickUpper) => {
  * @returns {Promise<Array>} - A promise that resolves to an array of user positions.
  */
 export const useGetPoolLP = async (canisterId) => {
-    const _rs = await Connect.canister(canisterId, 'swapPool').getUserPositionsByPrincipal(txtToPrincipal(walletStore.principal));
+    const _rs = await Connect.canister(canisterId, 'swapPool', true).getUserPositionsByPrincipal(txtToPrincipal(walletStore.principal));
     if(_rs && "ok" in _rs){
         return _rs.ok;
     }else{
@@ -51,7 +51,7 @@ export const useGetPoolLP = async (canisterId) => {
     }
 }
 export const useGetPosition = async (canisterId, positionId) => {
-    const _rs = await Connect.canister(canisterId, 'swapPool').getUserPosition(Number(positionId));
+    const _rs = await Connect.canister(canisterId, 'swapPool', true).getUserPosition(Number(positionId));
     if(_rs && "ok" in _rs){
         return _rs.ok;
     }else{
@@ -66,7 +66,7 @@ export const useGetPosition = async (canisterId, positionId) => {
  */
 export const useGetPoolMeta = async (canisterId) => {
     try{
-        const _rs = await Connect.canister(canisterId, 'swapPool').metadata();
+        const _rs = await Connect.canister(canisterId, 'swapPool', true).metadata();
         if(_rs && "ok" in _rs){
             console.log('useGetPoolMeta', _rs);
             return _rs.ok;
@@ -79,7 +79,7 @@ export const useGetPoolMeta = async (canisterId) => {
 }
 export const useGetTokenMeta = async (canisterId) => {
     try{
-        const _rs = await Connect.canister(canisterId, 'swapPool').getTokenMeta();
+        const _rs = await Connect.canister(canisterId, 'swapPool', true).getTokenMeta();
         console.log('useGetTokenMeta', _rs);
         return _rs;
     }catch(e){

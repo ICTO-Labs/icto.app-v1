@@ -6,25 +6,34 @@ class CreateActor {
     _idl = false;
     _actor = false;
     _type = "";
-    constructor(canister, idl) {
+    constructor(canister, idl, isAnonymous=false) {
         if (canister) this._canister = canister;
         if (idl) this._idl = idl;
         return new Proxy(this, {
             get : (target, name) => {
                 return async function() {
                     if (!target._actor) {
-                        if(walletStore.connector == "plug"){
-                            target._actor = await window.ic.plug.createActor({
-                                canisterId: target._canister,
-                                interfaceFactory: target._idl,
-                            });
-                        }else{
+                        if(isAnonymous == true){
                             target._actor = await actor.create({
-                                identity: walletStore.identity,
+                                identity: null,
                                 canisterId: canister,
                                 idlFactory: idl,
                             });
+                        }else{
+                            if(walletStore.connector == "plug"){
+                                target._actor = await window.ic.plug.createActor({
+                                    canisterId: target._canister,
+                                    interfaceFactory: target._idl,
+                                });
+                            }else{
+                                target._actor = await actor.create({
+                                    identity: walletStore.identity,
+                                    canisterId: canister,
+                                    idlFactory: idl,
+                                });
+                            }
                         }
+                        
                     }
                     try{
                         return await target._actor[name](...arguments);
@@ -47,8 +56,8 @@ class Connect {
     _actor = null;
     _provider = null;
 
-    constructor(cid, idl) {
-        console.log('Canister: ',cid, idl);
+    constructor(cid, idl, isAnonymous=false) {
+        console.log('Canister: ',cid, idl, isAnonymous);
         if(!cid) throw new Error("No Canister Id");
         if (!idl){
             if (Object.prototype.hasOwnProperty.call(this._mapIdls, cid)) {
@@ -64,7 +73,7 @@ class Connect {
             }
         }
         if (!Object.prototype.hasOwnProperty.call(this._canisters, cid)){
-            this._canisters[cid] = new CreateActor(cid, idl);//await this.provider.value.createActor(cid, idl);
+            this._canisters[cid] = new CreateActor(cid, idl, isAnonymous);//await this.provider.value.createActor(cid, idl);
         }
         return this._canisters[cid];
     }
@@ -72,5 +81,5 @@ class Connect {
 
 
 export default {
-    canister : (cid, idl) => new Connect(cid, idl)
+    canister : (cid, idl, isAnonymous) => new Connect(cid, idl, isAnonymous)
 };
