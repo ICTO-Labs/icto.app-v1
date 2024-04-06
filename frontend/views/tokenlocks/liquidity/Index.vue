@@ -9,7 +9,8 @@
     const isLoading = ref(false);
     const getContracts = async ()=>{
         isLoading.value = true;
-        contracts.value = await useGetContracts();
+        let _contracts = await useGetContracts();
+        contracts.value = _contracts.sort((a, b)=>b.created - a.created);
         isLoading.value = false;
         console.log(contracts.value);
     }
@@ -112,6 +113,35 @@
                                 </table>
                             </div>
                             <!--end::Table-->
+
+                            <div class="row">
+                                <div class="col-sm-12 col-md-5 d-flex align-items-center justify-content-center justify-content-md-start">
+                                    <div class="dataTables_length" id="kt_profile_overview_table_length">
+                                    <label>
+                                        <select name="kt_profile_overview_table_length" aria-controls="kt_profile_overview_table" class="form-select form-select-sm form-select-solid">
+                                        <option value="10">10</option>
+                                        </select>
+                                    </label>
+                                    </div>
+                                </div>
+                                <div class="col-sm-12 col-md-7 d-flex align-items-center justify-content-center justify-content-md-end">
+                                    <div class="dataTables_paginate paging_simple_numbers" id="kt_profile_overview_table_paginate">
+                                    <ul class="pagination">
+                                        <li class="paginate_button page-item previous disabled" id="kt_profile_overview_table_previous">
+                                        <a href="#" aria-controls="kt_profile_overview_table" data-dt-idx="0" tabindex="0" class="page-link">
+                                            <i class="previous"></i>
+                                        </a>
+                                        </li>
+                                        
+                                        <li class="paginate_button page-item next" id="kt_profile_overview_table_next">
+                                        <a href="#" aria-controls="kt_profile_overview_table" data-dt-idx="4" tabindex="0" class="page-link">
+                                            Next <i class="next"></i>
+                                        </a>
+                                        </li>
+                                    </ul>
+                                    </div>
+                                </div>
+                            </div>
                         </div>
                         <!--end::Tap pane-->
                     </div>

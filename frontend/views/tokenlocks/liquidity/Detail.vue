@@ -91,15 +91,6 @@
     }
 
     const getPosition = async()=>{
-        // positionData.value = {
-        //     "tickUpper": "-50520",
-        //     "tokensOwed0": "0",
-        //     "tokensOwed1": "0",
-        //     "feeGrowthInside1LastX128": "125453138640630681595162903735054254",
-        //     "liquidity": "733643428395",
-        //     "feeGrowthInside0LastX128": "1046503367790843981308566033923109780471",
-        //     "tickLower": "-93120"
-        // };
         if(contract.value){
             positionData.value = await useGetPosition(contract.value.poolId, contract.value.positionId);
             if(poolMeta.value){
