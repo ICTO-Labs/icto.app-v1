@@ -21,6 +21,7 @@
     "@tanstack/vue-query": "^5.22.2",
     "@thanpolas/univ3prices": "^3.0.2",
     "@vuepic/vue-datepicker": "^8.1.1",
+    "@vueup/vue-quill": "^1.2.0",
     "@vueuse/core": "^10.8.0",
     "apexcharts": "^3.46.0",
     "axios": "^1.6.7",

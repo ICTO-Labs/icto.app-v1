@@ -5,9 +5,12 @@
     import Codemirror from "codemirror-editor-vue3";
     import { VueFinalModal } from 'vue-final-modal'
     import moment from 'moment';
-    import { usetGetMetadata, useGetMyBalance } from '@/services/Token';
-    import { showError, validatePrincipal } from '@/utils/common';
+    import { usetGetMetadata, useGetMyBalance, useTokenApprove } from '@/services/Token';
+    import { showError, closeMessage, showLoading, validatePrincipal } from '@/utils/common';
     import LoadingLabel from "@/components/LoadingLabel.vue"
+    import walletStore from "@/store";
+    import { QuillEditor } from '@vueup/vue-quill'
+    import '@vueup/vue-quill/dist/vue-quill.snow.css';
 
     const newAirdropModal = ref(false);
     const isLoading = ref(false);
@@ -26,9 +29,8 @@
         steps.value[index] = "current";
         currentStep.value = index;
         for (let i = 0; i < steps.value.length; i++) {
-            console.log('index', index, i);
             if (i != index) {
-                if(i < index){
+                if(i < index){ 
                     steps.value[i] = "completed";
                 }else{
                     steps.value[i] = "pending";
@@ -58,7 +60,13 @@
         recipients: [],
         claimFee: 0,
         startTime: new Date(),
-        endTime: moment(new Date()).add(1, 'days').toDate()
+        endTime: moment(new Date()).add(1, 'days').toDate(),
+        title: '',
+        description: '',
+        website: '',
+        twitter: '',
+        telegram: '',
+        discord: ''
     });
     const recipients = ref('');
     const loadSampleData = ()=>{
@@ -110,6 +118,56 @@ zxcjx-7yvay-ow7hh-nbocq-5aaru-n7nwq-xyhau-jnr6m-f36ho-xzufk-rae,50`;
             isLoading.value = false;
 
         }else tokenInfo.value = null;
+    }
+
+    const approveToken = async()=>{
+        if(!tokenInfo.value){
+            showError('Please enter a valid Token Canister ID!');
+            changeStep(0);
+            return;
+        };
+        if(stats.value.totalRecipients < 5){
+            showError('Minimum recipients must be greater than 5!');
+            changeStep(0);
+            return;
+        }
+        Swal.fire({
+		title: "Are you sure?",
+		html: "Approve <strong>"+stats.value.totalAmount+ " "+tokenInfo.value.symbol+"</strong> to start the airdrop campaign?",
+		icon: "warning",
+		showCancelButton: true,
+		confirmButtonColor: "#3085d6",
+		cancelButtonColor: "#d33",
+		confirmButtonText: "Yes, I confirmed!"
+		}).then(async (result) => {
+            if (result.isConfirmed) {
+                showLoading("Approving token...");
+                let _payload = {
+                    spender: walletStore.principal,
+                    amount: stats.value.totalAmount,
+                };
+                try{
+                    let _approved = true;
+                    // let _approved = await useTokenApprove(airdrop.value.tokenId, _payload);
+                    if(_approved){
+                        changeStep(2);
+                    }else{
+                        showError('Failed to approve token');
+                    }
+                    console.log('_approved', _approved);
+                    stats.value.currentApproval = 1;
+                }catch(e){
+                    showError('Failed to approve token');
+                }
+                closeMessage();
+                isLoading.value = false;
+            }
+        })
+    }
+
+    const createAirdrop = async()=>{
+        console.log('airdrop', airdrop.value);
+        console.log('stats', stats.value);
     }
     const closeModal = ()=>{ newAirdropModal.value = false};
     onMounted(()=>{
@@ -184,7 +242,7 @@ zxcjx-7yvay-ow7hh-nbocq-5aaru-n7nwq-xyhau-jnr6m-f36ho-xzufk-rae,50`;
                                 </div>
                                 <div class="stepper-label">
                                     <h3 class="stepper-title">
-                                        Start Airdrop
+                                        Start
                                     </h3>
                                 </div>
                             </div>
@@ -195,132 +253,114 @@ zxcjx-7yvay-ow7hh-nbocq-5aaru-n7nwq-xyhau-jnr6m-f36ho-xzufk-rae,50`;
                             <div class="mb-5">
                                 <div :class="`flex-column ${steps[0]}`" data-kt-stepper-element="content">
                                     <div class="w-100">
-                                                            <div class="row mb-2">
-                                                                <div class="col-md-12 fv-row">
-                                                                    <div class="row fv-row">
-                                                                        <div class="col-md-6">
-                                                                            <label class="required fs-6 fw-bold form-label mb-2">Token Canister ID</label>
-                                                                            <input type="text" class="form-control" v-model="airdrop.tokenId" @change="getTokenInfo" placeholder="Token Canister Id"/>
-                                                                        </div>
-                                                                        <div class="col-md-6">
-                                                                            <label class="fs-6 fw-bold form-label mb-2">Balance
-                                                                            <LoadingLabel 
-                                                                                :loading="isLoading"
-                                                                                class="badge badge-light-primary ms-5"
-                                                                                @click="getTokenBalance"><i class="fas fa-arrows-rotate"></i> Refresh
-                                                                            </LoadingLabel>
+                                        <div class="row mb-2">
+                                            <div class="col-md-12 fv-row">
+                                                <div class="row fv-row">
+                                                    <div class="col-md-6">
+                                                        <label class="required fs-6 fw-bold form-label mb-2">Token Canister ID</label>
+                                                        <input type="text" class="form-control" v-model="airdrop.tokenId" @change="getTokenInfo" placeholder="Token Canister Id"/>
+                                                    </div>
+                                                    <div class="col-md-6">
+                                                        <label class="fs-6 fw-bold form-label mb-2">Balance
+                                                        <LoadingLabel 
+                                                            :loading="isLoading"
+                                                            class="badge badge-light-primary ms-5"
+                                                            @click="getTokenBalance"><i class="fas fa-arrows-rotate"></i> Refresh
+                                                        </LoadingLabel>
 
-                                                                        </label>
-                                                                            <input type="text" class="form-control" :value="`${tokenBalance} ${tokenInfo?tokenInfo.symbol:'ICP'}`" placeholder="" readonly />
-                                                                        </div>
-                                                                    </div>
-                                                                    <div class="form-text">Note: Currently we only support <strong>ICRC</strong> standard Tokens!</div>
-                                                                </div>
-                                                            </div>
-                                                            <div class="row">
-                                                                <!--begin::Col-->
-                                                                <div class="col-lg-6">
-                                                                    <!--begin::Option-->
-                                                                    <input type="radio" class="btn-check" name="airdrop_type" value="1" checked="checked" id="normal" v-model="airdrop.type">
-                                                                    <label class="btn btn-outline btn-outline-dashed btn-outline-default p-2 d-flex align-items-center mb-2" for="normal">
-                                                                        <i class="fas fa-wallet me-5 fs-2x"></i>
-                                                                        <span class="d-block fw-bold text-start">
-                                                                            <span class="text-dark fw-bolder d-block fs-5">Designated wallet</span>
-                                                                            <span class="text-muted fs-7">Only designated wallet can be claimed</span>
-                                                                        </span>
-                                                                    </label>
-                                                                    <!--end::Option-->
-                                                                <div class="fv-plugins-message-container invalid-feedback"></div></div>
-                                                                <!--end::Col-->
-                                                                <!--begin::Col-->
-                                                                <div class="col-lg-6">
-                                                                    <!--begin::Option-->
-                                                                    <input type="radio" class="btn-check" name="airdrop_type" value="2" id="any-wallet" v-model="airdrop.type">
-                                                                    <label class="btn btn-outline btn-outline-dashed btn-outline-default p-2 d-flex align-items-center" for="any-wallet">
-                                                                        <i class="fas fa-random me-5 fs-2x"></i>
-                                                                        <span class="d-block fw-bold text-start">
-                                                                            <span class="text-dark fw-bolder d-block fs-5">Any wallet</span>
-                                                                            <span class="text-muted fs-7">Any wallet can join and claim the airdrop</span>
-                                                                        </span>
-                                                                    </label>
-                                                                    <!--end::Option-->
-                                                                </div>
-                                                                <!--end::Col-->
-                                                            </div>
-                                                            <div class="separator separator-dashed mb-3"></div>
+                                                    </label>
+                                                        <input type="text" class="form-control" :value="`${tokenBalance} ${tokenInfo?tokenInfo.symbol:'ICP'}`" placeholder="" readonly />
+                                                    </div>
+                                                </div>
+                                                <div class="form-text">Note: Currently we only support <strong>ICRC</strong> standard Tokens!</div>
+                                            </div>
+                                        </div>
+                                        <div class="row">
+                                            <!--begin::Col-->
+                                            <div class="col-lg-6">
+                                                <!--begin::Option-->
+                                                <input type="radio" class="btn-check" name="airdrop_type" value="1" checked="checked" id="normal" v-model="airdrop.type">
+                                                <label class="btn btn-outline btn-outline-dashed btn-outline-default p-2 d-flex align-items-center mb-2" for="normal">
+                                                    <i class="fas fa-wallet me-5 fs-2x"></i>
+                                                    <span class="d-block fw-bold text-start">
+                                                        <span class="text-dark fw-bolder d-block fs-5">Designated wallet</span>
+                                                        <span class="text-muted fs-7">Only designated wallet can be claimed</span>
+                                                    </span>
+                                                </label>
+                                                <!--end::Option-->
+                                            <div class="fv-plugins-message-container invalid-feedback"></div></div>
+                                            <!--end::Col-->
+                                            <!--begin::Col-->
+                                            <div class="col-lg-6">
+                                                <!--begin::Option-->
+                                                <input type="radio" class="btn-check" name="airdrop_type" value="2" id="any-wallet" v-model="airdrop.type">
+                                                <label class="btn btn-outline btn-outline-dashed btn-outline-default p-2 d-flex align-items-center" for="any-wallet">
+                                                    <i class="fas fa-random me-5 fs-2x"></i>
+                                                    <span class="d-block fw-bold text-start">
+                                                        <span class="text-dark fw-bolder d-block fs-5">Any wallet</span>
+                                                        <span class="text-muted fs-7">Any wallet can join and claim the airdrop</span>
+                                                    </span>
+                                                </label>
+                                                <!--end::Option-->
+                                            </div>
+                                            <!--end::Col-->
+                                        </div>
+                                        <div class="separator separator-dashed mb-3"></div>
 
-                                                            <div class="row mb-2" v-if="airdrop.type == 1">
-                                                                <div class="col-md-12 fv-row">
-                                                                    <div class="d-flex justify-content-between">
-                                                                        <label class="required fs-6 fw-bold form-label mb-2">Recipients</label>
-                                                                        <div v-if="stats.error > 0"><span class="badge badge-light-danger fs-7 fw-bolder">Error: {{stats.error}}</span></div>
-                                                                    </div>
+                                        <div class="row mb-2" v-if="airdrop.type == 1">
+                                            <div class="col-md-12 fv-row">
+                                                <div class="d-flex justify-content-between">
+                                                    <label class="required fs-6 fw-bold form-label mb-2">Recipients</label>
+                                                    <div>
+                                                    <span class="badge badge-light-primary fs-7 fw-bold me-2">Valid: {{stats.totalRecipients}}</span>
+                                                    <span class="badge badge-light-danger fs-7 fw-bold" v-if="stats.error > 0">Error: {{stats.error}}</span>
+                                                    </div>
+                                                </div>
 
-                                                                    <Codemirror
-                                                                        v-model:value="recipients"
-                                                                        :options="cmOptions"
-                                                                        border
-                                                                        placeholder=""
-                                                                        :height="200"
-                                                                        @change="checkingRecipients"
-                                                                        ref="codemirror"
-                                                                    />
+                                                <Codemirror
+                                                    v-model:value="recipients"
+                                                    :options="cmOptions"
+                                                    border
+                                                    placeholder=""
+                                                    :height="200"
+                                                    @change="checkingRecipients"
+                                                    ref="codemirror"
+                                                />
 
-                                                                    <div class="d-flex flex-wrap w-100">
-                                                                        <div class="flex-grow-1"><strong>Format:</strong> Principal,Amount</div>
-                                                                        <div class="">
-                                                                            <a href="#" @click="loadSampleData()">Load sample data</a>
-                                                                        </div>
-                                                                    </div>
-                                                                </div>
-                                                            </div>
-                                                            <div class="row mb-5" v-if="airdrop.type == 2">
-                                                                <div class="col-md-4 fv-row">
-                                                                    <label class="d-flex align-items-center fs-6 fw-bold mb-2"><span class="required">Total recipients</span></label>
-                                                                    <div class="input-group mb-3">
-                                                                        <input type="text" class="form-control" placeholder="0" v-model="stats.totalRecipients">
-                                                                        <span class="input-group-text"><i class="fas fa-users"></i></span>
-                                                                    </div>
-                                                                </div>
-                                                                <div class="col-md-4 fv-row">
-                                                                    <label class="d-flex align-items-center fs-6 fw-bold mb-2"><span class="required">Total airdrop amount</span></label>
-                                                                    <div class="input-group mb-3">
-                                                                        <input type="text" class="form-control" placeholder="0" v-model="stats.totalAmount">
-                                                                        <span class="input-group-text">{{ tokenInfo?.symbol || '---' }}</span>
-                                                                    </div>
-                                                                </div>
-                                                                <div class="col-md-4 fv-row">
-                                                                    <label class="d-flex align-items-center fs-6 fw-bold mb-2"><span class="">Each recipient</span></label>
-                                                                    <div class="input-group mb-3">
-                                                                        <input type="text" class="form-control" placeholder="0" :value="stats.totalAmount/stats.totalRecipients" readonly />
-                                                                        <span class="input-group-text">{{ tokenInfo?.symbol || '---' }}</span>
-                                                                    </div>
-                                                                </div>
-                                                            </div>
-                                                            <div class="row mb-5 border bg-light-primary border-dashed border-gray-300 rounded m-1">
-                                                                <div class="row g-0 text-default fw-bold fs-7 p-2">
-                                                                    <div class="col px-2 rounded-2 me-7 mb-2 d-flex">
-                                                                        <div class="flex-grow-1">Your token balance</div>
-                                                                        <div class="fw-bolder fs-6">{{ stats.tokenBalance }} {{ tokenInfo?tokenInfo.symbol:'---' }}</div>
-                                                                    </div>
-                                                                    <div class="col px-2 rounded-2 mb-2 d-flex">
-                                                                        <div class="flex-grow-1">Your current approval</div>
-                                                                        <div class="fw-bolder fs-6">{{ stats.currentApproval }}</div>
-                                                                    </div>
-                                                                </div>
-                                                                <div class="row g-0 text-default fw-bold fs-7 px-2">
-                                                                    <div class="col px-2 rounded-2 me-7 mb-2 d-flex">
-                                                                        <div class="flex-grow-1">Total amount of tokens to send</div>
-                                                                        <div class="fw-bolder fs-6">{{ stats.totalAmount }}</div>
-                                                                    </div>
-                                                                    <div class="col px-2 rounded-2 mb-2 d-flex">
-                                                                        <div class="flex-grow-1">Total valid recipients</div>
-                                                                        <div class="fw-bolder fs-6">{{ stats.totalRecipients }}</div>
-                                                                    </div>
-                                                                </div>
-                                                            </div>
-                                                            
-                                                        </div>
+                                                <div class="d-flex flex-wrap w-100">
+                                                    <div class="flex-grow-1"><strong>Format:</strong> Principal,Amount (Minimum: 5 recipients)</div>
+                                                    <div class="">
+                                                        <a href="#" @click="loadSampleData()">Load sample data</a>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                        <div class="row mb-5" v-if="airdrop.type == 2">
+                                            <div class="col-md-4 fv-row">
+                                                <label class="d-flex align-items-center fs-6 fw-bold mb-2"><span class="required">Total recipients</span></label>
+                                                <div class="input-group mb-3">
+                                                    <input type="text" class="form-control" placeholder="0" v-model="stats.totalRecipients">
+                                                    <span class="input-group-text"><i class="fas fa-users"></i></span>
+                                                </div>
+                                            </div>
+                                            <div class="col-md-4 fv-row">
+                                                <label class="d-flex align-items-center fs-6 fw-bold mb-2"><span class="required">Total airdrop amount</span></label>
+                                                <div class="input-group mb-3">
+                                                    <input type="text" class="form-control" placeholder="0" v-model="stats.totalAmount">
+                                                    <span class="input-group-text">{{ tokenInfo?.symbol || '---' }}</span>
+                                                </div>
+                                            </div>
+                                            <div class="col-md-4 fv-row">
+                                                <label class="d-flex align-items-center fs-6 fw-bold mb-2"><span class="">Each recipient</span></label>
+                                                <div class="input-group mb-3">
+                                                    <input type="text" class="form-control" placeholder="0" :value="stats.totalAmount/stats.totalRecipients" readonly />
+                                                    <span class="input-group-text">{{ tokenInfo?.symbol || '---' }}</span>
+                                                </div>
+                                            </div>
+                                        </div>
+                                        
+                                        
+                                    </div>
                                 </div>
                                 <div :class="`flex-column ${steps[1]}`"  data-kt-stepper-element="content">
                                     <div class="row mb-5">
@@ -350,17 +390,70 @@ zxcjx-7yvay-ow7hh-nbocq-5aaru-n7nwq-xyhau-jnr6m-f36ho-xzufk-rae,50`;
                                             </div>
                                         </div>
                                     </div>
-                                    <div class="row mb-5">
-                                        <div class="col-md-6 d-flex flex-column gap-7 gap-md-10">
-                                            <button @click="approveToken()" class="btn btn-block btn-primary" :disabled="lockStep==2"><em class="fas fa-chevron-circle-down"></em> Approve</button>
+                                    <div class="row mb-5 border bg-light-primary border-dashed border-gray-300 rounded m-1">
+                                        <div class="row g-0 text-default fw-bold fs-7 p-2">
+                                            <div class="col px-2 rounded-2 me-7 mb-2 d-flex">
+                                                <div class="flex-grow-1">Your token balance</div>
+                                                <div class="fw-bolder fs-6">{{ stats.tokenBalance }} {{ tokenInfo?tokenInfo.symbol:'---' }}</div>
+                                            </div>
+                                            <div class="col px-2 rounded-2 mb-2 d-flex">
+                                                <div class="flex-grow-1">Your current approval</div>
+                                                <div class="fw-bolder fs-6">{{ stats.currentApproval }} {{ tokenInfo?tokenInfo.symbol:'---' }}</div>
+                                            </div>
                                         </div>
-                                        <div class="col-md-6 d-flex flex-column gap-7 gap-md-10">
-                                            <button @click="createAirdrop()" class="btn btn-block btn-success" :disabled="lockStep==1"><em class="fas fa-rocket me-1"></em>Create Airdrop</button>
+                                        <div class="row g-0 text-default fw-bold fs-7 px-2">
+                                            <div class="col px-2 rounded-2 me-7 mb-2 d-flex">
+                                                <div class="flex-grow-1">Total amount of tokens to send</div>
+                                                <div class="fw-bolder fs-6">{{ stats.totalAmount }} {{ tokenInfo?tokenInfo.symbol:'---' }}</div>
+                                            </div>
+                                            <div class="col px-2 rounded-2 mb-2 d-flex">
+                                                <div class="flex-grow-1">Total recipients</div>
+                                                <div class="fw-bolder fs-6">{{ stats.totalRecipients }}</div>
+                                            </div>
                                         </div>
                                     </div>
                                 </div>
                                 <div :class="`flex-column ${steps[2]}`"  data-kt-stepper-element="content">
-                                    3
+                                    <div class="row mb-5">
+                                        <div class="col-md-12 fv-row">
+                                            <label class="d-flex align-items-center fs-6 fw-bold mb-2"><span class="required">Campaign Title</span></label>
+                                            <input type="text" class="form-control" v-model="airdrop.title" placeholder="Airdrop campaign"/>
+                                        </div>
+                                    </div>
+                                    <div class="row mb-5">
+                                        <div class="col-md-12 fv-row">
+                                            <label class="d-flex align-items-center fs-6 fw-bold mb-2"><span class="required">Description</span></label>
+                                            <QuillEditor theme="snow" v-model:content="airdrop.description" contentType="html" style="height: 150px"/>
+                                            <!-- <textarea class="form-control" v-model="airdrop.description" placeholder="Airdrop description" rows="3"></textarea> -->
+                                        </div>
+                                    </div>
+                                    <div class="row mb-5">
+                                        <div class="col-md-6 fv-row">
+                                            <label class="d-flex align-items-center fs-6 fw-bold mb-2">Website</label>
+                                            <input class="form-control" v-model="airdrop.website" placeholder="Website" />
+                                        </div>
+                                        <div class="col-md-6 fv-row">
+                                            <label class="d-flex align-items-center fs-6 fw-bold mb-2">Twitter (X)</label>
+                                            <input class="form-control" v-model="airdrop.twitter" placeholder="Website" />
+                                        </div>
+                                    </div>
+                                    <div class="row mb-5">
+                                        <div class="col-md-6 fv-row">
+                                            <label class="d-flex align-items-center fs-6 fw-bold mb-2">Telegram</label>
+                                            <input class="form-control" v-model="airdrop.telegram" placeholder="Telegram" />
+                                        </div>
+                                        <div class="col-md-6 fv-row">
+                                            <label class="d-flex align-items-center fs-6 fw-bold mb-2">Discord</label>
+                                            <input class="form-control" v-model="airdrop.discord" placeholder="Discord" />
+                                        </div>
+                                    </div>
+
+                                    <div class="notice bg-light-warning mb-5 p-2" role="alert">
+                                        <div class="alert-text>">
+                                            <p class="mb-0">- Please make sure to provide accurate information to avoid any issues with your airdrop campaign.</p>
+                                            <p class="mb-0">- All information can be changed in the Airdrop panel.</p>
+                                        </div>
+                                    </div>    
                                 </div>
                                 <div :class="`flex-column ${steps[3]}`"  data-kt-stepper-element="content">
                                     4
@@ -376,17 +469,18 @@ zxcjx-7yvay-ow7hh-nbocq-5aaru-n7nwq-xyhau-jnr6m-f36ho-xzufk-rae,50`;
                                     </button>
                                 </div>
                                 <div>
-                                    <button type="button" class="btn btn-primary" data-kt-stepper-action="submit">
+                                    <button type="button" class="btn btn-primary btn-sm" @click="createAirdrop()" v-if="currentStep==2">
                                         <span class="indicator-label">
-                                            Submit
-                                        </span>
-                                        <span class="indicator-progress">
-                                            Please wait... <span class="spinner-border spinner-border-sm align-middle ms-2"></span>
+                                            Create Airdrop
                                         </span>
                                     </button>
-
-                                    <button type="button" class="btn btn-primary btn-sm"  @click="changeStep(currentStep+1)" v-if="currentStep<3">
-                                        Continue {{currentStep}}
+                                    <button type="button" class="btn btn-danger btn-sm"  @click="approveToken()" v-if="currentStep==1">
+                                        <em class="fas fa-chevron-circle-down"></em> Approve
+                                    </button>
+                                    <button type="button" class="btn btn-primary btn-sm"  @click="changeStep(currentStep+1)" v-if="currentStep<2 && currentStep!=1" :disabled="!tokenInfo || stats.totalRecipients <5">
+                                        <span v-if="!tokenInfo">Enter Token Canister</span>
+                                        <span v-else-if="stats.totalRecipients<5">Minimum 5 recipients</span>
+                                        <span v-else>Continue</span>
                                     </button>
                                 </div>
                                 <!--end::Wrapper-->
@@ -400,13 +494,8 @@ zxcjx-7yvay-ow7hh-nbocq-5aaru-n7nwq-xyhau-jnr6m-f36ho-xzufk-rae,50`;
     </VueFinalModal>
 </template>
 <style scoped>
-.slide-left-enter-active, .slide-left-leave-active {
-    transition: transform 0.5s;
-}
-
-.slide-left-enter, .slide-left-leave-to {
-    transform: translateX(-100%);
-}
-.custom-background { background: #FF0000; }
-
+    .ql-snow{
+        height: 150px !important;
+        background: #cccccc !important;
+    }
 </style>
