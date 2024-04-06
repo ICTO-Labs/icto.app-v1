@@ -15,12 +15,12 @@
 	}
 </script>
 <template>
-	<Toolbar :current="`My Tokens`" :showBtn="{modal: 'showDeployTokenModal', icon: 'fa-angle-double-up', label: 'Deploy Token'}"/>
+	<Toolbar :current="`Tokens`" :showBtn="{modal: 'showDeployTokenModal', icon: 'fa-angle-double-up', label: 'Deploy Token'}"/>
 
 	<div class="card card-xl-stretch mb-5 mb-xl-10">
 	<div class="card-header border-0 pt-5">
 		<h3 class="card-title align-items-start flex-column">
-			<span class="card-label fw-bolder fs-3 mb-1">My Tokens <span class="badge badge-light-primary">{{ myToken?myToken.length:0 }}</span></span>
+			<span class="card-label fw-bolder fs-3 mb-1">Tokens <span class="badge badge-light-primary">{{ myToken?myToken.length:0 }}</span></span>
 			<span class="text-muted mt-1 fw-bold fs-7" v-if="isLoading">Loading...</span>
 			<span class="text-muted mt-1 fw-bold fs-7" v-if="isError">{{ error }}</span>
 		</h3>

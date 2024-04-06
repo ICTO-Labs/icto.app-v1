@@ -89,9 +89,9 @@ const router = createRouter({
       component: NewContract
     },
     {
-      path: '/my-token',
-      meta: {title: 'My Tokens'},
-      name: 'my-token',
+      path: '/tokens',
+      meta: {title: 'Tokens'},
+      name: 'tokens',
       component: MyToken
     },
     {
