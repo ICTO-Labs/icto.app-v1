@@ -11,8 +11,8 @@
     const storeAsset = useAssetStore();
 
     const importTokenModal = ref(false);
-    const tokenStandard = ref('icrc3');
-    const canisterId = ref('2ouva-viaaa-aaaaq-aaamq-cai');
+    const tokenStandard = ref('icrc1');
+    const canisterId = ref('');
     const isImported = ref(false);
     const agree = ref(false);
     const tokenInfo = ref(null);
@@ -88,9 +88,9 @@
                                 <label class="form-label"><span class="required">Token Standard</span></label>
                                 <div class="form-control-wrap">
                                     <select class="form-select" v-model="tokenStandard">
-                                        <option value="icrc3" selected>ICRC-3</option>
+                                        <option value="icrc3">ICRC-3</option>
                                         <option value="icrc2">ICRC-2</option>
-                                        <option value="icrc1">ICRC-1</option>
+                                        <option value="icrc1" selected>ICRC-1</option>
                                     </select>
                                 </div>
                             </div>
