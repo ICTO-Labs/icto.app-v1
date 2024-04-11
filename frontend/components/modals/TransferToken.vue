@@ -34,9 +34,9 @@
                         showLoading("Transfering...")
                         //Close the dialog
                         let _rs = await useTransferToken(tokenInfo.value.canisterId, to.value, amount.value);
-                        // if(_rs){
-                        //     manageTokenModal.value = false;
-                        // }
+                        if(_rs){
+                            manageTokenModal.value = false;
+                        }
                         closeMessage();
                     }
                 })

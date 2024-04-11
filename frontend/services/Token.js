@@ -47,7 +47,7 @@ export const useGetTokenBalance = async(tokenId, principal, standard='icrc1')=>{
 }
 export const useTransferFrom = async(tokenId, payload, standard="icrc2")=>{
     let _token = getTokenInfo(tokenId);
-    const _amount = BigInt(parseInt(payload.amount) * _token ? Math.pow(10, _token.decimals) : config.E8S);
+    const _amount = BigInt(parseFloat(payload.amount) * (_token ? Math.pow(10, _token.decimals) : config.E8S));
     const _fee = BigInt(_token?_token.fee:0);
     const _from = txtToPrincipal(payload.from);
     const _to = txtToPrincipal(payload.to);
@@ -70,7 +70,7 @@ export const useTransferFrom = async(tokenId, payload, standard="icrc2")=>{
 }
 export const useTokenApprove = async(tokenId, payload, standard="icrc2")=>{
     let _token = getTokenInfo(tokenId);
-    const _amount = BigInt(parseInt(payload.amount) * _token ? Math.pow(10, _token.decimals) : config.E8S);
+    const _amount = BigInt(parseFloat(payload.amount) * (_token ? Math.pow(10, _token.decimals) : config.E8S));
     const _fee = BigInt(_token?_token.fee:0);
     const _spender = txtToPrincipal(payload.spender);
     try{
@@ -155,7 +155,8 @@ export const usetGetMetadata = async(tokenId, standard="icrc2")=>{
 export const useTransferToken = async(tokenId, to, amount)=>{
     const _p = txtToPrincipal(to);
     let _token = getTokenInfo(tokenId);
-    const _amount = BigInt(parseInt(amount) * _token ? Math.pow(10, _token.decimals) : config.E8S);
+    const _amount = BigInt(parseFloat(amount) * (_token ? Math.pow(10, _token.decimals) : config.E8S));
+    console.log('_amount', _amount, amount);
     // const _fee = BigInt(_token.fee>0?parseInt(_token.fee)/Math.pow(10, _token.decimals):0);
     const _fee = BigInt(_token?_token.fee:0);
 
