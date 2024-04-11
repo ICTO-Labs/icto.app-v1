@@ -96,7 +96,7 @@ export const walletStore = reactive({
             const icpPriceChange = parseFloat(data['internet-computer'].usd_24h_change);
             this.setICPPrice(icpPrice, icpPriceChange);
         } catch (error) {
-            console.error('Error fetching ICP price:', error);
+            console.log('Error fetching ICP price:', error);
             return null;
         }
     },
@@ -107,7 +107,7 @@ export const walletStore = reactive({
             const icpPrice = parseFloat(data.price);
             this.setICPPrice(icpPrice);
         } catch (error) {
-            console.error('Error fetching ICP price:', error);
+            console.log('Error fetching ICP price:', error);
             return null;
         }
     }
