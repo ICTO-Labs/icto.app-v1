@@ -38,7 +38,7 @@ class CreateActor {
                     try{
                         return await target._actor[name](...arguments);
                     }catch(e){
-                        console.log('e', e, );
+                        console.log('Create Proxy failed:', e, name);
                         return null;
                     }
                     

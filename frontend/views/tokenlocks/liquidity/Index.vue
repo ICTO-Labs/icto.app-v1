@@ -10,7 +10,7 @@
     const getContracts = async ()=>{
         isLoading.value = true;
         let _contracts = await useGetContracts();
-        contracts.value = _contracts.sort((a, b)=>b.created - a.created);
+        contracts.value = _contracts.sort((a, b)=>Number(b.created) - Number(a.created));
         isLoading.value = false;
         console.log(contracts.value);
     }

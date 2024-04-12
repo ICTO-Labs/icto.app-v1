@@ -5,6 +5,7 @@ import { showError, principalToAccountId } from "./common";
 import config from "../config";
 import tokenList from "@/ic/tokenList";
 export const decodeTransaction = (transactions)=>{
+  console.log('=>>>>>>>>>>>>>>>>>>>>>>>>>transactions', transactions);
   return transactions
       .map((transaction, txId) => {
         console.log('transaction', transaction);

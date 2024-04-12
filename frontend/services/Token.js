@@ -92,11 +92,16 @@ export const useTokenApprove = async(tokenId, payload, standard="icrc2")=>{
         return null;
     }
 }
-export const useGetTransactions = (tokenId, standard, start, end)=>{
+export const useGetTransactions = (tokenId, standard, start, length)=>{
     return useQuery({
         queryKey: ['tokenTransactions', tokenId],
         queryFn: async () => {
-            let _data = await Connect.canister(tokenId, standard).get_transactions({"start": start, "length": end});
+            let _payload = {
+                "start": Number(start),
+                "length": Number(length)
+            };
+            console.log('payload', _payload, tokenId, standard, start, length);
+            let _data = await Connect.canister(tokenId, 'icrc2', true).get_transactions(_payload);
             console.log('_data transaction', _data);
             let _rs = {
                 transactions: decodeTransaction(_data.transactions),
@@ -105,15 +110,15 @@ export const useGetTransactions = (tokenId, standard, start, end)=>{
             }
             return _rs;
         },
-        keepPreviousData: true,
-      })
+        keepPreviousData: false,
+    })
 }
 export const useGetTokenSupply = (tokenId, standard)=>{
     return useQuery({
         queryKey: ['tokenSupply', tokenId],
         queryFn: async () => {
             try{
-                return await Connect.canister(tokenId, standard).icrc1_total_supply();
+                return await Connect.canister(tokenId, standard, true).icrc1_total_supply();
             }catch(e){
                 throw new Error("Network Error: "+tokenId);
             }
@@ -126,7 +131,7 @@ export const useGetTokenOwner = (tokenId, standard)=>{
         queryKey: ['tokenOwner', tokenId],
         queryFn: async () => {
             try{
-                let _rs = await Connect.canister(tokenId, standard).icrc1_minting_account();
+                let _rs = await Connect.canister(tokenId, standard, true).icrc1_minting_account();
                 return {
                     principal: _rs[0].owner.toText(),
                     subaccount: principalToAccountId(_rs[0].owner, _rs[0].subaccount[0])
@@ -140,9 +145,9 @@ export const useGetTokenOwner = (tokenId, standard)=>{
 }
 export const usetGetMetadata = async(tokenId, standard="icrc2")=>{
     try{
-        let _tokenInfo =  await Connect.canister(tokenId, standard).icrc1_metadata();
+        let _tokenInfo =  await Connect.canister(tokenId, standard, true).icrc1_metadata();
         if(!_tokenInfo || "err" in _tokenInfo){
-			showError('Canister not found or did not match the token standard: '+standard.toUpperCase());
+			// showError('Canister not found or did not match the token standard: '+standard.toUpperCase());
             return null;
 		}else{
 			return decodeICRCMetadata(tokenId, _tokenInfo);
@@ -229,7 +234,9 @@ export const useCreateToken = async (payload)=>{
 
 export const useInstallToken = async (payload)=>{
     try {
-        const canisterId = await Connect.canister(config.TOKEN_DEPLOYER_CANISTER_ID, 'token_deployer').install(payload);
+        const _payload = {...payload};
+        _payload.transfer_fee = _payload.transfer_fee*config.E8S;
+        const canisterId = await Connect.canister(config.TOKEN_DEPLOYER_CANISTER_ID, 'token_deployer').install(_payload);
         return canisterId;
     } catch (error) {
         throw error;

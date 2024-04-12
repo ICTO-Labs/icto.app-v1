@@ -42,9 +42,9 @@
             let _tokenInfo = await usetGetMetadata(canisterId.value, tokenStandard.value);
             console.log(_tokenInfo);
             isLoading.value = false;
-            if(!_tokenInfo || _tokenInfo.standard != tokenStandard.value){
+            if(Object.is(_tokenInfo, null) || _tokenInfo.standard != tokenStandard.value){
                 isLoading.value = false;
-                showError('Token not found or did not match the token standard: '+tokenStandard.value.toUpperCase());
+                showError('Token not found or did not match the ICRC standard: '+tokenStandard.value.toUpperCase(), true);
             }else{
                 tokenInfo.value = _tokenInfo;
                 isImported.value = true;
@@ -58,7 +58,7 @@
     }
 
     const confirmImport = ()=>{
-        let _rs = storeAsset.addAsset(canisterId.value, '', tokenInfo.value.name, tokenInfo.value.symbol, tokenStandard.value, tokenInfo.value.decimals, tokenInfo.value.fee);
+        let _rs = storeAsset.addAsset(canisterId.value, tokenInfo.value.logo?tokenInfo.value.logo:'', tokenInfo.value.name, tokenInfo.value.symbol, tokenStandard.value, tokenInfo.value.decimals, tokenInfo.value.fee);
         if(_rs){
             EventBus.emit("showImportTokenModal", false);
             showSuccess("Token imported!")
@@ -118,10 +118,11 @@
                             <div class="d-flex align-items-center mb-10 alert alert-dismissible bg-light-primary d-flex flex-column flex-sm-row w-100 p-5 mb-5">
                                 <div class="me-5 position-relative">
                                     <div class="symbol symbol-45px symbol-circle">
-                                        <span class="symbol-label bg-primary text-white fw-semibold">
+                                        <img :src="tokenInfo.logo" class="w-100" v-if="tokenInfo.logo"/>
+                                        <span class="symbol-label bg-primary text-white fw-semibold" v-else>
                                             {{tokenInfo.symbol.charAt(0)}}
                                         </span>
-                                     </div>
+                                    </div>
                                 </div>
                                 <div class="fw-semibold">
                                     <a href="#" class="fs-5 fw-bold text-gray-900 text-hover-primary">{{tokenInfo.name}} ({{tokenInfo.symbol}})</a>

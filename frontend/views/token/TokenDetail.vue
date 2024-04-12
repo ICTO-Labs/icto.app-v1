@@ -1,7 +1,7 @@
 <script setup>
 	import {onMounted, ref} from "vue";
 	import { useGetTokenSupply, useGetTokenOwner, usetGetMetadata, useGetTransactions } from '@/services/Token';
-	import { showModal, shortPrincipal, shortAccount } from '@/utils/common';
+	import { showModal, showError, shortPrincipal, shortAccount } from '@/utils/common';
 	import TokenChart from "@/components/token/TokenChart.vue";
 	import {useRoute} from 'vue-router';
 	import config from "@/config";
@@ -19,8 +19,8 @@
 	const getTokenInfo = async()=>{
 		let _tokenInfo = await usetGetMetadata(tokenId);
 		isLoading.value = true;
-		if("err" in _tokenInfo){
-			showError('Canister not found or did not match the token standard: '+tokenStandard.value.toUpperCase());
+		if(Object.is(_tokenInfo, null) || "err" in _tokenInfo){
+			showError('Canister not found or did not match the ICRC standard', true);
 		}else{
 			tokenInfo.value = _tokenInfo;
 		}
@@ -39,7 +39,7 @@
 	
 </script>
 <template>
-	<Toolbar :current="tokenInfo?tokenInfo.name:''" :parents="[{title: 'Tokens', to: '/my-token'}]" :showBtn="{modal: 'showDeployTokenModal', icon: 'fa-angle-double-up', label: 'Deploy Token'}"/>
+	<Toolbar :current="tokenInfo?tokenInfo.name:''" :parents="[{title: 'Tokens', to: '/tokens'}]" :showBtn="{modal: 'showDeployTokenModal', icon: 'fa-angle-double-up', label: 'Deploy Token'}"/>
 	<div class="d-flex flex-column flex-lg-row">
 		<!--begin::Sidebar-->
 		<div class="flex-column flex-lg-row-auto me-lg-10  w-lg-250px w-xl-300px mb-10 order-1 order-lg-1">
@@ -153,7 +153,7 @@
 						<h2 class="fw-bolder">Token overview</h2>
 					</div>
 					<div class="card-toolbar">
-						<!-- <button type="button" class="btn btn-sm btn-primary me-2">Swap <i class="fas fa-exchange-alt"></i></button> -->
+						<a :href="`https://dashboard.internetcomputer.org/canister/${tokenId}`" type="button" target="_blank" class="btn btn-sm btn-light-info me-2">ICP Dashboard <i class="fa fa-external-link"></i></a>
 						<button type="button" class="btn btn-sm btn-light-primary me-2" @click="transferToken('transfer')">Mint <i class="fas fa-paper-plane"></i></button>
 						<button type="button" class="btn btn-sm btn-light-danger" @click="transferToken('burn')">Burn <i class="fas fa-burn"></i></button>
 					</div>
@@ -183,11 +183,11 @@
 										</td></tr>
 										<tr>
 											<td class="text-gray-400">Price:</td>
-											<td class="text-success">$---</td>
+											<td class="text-muted">0</td>
 										</tr>
 										<tr>
 											<td class="text-gray-400">Market Cap:</td>
-											<td class="text-success">$----</td>
+											<td class="text-muted">0</td>
 										</tr>
 								</tbody></table>
 							</div>
@@ -234,9 +234,9 @@
 								<!--end::Table head-->
 								<!--begin::Table body-->
 								<tbody class="fw-bold text-gray-800">
-									<!-- <div v-if="isTransLoading || isTransRefetching">Loading...</div>
-									<div v-if="isError">{{ error }}</div> -->
-									<tr v-if="tokenTransactions" v-for="tran in tokenTransactions.transactions">
+									<div v-if="isTransLoading || isTransRefetching">Loading...</div>
+									<!-- <div v-if="isError">{{ error }}</div> -->
+									<tr v-if="tokenTransactions && tokenTransactions?.transactions" v-for="tran in tokenTransactions.transactions">
 										<td>
 											<span :class="`badge badge-light-${tran.kind=='BURN'?'danger':tran.kind=='TRANSFER'?'success':'primary'}`">{{tran.kind}}</span>
 										</td>
