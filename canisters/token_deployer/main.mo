@@ -164,7 +164,7 @@ actor class Self() = this {
                 switch (decode) {
                     case (#ok(version)) {
                         let _lastest_version: Blob = Blob.fromArray(version);
-                        if(Blob.equal(SNS_WASM_VERSION, _lastest_version) == true){
+                        if(Blob.equal(SNS_WASM_VERSION, _lastest_version) == false){
                             SNS_WASM_VERSION := _lastest_version;
                             let _saved = await save_wasm_version(SNS_WASM_VERSION);
                             return #ok("New version saved" # debug_show(_saved));
