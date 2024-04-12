@@ -13,13 +13,13 @@
 			description: "Easily create and launch custom tokens on the Internet Computer using ICTO's deployment feature. Configure token details, leverage the official ICRC standard, and rapidly integrate your token into the expanding IC ecosystem.",
 			link: {
 				label: "Deploy your token",
-				url: "/token-creation"
+				url: "/tokens"
 			}
 		},
 		{
 			title: "Liquidity Locks",
 			img: "/media/features/liquidity-locks.png",
-			description: "Foster trust and stimulate trading activity through our transparent liquidity locks.",
+			description: "Seal your commitment to the project by visibly locking liquidity. Unlike burning tokens (hard to track), lock them securely for added transparency and trust. Ideal for token sales, ensuring fair distribution and milestone-based releases.",
 			link: {
 				label: "Configure your Token lock",
 				url: "/token-locks"
@@ -70,8 +70,8 @@
 								ICTO allows companies to create, vest, lock or distribute their tokens through airdrops.
 							</h3>
 							<div class="mt-10">
-								<router-link to="/my-token" class="btn btn-primary me-3">Getting started <i class="fas fa-arrow-right"></i></router-link>
-								<a href="https://docs.icto.app" class="btn btn-secondary" target="_blank">Documents <i class="fas fa-file"></i></a>
+								<router-link to="/tokens" class="btn btn-primary me-3">Launch a token <i class="fas fa-arrow-right"></i></router-link>
+								<a href="https://docs.icto.app" class="btn btn-secondary" target="_blank">Documentation <i class="fas fa-file"></i></a>
 							</div>
 						</div>
 						
@@ -368,7 +368,7 @@
 				<!--begin::Col-->
 				<div class="col-lg-4 pe-lg-16 mb-0 mb-lg-0">
 					<div>
-						<img src="http://localhost:5173/media/logos/logo-vertical.png" class="h-60px" />
+						<img src="/media/logos/logo-vertical.png" class="h-60px" />
 						<h5 class="fw-bold text-gray-600 mb-6 mt-5">Centralize your token needs<br />Entirely on-chain with Internet Computer!</h5>
 						<div class="flex">
 							<a href="https://github.com/ICTO-Labs" class="mb-6" target="_blank">
