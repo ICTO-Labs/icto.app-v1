@@ -6,6 +6,28 @@
 		transactions: "1.244+",
 		tvl: "$12K+"
 	})
+	const partners = ref([
+		{
+			name: "Dfinity Grants",
+			link: "https://dfinity.org/grants",
+			logo: "/media/partners/dfinity-grants.svg"
+		},
+		{
+			name: "ICPSwap",
+			link: "https://icpswap.com",
+			logo: "/media/partners/icpswap.svg"
+		},
+		{
+			name: "Canister Geek",
+			link: "https://cusyh-iyaaa-aaaah-qcpba-cai.raw.icp0.io/",
+			logo: "/media/partners/canister-geek.svg"
+		},
+		{
+			name: "Bitfinity",
+			link: "https://bitfinity.network",
+			logo: "/media/partners/bitfinity.webp"
+		}
+	]);
 	const features = ref([
 		{
 			title: "Token Deployment",
@@ -69,9 +91,9 @@
 							<h3 class="fs-2x mt-5 text-dark fw-normal">
 								ICTO allows companies to create, vest, lock or distribute their tokens through airdrops.
 							</h3>
-							<div class="mt-10">
-								<router-link to="/tokens" class="btn btn-primary me-3">Launch a token <i class="fas fa-arrow-right"></i></router-link>
-								<a href="https://docs.icto.app" class="btn btn-secondary" target="_blank">Documentation <i class="fas fa-file"></i></a>
+							<div class="mt-10 d-flex">
+								<router-link to="/tokens" class="btn btn-danger me-3">Launch your Token <i class="fas fa-angle-double-up"></i></router-link>
+								<router-link to="/token-locks" class="btn btn-success">Configure a Token lock <i class="fas fa-lock"></i></router-link>
 							</div>
 						</div>
 						
@@ -98,27 +120,11 @@
 			</div>
 				<div class="d-flex flex-center flex-wrap position-relative px-5 card-rounded" style="background:linear-gradient(90deg, #f2c602 0%, #dea004 100%);">
 					<span class="badge badge-secondary fw-bolder position-absolute translate-middle top-0 start-50">OUR PARTNERS</span>
-					<!--begin::Client-->
-					<a class="d-flex flex-center m-3 m-md-6" title="Dfinity Grants" href="https://dfinity.org/grants" target="_blank">
-						<img src="https://bitfinity.network/investors/dfinity.svg" class="mh-30px mh-lg-40px" alt="">
-					</a>
-					<!--end::Client-->
-					<!--begin::Client-->
-					<a class="d-flex flex-center m-3 m-md-6" title="ICPSwap" href="https://icpswap.com" target="_blank">
-						<img src="https://app.icpswap.com/static/media/logo-dark.7b8c12091e650c40c5e9f561c57473ba.svg" class="mh-30px mh-lg-40px" alt="">
-					</a>
-					<!--end::Client-->
-					<!--begin::Client-->
-					<a class="d-flex flex-center m-3 m-md-6" title="Canister Geek" href="https://cusyh-iyaaa-aaaah-qcpba-cai.raw.icp0.io/" target="_blank">
-						<img src="data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMTQ2MCIgaGVpZ2h0PSI0MDAiIHZlcnNpb249IjEuMSIgdmlld0JveD0iMCAwIDE0NjAgNDAwIiB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciPgogICAgPGcgZmlsbD0id2hpdGUiPgogICAgICAgIDxwYXRoIGQ9Im0yNDcuODggOTYuNzU5djIyLjk2NWgtNzguMDc4djQxLjkyOGgtNTcuMTg5di00MS45MjhoLTc4LjM3NXYtMjIuOTY1aC0yNC43NDJ2MjQxLjUgMC43NDEgMC4xNDggMS4zMzRjMCAzMC41MiA1OC45NjYgNTUuMjYyIDEzMS43MSA1NS4yNjIgNzIuNzQ1IDAgMTI4LjMtMjMuNDA5IDEzMS41Ni01Mi43NDRsMC4xNDgtMTIwLjE2di0xMjUuOTN6bS01Mi4xNTEgNDkuMTg5aDUzLjMzN3Y1My4zMzZoLTUzLjMzN3ptLTE2MC4wMS0wLjc0MWg1My4zMzZ2NTQuNjdoLTUzLjMzNnptMjEyLjc1IDE5MC4zOGMwIDAuNDQ0IDAgMS4wMzctMC4xNDggMS40ODEtMC4xNDggMC4yOTYtMC4xNDggMC43NDEtMC4yOTYgMS4wMzctMC4xNDkgMC4yOTctMC4xNDkgMC41OTMtMC4yOTcgMC44ODktNy41NTYgMTguNTItNTIuMjk5IDMyLjc0My0xMDYuNTIgMzIuNzQzLTU0LjIyNSAwLTk4LjgyLTE0LjIyMy0xMDYuMzgtMzIuNzQzLTAuMTQ4Mi0wLjI5Ni0wLjE0ODItMC41OTItMC4yOTY0LTAuNzQxdi0xMTUuNDFoNzguMDc5di0zNi43NDNoNTcuMDQxdjcyLjc0NWgtNjguNzQ1djI0LjQ0Nmg5My4zMzl2LTYwLjU5Nmg1NC4zNzN2MTEyLjl6bS0xNzIuOS0zMzAuNjloMTMxLjI3djI1LjkyOGgtMTMxLjI3em0tMjcuNzA1IDQyLjk2NmgxODYuNjh2MjUuOTI4aC0xODYuNjh6Ii8+CiAgICAgICAgPHBhdGggZD0ibTEzNjAuNyAyNTEuOTR2LTE1MS41OWgxOS44N3Y5NC44NDVsNDUuODg2LTUwLjE4OGgxOS40NjFsMS42Mzg4IDMuNDgyNC0zNy44OTcgNDEuMTc0IDQwLjc2NSA1OC43OTEtMS42Mzg4IDMuNDgyNGgtMTkuNDYxbC0zMi43NzYtNDcuOTM0LTE1Ljk3OCAxNy40MTJ2MzAuNTIyem0tMTEwLjMyLTMxLjU0N3YtNDQuMDQycTAtMzEuMzQyIDMxLjM0Mi0zMS4zNDJoMjYuNjNxMzEuMzQyIDAgMzEuMzQyIDMxLjM0MnYyOS40OThoLTY5LjQ0NHYxNi41OTNxMCAxMi4wODYgMTIuMDg2IDEyLjA4Nmg1My4yNnYxMC40NDdsLTkuMjE4MSA2Ljk2NDhoLTQ0LjY1N3EtMzEuMzQyIDAtMzEuMzQyLTMxLjU0N3ptMTkuODctMzAuMTEzaDQ5LjU3M3YtMTUuOTc4cTAtMTEuODgxLTExLjg4MS0xMS44ODFoLTI1LjYwNnEtMTIuMDg2IDAtMTIuMDg2IDExLjg4MXptLTEyOC41NSAzMC4xMTN2LTQ0LjA0MnEwLTMxLjM0MiAzMS4zNDItMzEuMzQyaDI2LjYzcTMxLjM0MiAwIDMxLjM0MiAzMS4zNDJ2MjkuNDk4aC02OS40NDR2MTYuNTkzcTAgMTIuMDg2IDEyLjA4NiAxMi4wODZoNTMuMjZ2MTAuNDQ3bC05LjIxODEgNi45NjQ4aC00NC42NTdxLTMxLjM0MiAwLTMxLjM0Mi0zMS41NDd6bTE5Ljg3LTMwLjExM2g0OS41NzN2LTE1Ljk3OHEwLTExLjg4MS0xMS44ODEtMTEuODgxaC0yNS42MDZxLTEyLjA4NiAwLTEyLjA4NiAxMS44ODF6bS0xMzAuMTYgMzAuMTEzdi00NC4wNDJxMC0zMS4zNDIgMzEuNTQ3LTMxLjM0Mmg1OC4xNzd2MTE2LjM1cTAgMzEuNTQ3LTMxLjU0NyAzMS41NDdoLTQwLjE1bC05LjQyMy02Ljk2NDh2LTEwLjQ0N2g0OS4xNjRxMTIuMDg2IDAgMTIuMDg2LTEyLjA4NnYtMTEuNDcxaC0zOC4zMDZxLTMxLjU0NyAwLTMxLjU0Ny0zMS41NDd6bTE5Ljg3IDIuMDQ4NXEwIDEyLjA4NiAxMi4wODYgMTIuMDg2aDM3Ljg5N3YtNzIuMTA2aC0zNy44OTdxLTEyLjA4NiAwLTEyLjA4NiAxMS44ODF6bS04Ny43MTIgMjkuNDk4di05NC4yM3E3LjE2OTctMTIuNzAxIDI3LjI0NS0xMi43MDFoMjEuMDk5bDkuNDIzIDYuOTY0OHYxMC40NDdoLTI2LjYzcS03Ljk4OTEgMC0xMS4yNjcgNC4wOTd2ODUuNDIyem0tMTA5LjUtMzEuNTQ3di00NC4wNDJxMC0zMS4zNDIgMzEuMzQyLTMxLjM0MmgyNi42M3EzMS4zNDIgMCAzMS4zNDIgMzEuMzQydjI5LjQ5OGgtNjkuNDQzdjE2LjU5M3EwIDEyLjA4NiAxMi4wODYgMTIuMDg2aDUzLjI2djEwLjQ0N2wtOS4yMTgyIDYuOTY0OGgtNDQuNjU3cS0zMS4zNDIgMC0zMS4zNDItMzEuNTQ3em0xOS44Ny0zMC4xMTNoNDkuNTczdi0xNS45NzhxMC0xMS44ODEtMTEuODgxLTExLjg4MWgtMjUuNjA2cS0xMi4wODYgMC0xMi4wODYgMTEuODgxem0tOTIuMTIyIDMwLjExM3YtMTA5LjhoMTkuODd2MzQuNDE0aDM3Ljg5N3YxNy40MTJoLTM3Ljg5N3Y2MC4wMnEwIDEyLjA4NiAxMi4wODYgMTIuMDg2aDI3Ljg1OXYxMC40NDdsLTkuNDIzIDYuOTY0OGgtMTkuMDUxcS0zMS4zNDIgMC0zMS4zNDItMzEuNTQ3em0tOTYuNzU0IDI0LjU4MnYtMTAuNDQ3aDQ3LjMycTEyLjA4NiAwIDEyLjA4Ni0xMi4yOTEgMC0xMi43MDEtOS44MzI3LTE0LjMzOWwtMjMuNTU4LTMuODkyMXEtMjYuMDE2LTQuNTA2Ny0yNi4wMTYtMjguNjc5IDAtMzAuMzE4IDMxLjU0Ny0zMC4zMThoMzMuMzlsOS40MjMgNi45NjQ4djEwLjQ0N2gtNDIuNDA0cS0xMi4yOTEgMC0xMi4yOTEgMTIuMjkxIDAgMTEuNDcxIDEwLjI0MiAxMy4zMTVsMjMuNzYyIDMuODkyMXEyNS42MDYgNC4zMDE4IDI1LjYwNiAyOS40OTggMCAzMC41MjItMzEuNzUxIDMwLjUyMmgtMzguMTAyem0tMzkuMzg3LTExOS4yMnYtMjEuNzE0aDIxLjMwNHYyMS43MTR6bTAuODE5MzkgMTI2LjE5di0xMDYuOTNoMTkuODd2MTA2Ljkzem0tMTExLjA4IDB2LTEwNi45M2g1Ny45NzJxMzEuMzQyIDAgMzEuMzQyIDMxLjM0MnY3NS41ODloLTE5Ljg3di03Ny42MzdxMC0xMS44ODEtMTEuODgxLTExLjg4MWgtMzcuNjkydjg5LjUxOXptLTc2LjQ2OCAwcS0zMS41NDcgMC0zMS41NDctMzEuMzQyIDAtMzEuMzQyIDMxLjU0Ny0zMS4zNDJoMzQuNjE5di0xNC45NTRxMC0xMS44ODEtMTEuODgxLTExLjg4MWgtNDMuODM3di0xMC40NDdsOS40MjMtNi45NjQ4aDM0LjgyNHEzMS4zNDIgMCAzMS4zNDIgMzEuMzQydjc1LjU4OXptLTExLjY3Ni0yOS40OThxMCAxMi4wODYgMTIuMDg2IDEyLjA4NmgzNC4yMXYtMjkuNzAzaC0zNC4yMXEtMTIuMDg2IDAtMTIuMDg2IDEyLjA4NnptLTExMC40NS0yLjA0ODV2LTQ0LjA0MnEwLTMxLjM0MiAzMS4zNDItMzEuMzQyaDM5LjUzNmw5LjQyMyA2Ljk2NDh2MTAuNDQ3aC00OC4zNDRxLTEyLjA4NiAwLTEyLjA4NiAxMS44ODF2NDguMTM5cTAgMTIuMDg2IDEyLjA4NiAxMi4wODZoNDguMzQ0djEwLjQ0N2wtOS40MjMgNi45NjQ4aC0zOS41MzZxLTMxLjM0MiAwLTMxLjM0Mi0zMS41NDd6Ii8+CiAgICA8L2c+Cjwvc3ZnPg==" class="mh-30px mh-lg-40px" alt="">
-					</a>
-					<!--end::Client-->
-					<!--begin::Client-->
-					<a class="d-flex flex-center m-3 m-md-6" title="Bitfinity" href="https://bitfinity.network" target="_blank">
-						<img src="https://bitfinity.network/logo-mix.webp" class="mh-30px mh-lg-40px" alt="">
-					</a>
-					<!--end::Client-->
-					
+					<span v-for="partner in partners" class="d-flex flex-center m-3 m-md-6" :title="partner.name" :key="partner.name">
+						<a :title="partner.name" :href="partner.link" target="_blank">
+							<img :src="partner.logo" class="mh-30px mh-lg-40px" :alt="partner.name">
+						</a>
+					</span>
 				</div>
 		</div>
 	</div>
@@ -366,10 +372,10 @@
 			<!--begin::Row-->
 			<div class="row py-0 py-lg-0">
 				<!--begin::Col-->
-				<div class="col-lg-4 pe-lg-16 mb-0 mb-lg-0">
+				<div class="col-lg-4 pe-lg-16 mb-10 mb-lg-0 footer-branch text-center">
 					<div>
 						<img src="/media/logos/logo-vertical.png" class="h-60px" />
-						<h5 class="fw-bold text-gray-600 mb-6 mt-5">Centralize your token needs<br />Entirely on-chain with Internet Computer!</h5>
+						<h5 class="fw-bold text-gray-600 mb-6 mt-5">Centralize your token needs!<br />Entirely on-chain with <a href="https://internetcomputer.org" target="_blank" title="Internet Computer">Internet Computer</a></h5>
 						<div class="flex">
 							<a href="https://github.com/ICTO-Labs" class="mb-6" target="_blank">
 								<i class="fab fa-github h-20px me-2 fs-2x"></i>
