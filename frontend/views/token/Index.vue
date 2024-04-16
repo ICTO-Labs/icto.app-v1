@@ -1,9 +1,11 @@
 <script setup>
-	import {ref} from "vue";
-	import { useGetUserTokens } from '@/services/Token';
+	import {onMounted, ref} from "vue";
+	import { useGetDeployerTokens } from '@/services/Token';
 	import { showModal, showLoading, showSuccess } from '@/utils/common';
-	import Copy from '@/components/icons/Copy.vue'
-	const { data: myToken, isLoading, isError, error, isRefetching, refetch} = useGetUserTokens(0);
+	const myToken = ref([]);
+	const showMyTokens = ref(false);
+	const isLoading = ref(false);
+	// const { data: myToken, isLoading, isError, error, isRefetching, refetch} = useGetUserTokens(0, router.query.me);
 	const deployToken = ()=>{
 		showModal("showDeployTokenModal", true);
 	}
@@ -13,6 +15,19 @@
 		newObj.canisterId = token.canister;
 		showModal("showTransferTokenModal", newObj);
 	}
+	const filter = (e)=>{
+		showMyTokens.value = e.target.checked;
+		console.log('showMyTokens.value', showMyTokens.value);
+		getTokens();
+	}
+	const getTokens = async ()=>{
+		isLoading.value = true;
+		myToken.value = await useGetDeployerTokens(0, showMyTokens.value);
+		isLoading.value = false;
+	}
+	onMounted(()=>{
+		getTokens();
+	})
 </script>
 <template>
 	<Toolbar :current="`Tokens`" :showBtn="{modal: 'showDeployTokenModal', icon: 'fa-angle-double-up', label: 'Deploy Token'}"/>
@@ -22,12 +37,20 @@
 		<h3 class="card-title align-items-start flex-column">
 			<span class="card-label fw-bolder fs-3 mb-1">Tokens <span class="badge badge-light-primary">{{ myToken?myToken.length:0 }}</span></span>
 			<span class="text-muted mt-1 fw-bold fs-7" v-if="isLoading">Loading...</span>
-			<span class="text-muted mt-1 fw-bold fs-7" v-if="isError">{{ error }}</span>
 		</h3>
 		<div class="card-toolbar">
 			<ul class="nav">
+				<li class="nav-item me-5">
+					<div class="form-check form-switch pt-2">
+						<input class="form-check-input" type="checkbox" value="" id="myTokens" @change="filter"/>
+						<label class="form-check-label" for="myTokens">
+							Show only my tokens
+						</label>
+					</div>
+				</li>
 				<li class="nav-item">
-					<a href="#" class="btn btn-sm btn-bg-light btn-active-dark me-3" @click="refetch()" :disabled="isRefetching">{{isRefetching?'Loading...':'Refresh'}}</a>
+					
+					<a href="#" class="btn btn-sm btn-bg-light btn-active-dark me-3" @click="getTokens()" :disabled="isLoading">{{isLoading?'Loading...':'Refresh'}}</a>
 					<!-- <a href="#" class="btn btn-sm btn-danger btn-active-dark me-3" @click="deployToken()" ><i class="fas fa-angle-double-up"></i> Deploy Token</a> -->
 				</li>
 				
@@ -76,7 +99,6 @@
 				<!--end::Table body-->
 			</table>
 			<Empty v-if="myToken && myToken.length ==0"></Empty>
-
 		</div>
 	</div>
 	<!--end::Body-->

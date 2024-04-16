@@ -31,13 +31,13 @@ export const useGetTokenBalance = async(tokenId, principal, standard='icrc1')=>{
         var _balance = 0;
         let _standard = standard.toLowerCase();
         if(_standard == 'icp' || _standard == 'icrc1' || _standard == 'icrc2'){
-            _balance = await Connect.canister(tokenId, 'icrc1').icrc1_balance_of({
+            _balance = await Connect.canister(tokenId, 'icrc1', true).icrc1_balance_of({
                 owner: txtToPrincipal(principal),
                 subaccount: [] 
             });
             return Number(_balance)/_decimals
         }else if(_standard == 'dip20'){
-            _balance = await Connect.canister(tokenId, 'dip20').balanceOf(txtToPrincipal(principal));
+            _balance = await Connect.canister(tokenId, 'dip20', true).balanceOf(txtToPrincipal(principal));
             return Number(_balance)/_decimals;
         }
     }catch(e){
@@ -242,15 +242,40 @@ export const useInstallToken = async (payload)=>{
         throw error;
     }
 }
-export const useGetUserTokens = (page)=> {
+export const useGetUserTokens = (page, my)=> {
     return useQuery({
         queryKey: ['user_tokens', page],
         queryFn: async () => {
-            const _rs = await Connect.canister(config.TOKEN_DEPLOYER_CANISTER_ID, 'token_deployer').getUserTokens(walletStore.principal, page);
+            let _rs;
+            console.log('==========================my', my);
+            if(my == true){
+                console.log('get only my tokens');
+                _rs = await Connect.canister(config.TOKEN_DEPLOYER_CANISTER_ID, 'token_deployer').getUserTokens(walletStore.principal, page);
+            }else{
+                _rs = await Connect.canister(config.TOKEN_DEPLOYER_CANISTER_ID, 'token_deployer').getTokens(page);
+            }
             if (_rs && typeof _rs === 'object' && 'err' in _rs) {
                 throw new Error(_rs.err);
             }
             return _rs;
         },
     });
+};
+export const useGetDeployerTokens = async (page, my)=> {
+    let _rs;
+    try{
+        if(my == true){
+            console.log('get only my tokens');
+            _rs = await Connect.canister(config.TOKEN_DEPLOYER_CANISTER_ID, 'token_deployer').getUserTokens(walletStore.principal, page);
+        }else{
+            _rs = await Connect.canister(config.TOKEN_DEPLOYER_CANISTER_ID, 'token_deployer').getTokens(page);
+        }
+        if (_rs && typeof _rs === 'object' && 'err' in _rs) {
+            throw new Error(_rs.err);
+        }
+        return _rs;
+    }catch(e){
+        return [];
+    }
+    
 };

@@ -3,7 +3,7 @@ import Page404 from './components/layout/404.vue'
 import Dashboard from './views/Dashboard.vue'
 import Contract from './views/contract/Contract.vue'
 import NewContract from './views/contract/NewContract.vue'
-import MyToken from './views/token/MyToken.vue'
+import Tokens from './views/token/Index.vue'
 import TokenDetail from './views/token/TokenDetail.vue'
 import ContractDetail from './views/contract/ContractDetail.vue'
 import Launchpad from './views/launchpad/Launchpad.vue'
@@ -92,7 +92,7 @@ const router = createRouter({
       path: '/tokens',
       meta: {title: 'Tokens'},
       name: 'tokens',
-      component: MyToken
+      component: Tokens
     },
     {
       path: '/airdrop',
