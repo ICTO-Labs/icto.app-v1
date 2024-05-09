@@ -1,61 +1,69 @@
 {
-  "canisters": {
-    "internet_identity": {
-      "type": "custom",
-      "candid": "https://github.com/dfinity/internet-identity/releases/download/release-2023-11-17/internet_identity.did",
-      "wasm": "https://github.com/dfinity/internet-identity/releases/download/release-2023-11-17/internet_identity_dev.wasm.gz",
-      "remote": {
-        "id": {
-          "ic": "rdmx6-jaaaa-aaaaa-aaadq-cai"
-        }
-      },
-      "frontend": {}
-    },
-    "backend": {
-      "main": "canisters/backend/main.mo",
-      "type": "motoko"
-    },
-    "token_deployer": {
-      "main": "canisters/token_deployer/main.mo",
-      "type": "motoko"
-    },
-    "deployer": {
-      "main": "canisters/deployer/main.mo",
-      "type": "motoko"
-    },
-    "lock_contract": {
-      "main": "canisters/deployer/contracts/TokenLock.mo",
-      "type": "motoko"
-    },
-    "frontend": {
-      "dependencies": [
-        "backend"
-      ],
-      "frontend": {
-        "entrypoint": "dist/index.html"
-      },
-      "source": [
-        "dist/"
-      ],
-      "type": "assets"
-    }
-  },
-  "defaults": {
-    "build": {
-      "packtool": ""
-    }
-  },
-  "networks": {
-    "local": {
-      "bind": "127.0.0.1:8000",
-      "type": "ephemeral"
-    },
-    "ic": {
-      "providers": [
-        "https://mainnet.dfinity.network"
-      ],
-      "type": "persistent"
-    }
-  },
-  "version": 1
+	"canisters": {
+	"internet_identity": {
+		"type": "custom",
+		"candid": "https://github.com/dfinity/internet-identity/releases/download/release-2023-11-17/internet_identity.did",
+		"wasm": "https://github.com/dfinity/internet-identity/releases/download/release-2023-11-17/internet_identity_dev.wasm.gz",
+		"remote": {
+		"id": {
+			"ic": "rdmx6-jaaaa-aaaaa-aaadq-cai"
+		}
+		},
+		"frontend": {}
+	},
+	"backend": {
+		"main": "canisters/backend/main.mo",
+		"type": "motoko"
+	},
+	"token_deployer": {
+		"main": "canisters/token_deployer/main.mo",
+		"type": "motoko"
+	},
+	"deployer": {
+		"main": "canisters/deployer/main.mo",
+		"type": "motoko"
+	},
+	"lock_contract": {
+		"main": "canisters/deployer/contracts/TokenLock.mo",
+		"type": "motoko"
+	},
+	"indexing_canister": {
+		"main": "canisters/indexing/main.mo",
+		"type": "motoko"
+	},
+	"claim_contract": {
+		"main": "canisters/contract/claim_token/main.mo",
+		"type": "motoko"
+	},
+	"frontend": {
+		"dependencies": [
+		"backend"
+		],
+		"frontend": {
+		"entrypoint": "dist/index.html"
+		},
+		"source": [
+		"dist/"
+		],
+		"type": "assets"
+	}
+	},
+	"defaults": {
+	"build": {
+		"packtool": ""
+	}
+	},
+	"networks": {
+	"local": {
+		"bind": "127.0.0.1:8000",
+		"type": "ephemeral"
+	},
+	"ic": {
+		"providers": [
+		"https://mainnet.dfinity.network"
+		],
+		"type": "persistent"
+	}
+	},
+	"version": 1
 }
