@@ -27,6 +27,7 @@
     "axios": "^1.6.7",
     "bignumber.js": "^9.1.2",
     "chart.js": "^4.4.1",
+    "chartjs-plugin-annotation": "^3.0.1",
     "codemirror-editor-vue3": "^2.4.1",
     "crc-32": "^1.2.2",
     "ic-stoic-identity": "^2.0.0",
