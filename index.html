@@ -23,7 +23,12 @@
   window.createPopper = createPopper;
 
   window.global = window
-  window.Buffer = Buffer
+  window.Buffer = Buffer;
+
+  //Magic to make BigInt work in Safari
+  BigInt.prototype.toJSON = function() {       
+    return this.toString()
+  }
 </script>
 <script type="module" src="/frontend/main.js"></script>
 <!--begin::Javascript-->
