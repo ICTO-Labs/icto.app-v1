@@ -6,6 +6,7 @@ const NETWORK = {
         deployer_id: local_canisters.deployer.local,//"be2us-64aaa-aaaaa-qaabq-cai",
         token_deployer_id: local_canisters.token_deployer.local,//"c5kvi-uuaaa-aaaaa-qaaia-cai",
         backend_id: local_canisters.backend.local,//"bd3sg-teaaa-aaaaa-qaaba-cai",
+        indexing_id: local_canisters.indexing_canister.local,//Mapping canister
         gov_token_id: "ajuq4-ruaaa-aaaaa-qaaga-cai",//governance token, required for charges
         host: "http://127.0.0.1:8000",
         identityProvider: "http://127.0.0.1:8000/?canisterId="+local_canisters.internet_identity.local+"#authorize",
@@ -23,6 +24,7 @@ const NETWORK = {
         deployer_id: canisters.deployer.ic,//"p7bu5-uyaaa-aaaap-qca3q-cai",
         token_deployer_id: canisters.token_deployer.ic,//"p7bu5-uyaaa-aaaap-qca3q-cai",
         backend_id: canisters.backend.ic, //"ys3lq-iiaaa-aaaap-qb7ba-cai",
+        // indexing_id: canisters.indexing_canister.ic,//Mapping canister
         host: "https://icp-api.io",
         scan: "https://dashboard.internetcomputer.org/canister/",
         identityProvider: "https://identity.ic0.app/#authorize"
@@ -38,6 +40,7 @@ const config = {
     DEPLOYER_CANISTER_ID: NETWORK[ENV]['deployer_id'],
     TOKEN_DEPLOYER_CANISTER_ID: NETWORK[ENV]['token_deployer_id'],
     BACKEND_CANISTER_ID: NETWORK[ENV]['backend_id'],
+    INDEXING_CANISTER_ID: NETWORK[ENV]['indexing_id'],
     CANIC_CANISTER_ID: "mxftc-eyaaa-aaaap-qanga-cai",
     CANISTER_CYCLE_MINTING: "rkp4c-7iaaa-aaaaa-aaaca-cai",
     CANISTER_IC_MANAGEMENT: "aaaaa-aa",

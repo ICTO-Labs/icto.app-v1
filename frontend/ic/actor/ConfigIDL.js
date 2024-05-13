@@ -14,6 +14,8 @@ import {idlFactory as deployerIDL} from '../../../src/declarations/deployer/depl
 import {idlFactory as tokenDeployerIDL} from '../../../src/declarations/token_deployer/token_deployer.did.js';
 import {idlFactory as backendIDL} from '../../../src/declarations/backend/backend.did.js';
 import {idlFactory as lockContractIDL} from '../../../src/declarations/lock_contract/lock_contract.did.js';
+import {idlFactory as claimContractIDL} from '../../../src/declarations/claim_contract/claim_contract.did.js';
+import {idlFactory as indexingIDL} from '../../../src/declarations/indexing_canister/indexing_canister.did.js';
 
 export const preloadIdls = {
     'cycles' : cyclesIDL,
@@ -27,6 +29,8 @@ export const preloadIdls = {
     'ext': ext,
     'IC': icIDL,
     'contract': contractIDL,
+    'token_claim': claimContractIDL,
+    'indexing': indexingIDL,
     'deployer': deployerIDL,
     'token_deployer': tokenDeployerIDL,
     'lock_contract': lockContractIDL,

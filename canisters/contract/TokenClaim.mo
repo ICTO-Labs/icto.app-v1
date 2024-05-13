@@ -13,47 +13,84 @@ import Time "mo:base/Time";
 import Cycles "mo:base/ExperimentalCycles";
 import Bool "mo:base/Bool";
 import Result "mo:base/Result";
+import Ledger "Ledger";
+import Types "./types/Common";//Common
 
-shared ({ caller }) actor class () = self {
+shared ({ caller = creator }) actor class Contract({
+    title: Text;
+    description: Text;
+    durationTime: Nat;
+    durationUnit: Nat;
+    cliffTime: Nat;
+    cliffUnit: Nat;
+    unlockSchedule: Nat;
+    canCancel: Text;
+    canChange: Text;
+    canView: Text;
+    startNow: Bool;
+    startTime: Time.Time;
+    created: Time.Time;
+    tokenInfo: Types.TokenInfo;
+    totalAmount: Nat;//Token will be sent (sum of recipents's amount)
+    unlockedAmount: Nat;//unlockedAmount
+    recipients: [Types.Recipient];
+    owner: Principal;//Contract owner
+}) = this {
+
+// shared ({ caller }) actor class () = self {
+
+    let ICRC1 : Ledger.ICRC1 = actor(tokenInfo.canisterId);
+
+    // Saving the recipient data (claim info, histories)
+    var recipientClaimInfo = HashMap.HashMap<Principal, RecipientClaimInfo>(0, Principal.equal, Principal.hash);
+    var totalAmount: Nat = 0;
+    var totalClaimedAmount: Nat = 0;
+    var totalRecipients: Nat = 0;
+    var E8S = 100_000_000;
+
     //Convert Time.Now to seconds
     func timeNow(): Nat{
         Int.abs(Time.now()/1_000_000_000)
     };
+
     // Contract info
     type ContractInfo = {
         title: Text;
         description: Text;
-        tokenId: Principal;
+        tokenInfo: Types.TokenInfo;
         lockDuration: Nat;
-        unlockSchedule: [(Nat, Nat)];
+        unlockSchedule: Nat;
         startTime: Nat;
         isStarted: Bool;
         isPaused: Bool;
         isCanceled: Bool;
         owner: Principal;
         allowTransfer: Bool;
+        created: Time.Time;
     };
     type ContractData = {
         title: Text;
         description: Text;
-        tokenId: Principal;
+        tokenInfo: Types.TokenInfo;
         lockDuration: Nat;
-        unlockSchedule: [(Nat, Nat)];
+        unlockSchedule: Nat;
         startTime: Nat;
         isStarted: Bool;
         totalAmount: Nat;
+        totalRecipients: Nat;
         totalClaimedAmount: Nat;
         cyclesBalance: Nat;
         isPaused: Bool;
         isCanceled: Bool;
         owner: Principal;
         allowTransfer: Bool;
+        created: Time.Time;
     };
 
     type Recipient = {
         principal: Principal;
         amount: Nat;
-        note: Text;
+        note: ?Text;
     };
 
     type VestingSchedule = {
@@ -92,43 +129,29 @@ shared ({ caller }) actor class () = self {
     };
     // Contract init
     var contractInfo: ContractInfo = { 
-        title = "Vesting Contract";
-        description = "This contract allows you to lock tokens for a period of time or release them according to a vesting schedule.";
-        tokenId = Principal.fromText("aaaaa-aa");
-        lockDuration = 0;
-        unlockSchedule = [];
+        title = title;
+        description = description;
+        tokenInfo = tokenInfo;
+        lockDuration = durationTime*durationUnit;
+        unlockSchedule = unlockSchedule;
         startTime = timeNow();
-        isStarted = false;
+        created = timeNow();
+        isStarted = true;
         isPaused = false;
         isCanceled = false;
-        owner = caller;
+        owner = owner;
         allowTransfer = false;
     };
 
-    // Saving the recipient data (claim info, histories)
-    var recipientClaimInfo = HashMap.HashMap<Principal, RecipientClaimInfo>(0, Principal.equal, Principal.hash);
-    var totalAmount: Nat = 0;
-    var totalClaimedAmount: Nat = 0;
 
     private func checkOwner(caller: Principal) {
         assert(Principal.equal(contractInfo.owner, caller));
     };
 
-    public shared({ caller }) func transferOwnership(newOwner: Principal) : async Result.Result<Bool, Text> {
-        if(contractInfo.allowTransfer == false){
-            return #err("Ownership transfer is not allowed");
-        };
-        checkOwner(caller);
-        contractInfo := {
-                contractInfo with
-                owner = newOwner;
-            };
-        #ok(true);    
-    };
-
+    
     // Update recipient info
     private func addOrUpdateRecipient(principal: Principal, recipient: Recipient, vestingCliff: Nat, claimInterval: Nat, vestingDuration: Nat) {
-        assert(contractInfo.isStarted == false);
+        // assert(contractInfo.isStarted == false);
         switch (recipientClaimInfo.get(principal)) {
             case (?claimInfo) {
                 recipientClaimInfo.put(principal, {
@@ -141,6 +164,7 @@ shared ({ caller }) actor class () = self {
             };
             case (_) {
                 totalAmount += recipient.amount;
+                totalRecipients += 1;
                 recipientClaimInfo.put(principal, {
                     recipient = recipient;
                     claimedAmount = 0;
@@ -154,6 +178,38 @@ shared ({ caller }) actor class () = self {
             };
         };
     };
+    
+    private func processRecipent(): (){
+        for(recipient in recipients.vals()) {
+            let _recipient = {
+                recipient = {
+                    principal = Principal.fromText(recipient.address);
+                    amount = recipient.amount;
+                    note = recipient.note;
+                };
+                principal = Principal.fromText(recipient.address);
+                vestingCliff = cliffTime*cliffUnit;
+                claimInterval = unlockSchedule;
+                vestingDuration = durationTime*durationUnit;
+            };
+            addOrUpdateRecipient(_recipient.principal, _recipient.recipient, _recipient.vestingCliff, _recipient.claimInterval, _recipient.vestingDuration);
+        }
+    };
+
+    processRecipent();//Init process recipients
+
+    public shared({ caller }) func transferOwnership(newOwner: Principal) : async Result.Result<Bool, Text> {
+        if(contractInfo.allowTransfer == false){
+            return #err("Ownership transfer is not allowed");
+        };
+        checkOwner(caller);
+        contractInfo := {
+                contractInfo with
+                owner = newOwner;
+            };
+        #ok(true);    
+    };
+
 
     //Start contract
     public shared(msg) func startContract(): async Result.Result<Bool, Text>{
@@ -176,6 +232,7 @@ shared ({ caller }) actor class () = self {
             contractInfo with
             totalAmount = totalAmount;
             totalClaimedAmount = totalClaimedAmount;
+            totalRecipients = totalRecipients;
             cyclesBalance = Cycles.balance();
         };
     };
@@ -184,7 +241,17 @@ shared ({ caller }) actor class () = self {
     public query func getRecipients(): async [RecipientClaim] {
         let _arr = Buffer.Buffer<RecipientClaim>(0);
         for ((history) in recipientClaimInfo.entries()) {
-            _arr.add(history.1);
+
+            let _recipient = {
+                recipient = history.1.recipient;
+                claimedAmount = history.1.claimedAmount;
+                remainingAmount = history.1.remainingAmount;
+                lastClaimedTime = history.1.lastClaimedTime;
+                vestingCliff = history.1.vestingCliff;
+                claimInterval = history.1.claimInterval;
+                vestingDuration = history.1.vestingDuration;
+            };
+            _arr.add(_recipient);
         };
         _arr.toArray();
     };
@@ -294,7 +361,7 @@ shared ({ caller }) actor class () = self {
             {
                 principal = principal;
                 amount = amount;
-                note = "";
+                note = null;
             },
             vestingCliff, claimInterval, vestingDuration);
         #ok(true);    

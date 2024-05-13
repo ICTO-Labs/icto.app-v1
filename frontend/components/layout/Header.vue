@@ -87,16 +87,16 @@ const router = useRoute();
 													</div>
 												</div>
 											</div>
-											<div :class="`menu-item menu-lg-down-accordion me-lg-1 ${router.name=='Airdrop' || router.name=='AirdropDetail' ?'here':''}`">
-												<router-link class="menu-link py-3" to="/airdrop">
-													<span class="menu-title  text-success"><i class="fas fa-rocket me-2 text-success"></i> Airdrop</span>
+											<div :class="`menu-item menu-lg-down-accordion me-lg-1 ${router.name=='tokenClaim' || router.name=='newContract' ?'here':''}`">
+												<router-link class="menu-link py-3" to="/token-claim">
+													<span class="menu-title text-success"><i class="fas fa-coins me-2 text-success"></i> Token Claim</span>
                                                 </router-link>
 											</div>
-											<div :class="`menu-item menu-lg-down-accordion me-lg-1 ${router.name=='contract' || router.name=='contract-detail' ?'here':''}`">
+											<!-- <div :class="`menu-item menu-lg-down-accordion me-lg-1 ${router.name=='contract' || router.name=='contract-detail' ?'here':''}`">
 												<router-link class="menu-link py-3" to="/payments">
 													<span class="menu-title">Payments</span>
                                                 </router-link>
-											</div>
+											</div> -->
 											<!-- <div class="menu-item menu-lg-down-accordion me-lg-1">
 												<router-link class="menu-link py-3" to="/vesting">
 													<span class="menu-title">Vesting</span>

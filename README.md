@@ -36,6 +36,11 @@ npm i
 npm run dev
 ```
 
+## Add admins
+ICTO use an indexing canister to map created contract with user.
+Add backend canister as admin to indexing_canister
+
+
 Which will start a server at `http://localhost:5173`, proxying API requests to the replica at port 8000.
 
 

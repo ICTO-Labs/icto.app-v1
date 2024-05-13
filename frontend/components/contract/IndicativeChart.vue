@@ -3,12 +3,12 @@
     import {LineChart,useLineChart} from "vue-chart-3";
     import {Chart,registerables} from "chart.js";
     Chart.register(...registerables);
-    import { useGetContract, useGetPaymentHistory, useCancelContract } from "@/services/Contract";
     import moment from "moment";
+import config from "../../config";
 
     const props = defineProps(['contractInfo', 'contractId']);
     const contractInfo = ref(props.contractInfo);
-    console.log(contractInfo.value);
+    console.log('CAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA', contractInfo.value);
     // const { data: contractInfo, error, isError, isLoading, isRefetching, refetch } = useGetContract(props.contractId);
     const chartDetail = ref({
         label: [],
@@ -24,13 +24,12 @@
         chartDetail.value.data = [];
         let startTime = Number(contractInfo.value.startTime);
         let unlockSchedule = Number(contractInfo.value.unlockSchedule);
-        let durationTime = Number(contractInfo.value.durationTime);
-        let durationUnit = Number(contractInfo.value.durationUnit);
-        let unlockAmount = Number(contractInfo.value.totalAmount)/(durationUnit*durationTime/unlockSchedule);
+        let lockDuration = Number(contractInfo.value.lockDuration);
+        let unlockAmount = Number(contractInfo.value.totalAmount)/(lockDuration/unlockSchedule)/config.E8S;
         //Generate data
         let _startCount = 0;
         let _maxLoop = 100;//Limit the loop!
-        for (let i = startTime; i <= startTime+(durationUnit*durationTime)+unlockSchedule; i +=unlockSchedule) {
+        for (let i = startTime; i <= startTime+(lockDuration)+unlockSchedule; i +=unlockSchedule) {
             _startCount++
             if(_startCount >= _maxLoop) break;
             chatSeries.value.push({
@@ -140,6 +139,6 @@
     })   
 </script>
 <template>
-    <apexchart type="line" height="350" :options="xchartOptions" :series="xseries" v-if="chartDetail"></apexchart>
-    <!-- <LineChart :chartData="chartData" :options="chartOptions" /> -->
+    <!-- <apexchart type="line" height="350" :options="xchartOptions" :series="xseries" v-if="chartDetail"></apexchart> -->
+    <LineChart :chartData="chartData" :options="chartOptions" />
 </template>

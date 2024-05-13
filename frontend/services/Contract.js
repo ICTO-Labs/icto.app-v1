@@ -1,6 +1,8 @@
 import { useQuery } from "@tanstack/vue-query";
 import Connect from "@/ic/actor/Connect";
 import config from "../config";
+import walletStore from "@/store/";
+import { Principal } from "@dfinity/principal";
 
 export const useCreateContract = async (data)=>{
     try{
@@ -10,9 +12,11 @@ export const useCreateContract = async (data)=>{
     }
     
 }
-export const useGetMyContracts = async (page=0)=>{
+export const useGetMyContracts = async ()=>{
     try{
-        return await Connect.canister(config.BACKEND_CANISTER_ID, 'backend').getMyContracts(page)
+        if(walletStore.isLogged){
+            return await Connect.canister(config.INDEXING_CANISTER_ID, 'indexing', true).getUserContracts(walletStore.principal);
+        }else return [];
     }catch(e){
         throw new Error(e);
     }
@@ -20,19 +24,44 @@ export const useGetMyContracts = async (page=0)=>{
 export const useCancelContract = async (contractId)=>{
     return await Connect.canister(config.BACKEND_CANISTER_ID, 'contract').whoami();
 }
+export const useGetMyClaimedAmount = async (contractId)=>{
+    if(walletStore.isLogged){
+        return await Connect.canister(contractId, 'token_claim', true).checkClaimable(walletStore._principal);
+    }else return 0;
+}
+export const useClaim = async (contractId)=>{
+    return await Connect.canister(contractId, 'token_claim').claim();
+}
 export const useGetContract = async (contractId) => {
     try{
-        return await Connect.canister(contractId, 'contract').get()
+        return await Connect.canister(contractId, 'token_claim', true).getContractInfo()
     }catch(e){
         throw new Error(e);
     }
 }
-export const useGetPaymentHistory = (contractId) => {
-    return useQuery({
-        queryKey: ['paymentHistory', contractId],
-        queryFn: async () => await Connect.canister(contractId, 'contract').history(),
-        keepPreviousData: true,
-        retry: 0,
-        refetchInterval: 0
-      })
+export const useGetContractRecipients = async (contractId) => {
+    try{
+        return await Connect.canister(contractId, 'token_claim', true).getRecipients();
+    }catch(e){
+        throw new Error(e);
+    }
 }
+export const useGetClaimRecord = async (contractId) => {
+    try{
+        if(walletStore.isLogged){
+            return await Connect.canister(contractId, 'token_claim').getClaimHistory(walletStore._principal);
+        }else return [];
+    }catch(e){
+        throw new Error(e);
+    }
+}
+// export const useGetClaimRecord = (contractId) => {
+//     let _principal = walletStore.isLogged?walletStore._principal:Principal.fromText("2vxsx-fae");
+//     return useQuery({
+//         queryKey: ['claimRecord', contractId],
+//         queryFn: async () => await Connect.canister(contractId, 'token_claim').getClaimHistory(_principal),
+//         keepPreviousData: true,
+//         retry: 3,
+//         refetchInterval: 0
+//     })
+// }

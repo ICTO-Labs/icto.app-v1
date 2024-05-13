@@ -32,7 +32,7 @@
 		"type": "motoko"
 	},
 	"claim_contract": {
-		"main": "canisters/contract/claim_token/main.mo",
+		"main": "canisters/contract/TokenClaim.mo",
 		"type": "motoko"
 	},
 	"frontend": {

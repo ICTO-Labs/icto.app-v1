@@ -21,7 +21,7 @@ module {
     public type ContractData = {
         contractId: Text;
         createdBy: Text;
-        name: Text;
+        title: Text;
         description: Text;
         durationTime: Nat;
         durationUnit: Nat;
@@ -32,17 +32,22 @@ module {
         startNow: Bool;
         startTime: Time.Time;
         created: Time.Time;
-        tokenId: Text;
-        tokenName: Text;
-        tokenStandard: Text;
+        tokenInfo: TokenInfo;
         totalAmount: Nat;
         recipients: [Recipient];
     };
     public type Recipient = {
         amount: Nat;
         address: Text;
-        title: ?Text;
         note: ?Text;
     }; 
+    public type TokenInfo = {
+        canisterId: Text;
+        name: Text;
+        standard: Text;
+        decimals: Nat;
+        symbol: Text;
+        fee: Nat;
+    }
 
 }

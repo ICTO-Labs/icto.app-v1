@@ -1,9 +1,27 @@
 <script setup>
     import moment from 'moment';
     import config from "@/config"
-    import { useGetPaymentHistory } from "@/services/Contract";
+    import { useGetClaimRecord } from "@/services/Contract";
+    import { recordForm } from '@dfinity/candid';
+    import { onMounted, ref, watchEffect } from 'vue';
+    import walletStore from "@/store";
     const props = defineProps(['contractId']);
-    const { data: paymentHistory, isLoading, isError, error} = useGetPaymentHistory(props.contractId);
+    // const { data: claimRecord, isLoading, isError, error} = useGetClaimRecord(props.contractId);
+    const claimRecords = ref([]);
+
+    const getMyClaim = async()=>{
+        claimRecords.value = await useGetClaimRecord(props.contractId);
+        console.log('claimRecords.value++++++++++++++++++++++++', claimRecords.value);
+    }
+
+    watchEffect(() => {
+        if(walletStore.isLogged){
+            getMyClaim();
+        }
+    });
+    onMounted(()=>{
+        getMyClaim();
+    })
 </script>
 <template>
     <div class="card-body pt-0">
@@ -20,21 +38,19 @@
                     <th class="min-w-90px sorting" rowspan="1" colspan="1">TxId</th>
                 </tr>
                 </thead>
-                <span v-if="isLoading">Loading...</span>
-                <span v-else-if="isError">Error: {{ error.message }}</span>
                 <tbody class="fs-6 fw-normal">
-                <tr class="odd" v-for="(payment, idx) in paymentHistory">
+                <tr class="odd" v-for="(record, idx) in claimRecords[0]">
                     <td>
                         {{ idx +1}}.
                     </td>
                     <td>
                         <span class="fs-6 fw-normal text-primary">
-                            {{ payment[1].to }}
+                            {{ walletStore.principal }}
                         </span>
                     </td>
-                    <td class="text-center">{{ Number(payment[1].amount)/config.E8S }}</td>
-                    <td> {{ moment.unix(Number(payment[1].time)).format('lll') }} </td>
-                    <td> # </td>
+                    <td class="text-center">{{ Number(record.amount)/config.E8S }}</td>
+                    <td> {{ moment.unix(Number(record.claimedAt)).format('lll') }} </td>
+                    <td> #{{ record.txId }} </td>
                 </tr>
                 </tbody>
             </table>

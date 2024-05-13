@@ -29,9 +29,9 @@ const router = createRouter({
       component: Dashboard
     },
     {
-      path: '/payments',
-      meta: {title: 'Payments'},
-      name: 'contract',
+      path: '/token-claim',
+      meta: {title: 'Token Claims'},
+      name: 'token-claim',
       component: Contract,
     },
     {
@@ -109,7 +109,7 @@ const router = createRouter({
       component: TokenDetail
     },
     {
-      path: '/contract/:contractId',
+      path: '/token-claim/:contractId',
       meta: {title: 'Contract Details', navs: [{title: 'Payments', to: '/payments'}]},
       name: 'contract-detail',
       component: ContractDetail

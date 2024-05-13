@@ -5,7 +5,6 @@
     import chartjsPluginAnnotation from "chartjs-plugin-annotation";
 
     Chart.register(...registerables, chartjsPluginAnnotation);
-    import { useGetContract, useGetPaymentHistory, useCancelContract } from "@/services/Contract";
     import moment from "moment";
 
     const props = defineProps(['contractInfo', 'isChanged']);

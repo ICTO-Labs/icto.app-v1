@@ -89,6 +89,7 @@ export const useTokenApprove = async(tokenId, payload, standard="icrc2")=>{
         });
         return response;
     }catch(e){
+        console.log('error', e);
         return null;
     }
 }

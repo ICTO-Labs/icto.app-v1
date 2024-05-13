@@ -10,10 +10,12 @@ module {
     public type Duration = {#seconds : Nat; #nanoseconds : Nat};
     public type TimerId = Nat;
     public type ContractData = {
-        name: Text;
+        title: Text;
         description: Text;
         durationTime: Nat;
         durationUnit: Nat;
+        cliffTime: Nat;
+        cliffUnit: Nat;
         unlockSchedule: Nat;
         canCancel: Text;
         canChange: Text;
@@ -21,10 +23,7 @@ module {
         startNow: Bool;
         startTime: Time.Time;
         created: Time.Time;
-        tokenId: Text;
-        tokenName: Text;
-        tokenSymbol: Text;
-        tokenStandard: Text;
+        tokenInfo: TokenInfo;
         totalAmount: Nat;
         unlockedAmount: Nat;
         recipients: [Recipient];
@@ -33,7 +32,6 @@ module {
     public type Recipient = {
         amount: Nat;
         address: Text;
-        title: ?Text;
         note: ?Text;
     };
     public type UserInfo = {
@@ -68,5 +66,12 @@ module {
         #Ok: Ok;
         #Err: Err;
     };
-
+    public type TokenInfo = {
+        canisterId: Text;
+        name: Text;
+        standard: Text;
+        symbol: Text;
+        decimals: Nat;
+        fee: Nat;
+    }
 }

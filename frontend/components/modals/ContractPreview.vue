@@ -3,20 +3,20 @@
     import EventBus from "@/services/EventBus";
     import { DURATION, SCHEDULE} from "@/config/constants"
     import { onMounted, ref } from 'vue';
-    import { showLoading } from "@/utils/common"
+	import { showError, showSuccess, txtToPrincipal, principalToText, closeMessage, showLoading } from '@/utils/common';
     import moment from 'moment';
     import Copy from "@/components/icons/Copy.vue";
     import _api from "@/ic/api";
     import { currencyFormat } from "@/utils/token";
     import {Principal} from "@dfinity/principal";
     import { useCreateContract } from "@/services/Contract";
-    import { useTokenApprove, useTransferFrom } from "@/services/Token";
     import LoadingButton from '@/components/LoadingButton.vue';
     const contractData = ref(null);
     const contractDetailsModal = ref(false);
     const isLoading = ref(false);
     import walletStore from '@/store/'
-    import config from '../../config';
+    import config from '@/config';
+	import { useCreateToken, useTokenApprove, useTransferFrom, useInstallToken  } from '@/services/Token';
 
     const closeModal = ()=>{
         contractDetailsModal.value = false;
@@ -27,7 +27,7 @@
     const createContract = async()=>{
         Swal.fire({
 		title: "Are you sure?",
-		text: "Create new contract!",
+		text: "Create new claim contract!",
 		icon: "warning",
 		showCancelButton: true,
 		confirmButtonColor: "#3085d6",
@@ -36,12 +36,32 @@
 		}).then(async (result) => {
 		if (result.isConfirmed) {
             isLoading.value = true;
+            //Step 1.
+            // showLoading("Approving token...");
+            // let _approved = await useTokenApprove(contractData.value.token.canisterId, {spender: config.TOKEN_DEPLOYER_CANISTER_ID, amount: (contractData.value.totalAmount+1)*config.E8S});
+            // console.log('_approved', _approved);
+            // if(_approved == null){
+            //     isLoading.value = false;
+            //     closeMessage();
+            //     return;
+            // }
+            // if(_approved && _approved.hasOwnProperty('Err')){
+            //     isLoading.value = false;
+            //     if (_approved.Err?.InsufficientFunds) {
+            //         showError('Insufficient Funds', true);
+            //     }else{
+            //         showError("Approve not succeed, please see the console for further detail!", true);
+            //     }
+            //     return;
+            // }
+
+            //Step 2.
             console.log('contractData.value: ', contractData.value.token);
             let tokenInfo = await contractData.value.token;
             let _totalAmount = 0;
             let recipients = contractData.value.recipients.map(recipient=>{
                 _totalAmount += Number(recipient.amount);
-                return {address: recipient.address, amount: Number(recipient.amount), title: [""+recipient.title+""], note: [""+recipient.note+""]}
+                return {address: recipient.address, amount: Number(recipient.amount)*Math.pow(10, tokenInfo.decimals), note: [""+recipient.note+""]}
             });
             // let recipients = [
             //      {address: "udh45-qy6i6-si637-5wxbo-huuba-estc4-esa7g-yo6wj-lo4pb-37fsh-aqe", amount: 600, note: ["Senior Developer"], title: ["Kenny"]},
@@ -51,10 +71,12 @@
             //      {address: "nivbr-btueu-rgdah-w4pcd-wqtmb-fr4ny-hp3ie-a7e6p-4ndto-ajwhj-fqe", amount: 135, note: ["3D Designer"], title: ["Peter"]},
             // ];
             let _data = {
-                name: contractData.value.name,
+                title: contractData.value.name,
                 description: contractData.value.description,
                 durationTime: Number(contractData.value.durationTime),
                 durationUnit: Number(contractData.value.durationUnit),
+                cliffTime: Number(contractData.value.cliffTime),
+                cliffUnit: Number(contractData.value.cliffUnit),
                 unlockSchedule: Number(contractData.value.unlockSchedule),
                 canCancel: contractData.value.canCancel,
                 canChange: contractData.value.canChange,
@@ -62,11 +84,15 @@
                 startNow: contractData.value.startNow,
                 startTime: moment(contractData.value.startTime).unix(),
                 created: moment().unix(),
-                tokenId: tokenInfo.canisterId,
-                tokenName: tokenInfo.name,
-                tokenStandard: tokenInfo.standard,
-                tokenSymbol: tokenInfo.symbol,
                 totalAmount: _totalAmount,
+                tokenInfo: {
+                    canisterId: tokenInfo.canisterId,
+                    name: tokenInfo.name,
+                    standard: tokenInfo.standard,
+                    symbol: tokenInfo.symbol,
+                    decimals: tokenInfo.decimals,
+                    fee: tokenInfo.fee,
+                },
                 unlockedAmount: 0,
                 recipients: recipients,
                 owner: Principal.fromText(walletStore.principal)
@@ -77,7 +103,7 @@
             // let _approve = await useTokenApprove(tokenInfo.canisterId, {spender: config.BACKEND_CANISTER_ID, amount: _totalAmount});
             // let _transfer = await useTransferFrom(tokenInfo.canisterId, {from: walletStore.principal, to: config.BACKEND_CANISTER_ID, amount: _totalAmount});
             // return;
-            showLoading("Deploying your contract data");
+            showLoading("Deploying your contract data...");
             let _rs = await useCreateContract(_data);
             isLoading.value = false;
             console.log('rs', _rs);
@@ -87,13 +113,13 @@
                 Swal.fire({
                             icon: 'success',
                             title: 'Success',
-                            html: '<p>Your contract has been created successfully.</p><p>View contract: <a href="/contract/'+_rs+'">'+_rs+'</a></p>',
+                            html: '<p>Your contract has been created successfully.</p><p>View contract: <a href="/token-claim/'+_rs+'">'+_rs+'</a></p>',
                         })
             }else{
                 Swal.fire({
                             icon: 'error',
                             title: 'Oops...',
-                            text: (typeof(_rs) == 'object' && ("err" in _rs))?_rs.err:'Something went wrong, please try again!',
+                            text: (_rs && typeof(_rs) == 'object' && ("err" in _rs))?_rs.err:'Something went wrong, please try again!',
                         })
             }
         
@@ -144,9 +170,18 @@
                                 </div>
 
                                 <div class="d-flex flex-column flex-sm-row gap-7 gap-md-10 mt-5">
+
                                     <div class="flex-root d-flex flex-column">
-                                        <span class="fw-bold">Duration</span>
-                                        <span class="fs-6 text-gray-600">{{contractData.durationUnit}} {{DURATION[contractData.durationTime]}}</span>
+                                        <div class="d-flex flex-column flex-sm-row gap-7">
+                                            <div class="flex-root d-flex flex-column">
+                                                <span class="fw-bold">Vesting Duration</span>
+                                                <span class="fs-6 text-gray-600">{{contractData.durationUnit}} {{DURATION[contractData.durationTime]}}</span>
+                                            </div>
+                                            <div class="flex-root d-flex flex-column">
+                                                <span class="fw-bold">Cliff</span>
+                                                <span class="fs-6 text-gray-600">{{contractData.cliffUnit}} {{DURATION[contractData.cliffTime]}}</span>
+                                            </div>
+                                        </div>
                                     </div>
                                     <div class="flex-root d-flex flex-column">
                                         <span class="fw-bold">Unlock Schedule</span>
@@ -173,7 +208,6 @@
                                         <span class="fs-6 text-gray-600">{{contractData.startTime}}</span>
                                     </div>
                                 </div>
-                               
                             </div>
 
                             <div class="d-flex flex-column gap-7 gap-md-10">
@@ -195,9 +229,8 @@
                                                     <td class="text-end text-gray-800 fw-bold">{{ (recipient.amount) }}</td>
                                                     <td>
                                                         <div class="mb-1">       
-															<div class="fw-bold text-gray-800 fs-7" v-if="recipient.title">
-                                                                {{ recipient.title }}
-                                                                <span class="fw-normal badge badge-light-info" v-if="recipient.note && recipient.note != ''">{{ recipient.note }}</span>
+															<div class="fw-bold text-gray-800 fs-7" v-if="recipient.note">
+                                                                {{ recipient.note }}
                                                             </div> 
 															<div class="fw-bold text-gray-600 fs-7" v-else>Recipient #{{ idx+1 }}</div> 
 															<div class="text-gray-800 fs-7">
@@ -206,15 +239,15 @@
 														</div>
                                                     </td>
                                                 </tr>
-                                                <tr class="bg-light">
+                                                <tr class="bg-light fs-6">
                                                     <td class="text-end fw-bold">Total:</td>
                                                     <td class="text-end fw-bold text-danger">{{currencyFormat(contractData.totalAmount)}}</td>
-                                                    <td>${{ contractData.token.symbol }}</td>
+                                                    <td>{{ contractData.token.symbol }}</td>
                                                 </tr>
-                                                <tr class="bg-light">
+                                                <tr class="bg-light fs-6">
                                                     <td class="text-end fw-bold">Creation Fee:</td>
                                                     <td class="text-end fw-bold text-danger">0</td>
-                                                    <td>$ICP</td>
+                                                    <td>ICP</td>
                                                 </tr>
                                             </tbody>
                                         </table>
@@ -232,13 +265,14 @@
                                     </span>
                                 </div>
                             </div>
-                            <div class="d-flex flex-column gap-7 gap-md-10">
-                                <LoadingButton 
-                                :loading="isLoading"
-                                class="btn btn-danger btn-block"
-                                @click="createContract()">Create contract
-                            </LoadingButton>
-                                <!-- <button class="btn btn-danger btn-sm" @click="createContract()">Confirm! Create my contract</button> -->
+                            <div class="row mb-5">
+                                <div class="col-md-12 d-flex flex-column gap-7 gap-md-10">
+                                    <LoadingButton 
+                                        :loading="isLoading"
+                                        class="btn btn-danger btn-block"
+                                        @click="createContract()"><em class="fas fa-chevron-circle-down"></em> Approve & Create contract
+                                    </LoadingButton>
+                                </div>
                             </div>
                             
                         </div>

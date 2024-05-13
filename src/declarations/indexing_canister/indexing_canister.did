@@ -1,0 +1,11 @@
+type anon_class_13_1 = 
+ service {
+   addAdmin: (text) -> ();
+   addUserContract: (text, text) -> ();
+   cycleBalance: () -> (nat) query;
+   getAllAdmins: () -> (vec text) query;
+   getContracts: (nat) -> ();
+   getUserContracts: (text) -> (vec text) query;
+   removeAdmin: (text) -> ();
+ };
+service : () -> anon_class_13_1

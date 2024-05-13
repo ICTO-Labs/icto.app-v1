@@ -7,6 +7,8 @@
 	import EventBus from "@/services/EventBus";
 	import { useAssetStore } from "@/store/token";
 	import { useGetMyBalance } from '@/services/Token';
+	import PreviewChart from '@/components/contract/PreviewChart.vue';
+    import { DURATION, SCHEDULE} from "@/config/constants"
 
 
 	import VueMultiselect from 'vue-multiselect'
@@ -14,7 +16,7 @@
 	const isLoading = ref(false);
 	const storeAsset = useAssetStore();
 	const walletStore = useWalletStore();
-	const token = ref({symbol: 'ICP', name: 'Internet Computer', canisterId: 'ryjl3-tyaaa-aaaaa-aaaba-cai', standard: 'ledger'});
+	const token = ref({symbol: 'ICP', name: 'Internet Computer', canisterId: 'ryjl3-tyaaa-aaaaa-aaaba-cai', standard: 'icrc1', decimals: 8, fees: 10000});
 	const tokenBalance = ref(walletStore.wallet.balance);
 	const totalAmount = ref(0);
 	const newRecipient = ref({amount:"", address: "", title: "", note: ""});
@@ -34,18 +36,35 @@
 		durationUnit: 1,
 		durationTime: 2628002,
 		unlockSchedule: 86400,
+		cliffUnit: 0,
+		cliffTime: 2628002,
+		totalAmount: 1000,
 		recipients: [],
 		canView: 'both',
 		canCancel: 'neither',
 		canChange: 'neither',
 	})
 	const customLabel = ({ name, canisterId })=>{
-    	return `${name} | Canister ID: ${canisterId}`
+		return `${name} | Canister ID: ${canisterId}`
     }
 	const setSelectedToken = async ()=>{
 		resetRecipients();
 		tokenBalance.value = 0;
 		await getTokenBalance();
+	}
+	const validateVesting = ()=>{
+		let cliffInSeconds = contractData.value.cliffUnit*contractData.value.cliffTime;
+		let durationInSeconds = contractData.value.durationUnit*contractData.value.durationTime;
+		let unlockSchedule = contractData.value.unlockSchedule;
+		if (cliffInSeconds > durationInSeconds) {
+			contractData.value.cliffUnit = contractData.value.durationUnit;
+			contractData.value.cliffTime = contractData.value.durationTime;
+		}
+		if (Number(contractData.value.unlockSchedule) > Number(contractData.value.durationTime)){
+			console.log('object', contractData.value.unlockSchedule > contractData.value.durationTime);
+			contractData.value.unlockSchedule = contractData.value.durationTime;
+		}
+
 	}
 	const calTotalToken = ()=>{
 		totalAmount.value = recipients.value.reduce((acc,cur) => acc + Number(cur.amount), 0);
@@ -70,21 +89,18 @@
 	}
 	const addRecipient = ()=>{
 		let _to = newRecipient.value.address.trim();
-		if(token.value.standard  == 'ledger' && !validateAddress(_to)){
-			showError("Please use a valid Account ID!");
-			return;
-		}
 		if(token.value.standard  != 'ledger' && !validatePrincipal(_to)){
 			showError("Please use a valid Principal ID!");
 			return;
 		}
-		if(newRecipient.value.amount <= 0 || newRecipient.value.amount > (tokenBalance.value-totalAmount.value)){
-			showError("Not enough "+token.value.symbol+", check remaining amount!");
-			return;
-		}
+		// if(newRecipient.value.amount <= 0 || newRecipient.value.amount > (tokenBalance.value-totalAmount.value)){
+		// 	showError("Not enough "+token.value.symbol+", check remaining amount!");
+		// 	return;
+		// }
 		let idx = findRecipientIdx(_to);
 		if(idx > -1){//Update amount if existed
 			recipients.value[idx].amount += Number(newRecipient.value.amount);
+			recipients.value[idx].note = newRecipient.value.note??"";
 		}else{
 			recipients.value.push({address:_to, amount: Number(newRecipient.value.amount), title: newRecipient.value.title??"", note:newRecipient.value.note??""})
 		}
@@ -116,128 +132,186 @@
 	}
 </script>
 <template>
-    <Toolbar :current="`New Contract`" :parents="[{title: 'Payments', to: '/payments'}]"/>
+    <Toolbar :current="`New Contract`" :parents="[{title: 'Token Claim', to: '/token-claim'}]"/>
 
 	<form class="form" @submit.prevent="reviewContract">
-	<div class="card  mb-xl-8">
-		<div class="card-header align-items-center">
-			<label class="fs-4 fw-bold form-label mb-2 text-primary">Create New Contract</label>
-		</div>
-		<div class="card-body pt-5 pb-2">
-				<!--begin::Step 1-->
-				<div class="current" data-kt-stepper-element="content">
-					<div class="w-100">
-						<div class="row mb-10">
-							<div class="col-md-12 fv-row">
-								<label class="d-flex align-items-center fs-6 fw-bold mb-2"><span class="required">Contract Name</span></label>
-								<input type="text" class="form-control fw-normal" v-model="contractData.name" name="name" placeholder="Your contract name" required />
-							</div>
-						</div>
-						<div class="row mb-10">
-							<div class="col-md-12 fv-row">
-								<label class="d-flex align-items-center fs-6 fw-bold mb-2"><span class="required">Description</span></label>
-								<textarea class="form-control fw-normal" v-model="contractData.description" name="description" placeholder="Contract description" required></textarea>
-							</div>
-						</div>
-						<div class="row mb-10">
-							<div class="col-md-6 fv-row">
-								<label class="d-flex align-items-center fs-6 fw-bold mb-2">
-									<span class="required">Token</span> 
-									<i class="fas fa-exclamation-circle ms-2 fs-7" data-bs-toggle="tooltip" title="Specify your Token"></i>
-									<a href="#" class="badge badge-light-primary ms-5" @click="importToken">+ Import</a>
-									<a href="#" class="badge badge-light-danger ms-5" @click="deployToken">+ Deploy New Token</a>
-								</label>
-
-								<VueMultiselect v-model="token" :options="storeAsset.assets" track-by="name" @update:model-value="setSelectedToken" :option-height="40" :custom-label="customLabel" :allow-empty="false" placeholder="Select Token..." selectLabel="" deselectLabel="">
-									<template v-slot:singleLabel="{ option }">
-										<img class="option__image" :src="`https://${config.CANISTER_STORAGE_ID}.raw.icp0.io/${option.canisterId}.png`">
-										<span class="option__desc">
-											<span class="option__title">{{ option.name }} ({{ option.symbol }} ) · {{ option.canisterId }} 
-												<span class="badge badge-light-primary ms-auto">{{ option.standard?option.standard.toUpperCase():'' }}</span>
-											</span>
-										</span>
-									</template>
-									<template v-slot:option="{ option }">
-										<img class="option__image" :src="`https://${config.CANISTER_STORAGE_ID}.raw.icp0.io/${option.canisterId}.png`" alt="Select Token">
-										<span class="option__desc">
-											<span class="option__title">{{ option.name }} ({{ option.symbol }} ) · {{ option.canisterId }} 
-												<div class="badge badge-light-primary ms-auto">{{ option.standard?option.standard.toUpperCase():'' }}</div></span>
-										</span>
-									</template>
-								</VueMultiselect>
-
-									<!-- <VueMultiselect v-model="token" :options="storeAsset.assets" track-by="name" @update:model-value="setSelectedToken" :option-height="104" :custom-label="customLabel" :show-labels="false">
-										<template slot="singleLabel" slot-scope="props">
-											<img class="option__image" src="https://app.icpswap.com/static/media/icp.971d3265.svg" ><span class="option__desc"><span class="option__title">{{ props.option.name }} - {{ props.option.canisterId }}</span></span>
-										</template>
-										<template slot="option" slot-scope="props">
-											<img class="option__image" src="https://app.icpswap.com/static/media/icp.971d3265.svg">
-											<div class="option__desc">
-												<span class="option__title">{{ props.option.name }}</span>
-												<span class="option__small">{{ props.option.canisterId }}</span>
-											</div>
-										</template>
-									</VueMultiselect> -->
-									<!-- <select class="form-select" @change="setSelectedToken" v-model="token" placeholder="Select token">
-										<option :value="{symbol: 'icp', name: 'Internet Computer', canisterId: 'ryjl3-tyaaa-aaaaa-aaaba-cai', standard: 'ledger'}" selected>Internet Computer (ICP)</option>
-										<option :value="asset" v-for="asset in storeAsset.assets"  :key="asset.canisterId">{{ asset.name }} ({{ asset.symbol }}) | {{ asset.canisterId }}</option>
-									</select> -->
-							</div>
-							<div class="col-md-6 fv-row">
-								<label class="fs-6 fw-bold form-label mb-2">Balance
-									<LoadingLabel 
-										:loading="isLoading"
-										class="badge badge-light-primary ms-5"
-										@click="getTokenBalance"><i class="fas fa-arrows-rotate"></i> Refresh
-									</LoadingLabel>
-
-								</label>
-								<input type="text" readonly class="form-control form-control-solid" :value="currencyFormat(tokenBalance)">
-							</div>
-						</div>
-						<div class="row mb-10">
-							<div class="col-md-6 fv-row">
-								<label class="required fs-6 fw-bold form-label mb-2">Duration</label>
-								<div class="row fv-row">
-									<div class="col-4">
-										<input type="text" class="form-control" v-model="contractData.durationUnit" required placeholder="Number"/>
-									</div>
-									<div class="col-8">
-										<select name="duration" class="form-select" data-hide-search="true" data-placeholder="Month" v-model="contractData.durationTime" >
-											<option value="1">Second</option>
-											<option value="60">Minute</option>
-											<option value="3600">Hour</option>
-											<option value="86400">Day</option>
-											<option value="604800">Week</option>
-											<option value="2628002" selected>Month</option>
-											<option value="7884006">Quarter</option>
-											<option value="31536000">Year</option>
-										</select>
-									</div>
+		<div class="row gy-5 g-xl-8">
+			<div class="col-md-7 fv-row">
+				<div class="card card-xl-stretch mb-xl-8">
+					<div class="card-header align-items-center">
+						<label class="fs-4 fw-bold form-label mb-2 text-primary">Create New Contract</label>
+					</div>
+					<div class="card-body pt-5 pb-2">
+						<div class="w-100">
+							<div class="row mb-5">
+								<div class="col-md-12 fv-row">
+									<label class="d-flex align-items-center fs-6 fw-bold mb-2"><span class="required">Contract Name</span></label>
+									<input type="text" class="form-control fw-normal" v-model="contractData.name" name="name" placeholder="Your contract name, campaign..." required />
 								</div>
 							</div>
-							<div class="col-md-6 fv-row">
-								<label class="required fs-6 fw-bold form-label mb-2">Unlock schedule</label>
-								<div class="row fv-row">
-									<div class="col-12">
-										<select name="releaseFrequencyPeriod" class="form-select" v-model="contractData.unlockSchedule">
-											<option value="1">Per Second</option>
-											<option value="60">Per Minute</option>
-											<option value="3600">Hourly</option>
-											<option value="86400">Daily</option>
-											<option value="604800">Weekly</option>
-											<option value="2628002">Monthly</option>
-											<option value="7884006">Quarterly</option>
-											<option value="31536000">Yearly</option>
-										</select>
+							<div class="row mb-5">
+								<div class="col-md-12 fv-row">
+									<label class="d-flex align-items-center fs-6 fw-bold mb-2"><span class="required">Description</span></label>
+									<textarea class="form-control fw-normal" v-model="contractData.description" name="description" placeholder="Contract description" required></textarea>
+								</div>
+							</div>
+							<div class="row mb-5">
+								<div class="col-md-8 fv-row">
+									<label class="d-flex align-items-center fs-6 fw-bold mb-2">
+										<span class="required">Token</span> 
+										<i class="fas fa-exclamation-circle ms-2 fs-7" data-bs-toggle="tooltip" title="Specify your Token"></i>
+										<a href="#" class="badge badge-light-primary ms-5" @click="importToken">+ Import</a>
+										<a href="#" class="badge badge-light-danger ms-5" @click="deployToken">+ Deploy New Token</a>
+									</label>
+
+									<VueMultiselect v-model="token" :options="storeAsset.assets" track-by="name" @update:model-value="setSelectedToken" :option-height="40" :custom-label="customLabel" :allow-empty="false" placeholder="Select Token..." selectLabel="" deselectLabel="">
+										<template v-slot:singleLabel="{ option }">
+											<img class="option__image" :src="`https://${config.CANISTER_STORAGE_ID}.raw.icp0.io/${option.canisterId}.png`">
+											<span class="option__desc">
+												<span class="option__title">{{ option.name }} ({{ option.symbol }} )
+													<span class="badge badge-light-primary ms-auto">{{ option.standard?option.standard.toUpperCase():'' }}</span>
+												</span>
+											</span>
+										</template>
+										<template v-slot:option="{ option }">
+											<img class="option__image" :src="`https://${config.CANISTER_STORAGE_ID}.raw.icp0.io/${option.canisterId}.png`" alt="Select Token">
+											<span class="option__desc">
+												<span class="option__title">{{ option.name }} ({{ option.symbol }} ) · {{ option.canisterId }} 
+													<div class="badge badge-light-primary ms-auto">{{ option.standard?option.standard.toUpperCase():'' }}</div></span>
+											</span>
+										</template>
+									</VueMultiselect>
+
+										<!-- <VueMultiselect v-model="token" :options="storeAsset.assets" track-by="name" @update:model-value="setSelectedToken" :option-height="104" :custom-label="customLabel" :show-labels="false">
+											<template slot="singleLabel" slot-scope="props">
+												<img class="option__image" src="https://app.icpswap.com/static/media/icp.971d3265.svg" ><span class="option__desc"><span class="option__title">{{ props.option.name }} - {{ props.option.canisterId }}</span></span>
+											</template>
+											<template slot="option" slot-scope="props">
+												<img class="option__image" src="https://app.icpswap.com/static/media/icp.971d3265.svg">
+												<div class="option__desc">
+													<span class="option__title">{{ props.option.name }}</span>
+													<span class="option__small">{{ props.option.canisterId }}</span>
+												</div>
+											</template>
+										</VueMultiselect> -->
+										<!-- <select class="form-select" @change="setSelectedToken" v-model="token" placeholder="Select token">
+											<option :value="{symbol: 'icp', name: 'Internet Computer', canisterId: 'ryjl3-tyaaa-aaaaa-aaaba-cai', standard: 'ledger'}" selected>Internet Computer (ICP)</option>
+											<option :value="asset" v-for="asset in storeAsset.assets"  :key="asset.canisterId">{{ asset.name }} ({{ asset.symbol }}) | {{ asset.canisterId }}</option>
+										</select> -->
+								</div>
+								<div class="col-md-4 fv-row">
+									<label class="fs-6 fw-bold form-label mb-2">Balance
+										<LoadingLabel 
+											:loading="isLoading"
+											class="badge badge-light-primary ms-5"
+											@click="getTokenBalance"><i class="fas fa-arrows-rotate"></i> Refresh
+										</LoadingLabel>
+
+									</label>
+									<input type="text" readonly class="form-control form-control-solid" :value="currencyFormat(tokenBalance)">
+								</div>
+							</div>
+							<div class="row mb-10">
+								<div class="col-md-4 fv-row">
+									<label class="required fs-6 fw-bold form-label mb-2">Vesting Duration</label>
+									<div class="row fv-row">
+										<div class="col-4">
+											<input type="text" class="form-control" v-model="contractData.durationUnit" required placeholder="Number" @change="validateVesting"/>
+										</div>
+										<div class="col-8">
+											<select name="duration" class="form-select" @change="validateVesting" v-model="contractData.durationTime" >
+												<option value="1">Second</option>
+												<option value="60">Minute</option>
+												<option value="3600">Hour</option>
+												<option value="86400">Day</option>
+												<option value="604800">Week</option>
+												<option value="2628002" selected>Month</option>
+												<option value="7884006">Quarter</option>
+												<option value="31536000">Year</option>
+											</select>
+										</div>
+										
+									</div>
+								</div>
+								<div class="col-md-4 fv-row">
+									<label class="required fs-6 fw-bold form-label mb-2">Cliff</label>
+									<div class="row fv-row">
+										<div class="col-4">
+											<input type="text" class="form-control" v-model="contractData.cliffUnit" @change="validateVesting" required placeholder="Number"/>
+										</div>
+										<div class="col-8">
+											<select name="cliff" class="form-select" @change="validateVesting" v-model="contractData.cliffTime" >
+												<option value="1">Second</option>
+												<option value="60">Minute</option>
+												<option value="3600">Hour</option>
+												<option value="86400">Day</option>
+												<option value="604800">Week</option>
+												<option value="2628002" selected>Month</option>
+												<option value="7884006">Quarter</option>
+												<option value="31536000">Year</option>
+											</select>
+										</div>
+										
+									</div>
+								</div>
+								<div class="col-md-4 fv-row">
+									<label class="required fs-6 fw-bold form-label mb-2">Unlock schedule</label>
+									<div class="row fv-row">
+										<div class="col-12">
+											<select name="releaseFrequencyPeriod" class="form-select" v-model="contractData.unlockSchedule" @change="validateVesting">
+												<option value="1">Per Second</option>
+												<option value="60">Per Minute</option>
+												<option value="3600">Hourly</option>
+												<option value="86400">Daily</option>
+												<option value="604800">Weekly</option>
+												<option value="2628002">Monthly</option>
+												<option value="7884006">Quarterly</option>
+												<option value="31536000">Yearly</option>
+											</select>
+										</div>
 									</div>
 								</div>
 							</div>
 						</div>
 					</div>
 				</div>
+			</div>
+			<div class="col-md-5 fv-row">
+				<div class="card card-xl-stretch mb-xl-8">
+					<div class="card-header align-items-center">
+						<label class="fs-4 fw-bold form-label mb-2 text-primary">Vesting Schedule</label>
+					</div>
+					<div class="card-body pt-5 pb-2">
+						<PreviewChart :contractInfo="contractData"></PreviewChart>
+						
+						<!-- <div class="d-flex align-items-center mb-3">
+							<div class="flex-grow-1">
+								<span class="text-gray-800 text-hover-primary fw-bold fs-6">Vesting duration</span>
+							</div>
+							<span class="badge badge-secondary fs-8 fw-bolder">
+								{{contractData.durationUnit}} {{DURATION[contractData.durationTime]}}
+							</span>
+						</div>
+						<div class="d-flex align-items-center mb-3">
+							<div class="flex-grow-1">
+								<span class="text-gray-800 text-hover-primary fw-bold fs-6">Cliff</span>
+							</div>
+							<span class="badge badge-secondary fs-8 fw-bolder">
+								{{contractData.cliffUnit}} {{DURATION[contractData.cliffTime]}}
+							</span>
+						</div>
+						<div class="d-flex align-items-center mb-5">
+							<div class="flex-grow-1">
+								<span class="text-gray-800 text-hover-primary fw-bold fs-6">Unlock schedule</span>
+							</div>
+							<span class="badge badge-secondary fs-8 fw-bolder">
+								{{SCHEDULE[contractData.unlockSchedule]}}
+							</span>
+						</div> -->
+					</div>
+				</div>
+			</div>
 		</div>
-	</div>
 	
 	<div class="card mb-xl-8" >
 		<div class="card-header align-items-center">
@@ -257,7 +331,7 @@
 						</div>
 					</div>
 					<div class="fw-bolder fs-2 text-success px-10">
-						{{currencyFormat((tokenBalance - totalAmount))}}
+						{{currencyFormat((tokenBalance - totalAmount > 0?(tokenBalance - totalAmount):0))}}
 						<span class="text-muted fs-4 fw-bold">{{tokenInfo.symbol}}</span>
 						<div class="fs-7 fw-normal text-muted">Remaining amount</div>
 					</div>
@@ -277,8 +351,7 @@
 					<tr class="fw-bolder fs-7 text-gray-800 border-bottom border-gray-200 bg-light">
 						<th class="ps-4 w-25px ">#</th>
 						<th class="w-100px text-end">Amount</th>
-						<th class="min-w-400px">Principal ID/Account ID</th>
-						<th class="min-w-50px">Title</th>
+						<th class="min-w-400px">Principal ID</th>
 						<th class="min-w-100px">Note</th>
 						<th class="w-100px text-end"></th>
 					</tr>
@@ -305,11 +378,6 @@
 						</td>
 						<td>
 							<span class="fw-bold text-gray-800 d-block fs-7">
-								{{recipient.title}}
-							</span>
-						</td>
-						<td>
-							<span class="fw-bold text-gray-800 d-block fs-7">
 								{{recipient.note}}
 							</span>
 						</td>
@@ -330,12 +398,8 @@
 							<input type="number" class="form-control form-control-sm text-red" v-model="newRecipient.amount" min="0" placeholder="---">
 						</td>
 						<td>
-							<label class="required fs-7 form-label mb-2">Recipient Principal ID/Account ID</label>
-							<input type="text" class="form-control form-control-sm d-block" v-model="newRecipient.address" placeholder="Enter Principal ID or Account ID" ref="address">
-						</td>
-						<td>
-							<label class=" fs-7 form-label mb-2">Title <span class="text-muted fs-8">(optional)</span></label>
-							<input type="text" class="form-control form-control-sm mb-1" v-model="newRecipient.title" placeholder="Title or name, eg: Seed round">
+							<label class="required fs-7 form-label mb-2">Recipient Principal ID</label>
+							<input type="text" class="form-control form-control-sm d-block" v-model="newRecipient.address" placeholder="Enter Principal ID" ref="address">
 						</td>
 						<td>
 							<label class=" fs-7 form-label mb-2">Note <span class="text-muted fs-8">(optional)</span></label>
@@ -361,32 +425,12 @@
 		<div class="card-body pt-5">
 			<div class="row mb-10">
 				<div class="col-md-4 fv-row">
-					<label class="required fs-6 fw-bold form-label mb-2">Who can view the contract?</label>
-					<select v-model="contractData.canView" class="form-select">
-						<option value="public">Public</option>
-						<option value="both" selected>Only Sender and Recipient</option>
-					</select>
+					<label class="fs-6 fw-bold form-label mb-2">Contract can be canceled?</label>
+					<label class="form-check form-switch form-check-custom form-check-solid">
+						<input class="form-check-input" type="checkbox" v-model="contractData.canCancel"/>
+						<span class="form-check-label fw-bold text-muted">Allow the owner to cancel</span>
+					</label>
 				</div>
-				<div class="col-md-4 fv-row">
-					<label class="required fs-6 fw-bold form-label mb-2">Who can cancel contract?</label>
-					<select v-model="contractData.canCancel" class="form-select">
-						<option value="recipient">Only Recipient</option>
-						<option value="sender">Only Sender</option>
-						<option value="both">Both</option>
-						<option value="neither">Neither</option>
-					</select>
-				</div>
-				<div class="col-md-4 fv-row">
-					<label class="required fs-6 fw-bold form-label mb-2">Who can change recipient?</label>
-					<select v-model="contractData.canChange" class="form-select" disabled >
-						<option value="recipient">Only Recipient</option>
-						<option value="sender">Only Sender</option>
-						<option value="both">Both</option>
-						<option value="neither">Neither</option>
-					</select>
-				</div>
-			</div>
-			<div class="row mb-10">
 				<div class="col-md-4 fv-row">
 					<label class="fs-6 fw-bold form-label mb-2">Start now</label>
 					<label class="form-check form-switch form-check-custom form-check-solid">
@@ -395,14 +439,11 @@
 					</label>
 				</div>
 				<div class="col-md-4 fv-row" v-if="!contractData.startNow">
-					<label class="required  fs-6 fw-bold form-label mb-2">Start Time</label>
+					<label class="required  fs-6 fw-bold form-label mb-2">Specify start time</label>
 					<VueDatePicker v-model="contractData.startTime" :min-date="new Date()" :enable-time-picker="true" time-picker-inline auto-apply></VueDatePicker>
 				</div>
-				<!-- <div class="col-md-4 fv-row" v-if="!contractData.startNow">
-					<label class="required  fs-6 fw-bold form-label mb-2">Start Time</label>
-					<VueDatePicker v-model="contractData.startTime" time-picker :min-date="new Date()" auto-apply></VueDatePicker>
-				</div> -->
 			</div>
+			
 			<div class="d-flex flex-column pe-0">
 				<button type="submit" class="btn btn-lg btn-primary btn-block">Preview Contract
 					<span class="svg-icon svg-icon-3 ms-1 me-0">
