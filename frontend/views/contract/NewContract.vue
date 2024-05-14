@@ -53,6 +53,9 @@
 		await getTokenBalance();
 	}
 	const validateVesting = ()=>{
+		if(contractData.value.cliffUnit < 0) contractData.value.cliffUnit = 0;
+		if(contractData.value.durationUnit < 0) contractData.value.durationUnit = 0;
+		
 		let cliffInSeconds = contractData.value.cliffUnit*contractData.value.cliffTime;
 		let durationInSeconds = contractData.value.durationUnit*contractData.value.durationTime;
 		let unlockSchedule = contractData.value.unlockSchedule;
@@ -61,7 +64,6 @@
 			contractData.value.cliffTime = contractData.value.durationTime;
 		}
 		if (Number(contractData.value.unlockSchedule) > Number(contractData.value.durationTime)){
-			console.log('object', contractData.value.unlockSchedule > contractData.value.durationTime);
 			contractData.value.unlockSchedule = contractData.value.durationTime;
 		}
 
@@ -127,7 +129,6 @@
 		contractData.value.recipients = recipients.value;
 		contractData.value.token = token.value;
 		contractData.value.totalAmount = totalAmount.value;
-		console.log('contractData', contractData.value);
 		EventBus.emit("showContractDetailsModal", {...contractData.value, status: true})
 	}
 </script>

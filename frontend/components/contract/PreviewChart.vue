@@ -75,6 +75,14 @@
         }
         //Settting fully vested
         chartOptions.value.plugins.annotation.annotations.fullyVested.value = start;
+        if(start == 0){
+            chartOptions.value.plugins.annotation.annotations.fullyVested.label.rotation = '0';
+            chartOptions.value.plugins.annotation.annotations.fullyVested.label.content = 'Instant unlock';
+        }else{
+            chartOptions.value.plugins.annotation.annotations.fullyVested.label.rotation = 'vertical';
+            chartOptions.value.plugins.annotation.annotations.fullyVested.label.content = 'Fully vested';
+        }
+        
 
         // Adding more 3 points for the chart
         for (let i = 0; i < 3; i++) {

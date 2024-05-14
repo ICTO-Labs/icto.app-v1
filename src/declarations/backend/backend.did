@@ -3,7 +3,7 @@ type TokenInfo =
  record {
    canisterId: text;
    decimals: nat;
-   fees: nat;
+   fee: nat;
    name: text;
    standard: text;
    symbol: text;

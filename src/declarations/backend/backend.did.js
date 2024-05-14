@@ -25,8 +25,8 @@ export const idlFactory = ({ IDL }) => {
     'amount' : IDL.Nat,
   });
   const TokenInfo = IDL.Record({
+    'fee' : IDL.Nat,
     'decimals' : IDL.Nat,
-    'fees' : IDL.Nat,
     'name' : IDL.Text,
     'standard' : IDL.Text,
     'symbol' : IDL.Text,

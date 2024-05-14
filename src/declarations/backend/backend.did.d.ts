@@ -44,8 +44,8 @@ export interface Recipient {
 }
 export type Time = bigint;
 export interface TokenInfo {
+  'fee' : bigint,
   'decimals' : bigint,
-  'fees' : bigint,
   'name' : string,
   'standard' : string,
   'symbol' : string,
