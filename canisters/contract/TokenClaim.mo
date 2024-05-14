@@ -181,6 +181,7 @@ shared ({ caller = creator }) actor class Contract({
     
     private func processRecipent(): (){
         for(recipient in recipients.vals()) {
+            let _duration = durationTime*durationUnit;
             let _recipient = {
                 recipient = {
                     principal = Principal.fromText(recipient.address);
@@ -189,8 +190,8 @@ shared ({ caller = creator }) actor class Contract({
                 };
                 principal = Principal.fromText(recipient.address);
                 vestingCliff = cliffTime*cliffUnit;
-                claimInterval = unlockSchedule;
-                vestingDuration = durationTime*durationUnit;
+                claimInterval = if(_duration > 0){ unlockSchedule } else { 0 };
+                vestingDuration = _duration;
             };
             addOrUpdateRecipient(_recipient.principal, _recipient.recipient, _recipient.vestingCliff, _recipient.claimInterval, _recipient.vestingDuration);
         }
@@ -276,14 +277,19 @@ shared ({ caller = creator }) actor class Contract({
 
                 if (currentTime >= lastClaimedTime + vestingCliff) {
                     let elapsedTime = currentTime - lastClaimedTime - vestingCliff;
-                    let numIntervals = elapsedTime / claimInterval;
                     let maxClaimableAmount = allocatedAmount - claimInfo.claimedAmount;
 
-                    if (numIntervals > 0) {
-                        let amountPerInterval = allocatedAmount / (vestingDuration / claimInterval);
-                        let claimableAmountInIntervals = numIntervals * amountPerInterval;
-                        claimableAmount := Nat.min(claimableAmountInIntervals, maxClaimableAmount);
-                    };
+                    if(claimInterval == 0){
+                        claimableAmount := maxClaimableAmount;
+                    }else{
+                        let numIntervals = elapsedTime / claimInterval;
+                        if (numIntervals > 0) {
+                            let amountPerInterval = allocatedAmount / (vestingDuration / claimInterval);
+                            let claimableAmountInIntervals = numIntervals * amountPerInterval;
+                            claimableAmount := Nat.min(claimableAmountInIntervals, maxClaimableAmount);
+                        };
+                    }
+                    
                 };
             };
             case (_) {

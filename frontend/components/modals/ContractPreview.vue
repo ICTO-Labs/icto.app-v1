@@ -7,7 +7,7 @@
     import moment from 'moment';
     import Copy from "@/components/icons/Copy.vue";
     import _api from "@/ic/api";
-    import { currencyFormat } from "@/utils/token";
+    import { currencyFormat, formatTokenAmount } from "@/utils/token";
     import {Principal} from "@dfinity/principal";
     import { useCreateContract } from "@/services/Contract";
     import LoadingButton from '@/components/LoadingButton.vue';
@@ -60,8 +60,8 @@
             let tokenInfo = await contractData.value.token;
             let _totalAmount = 0;
             let recipients = contractData.value.recipients.map(recipient=>{
-                _totalAmount += Number(recipient.amount);
-                return {address: recipient.address, amount: Number(recipient.amount)*Math.pow(10, tokenInfo.decimals), note: [""+recipient.note+""]}
+                _totalAmount += Number(formatTokenAmount(recipient.amount, tokenInfo.decimals));
+                return {address: recipient.address, amount: Number(formatTokenAmount(recipient.amount, tokenInfo.decimals)), note: [""+recipient.note+""]}
             });
             // let recipients = [
             //      {address: "udh45-qy6i6-si637-5wxbo-huuba-estc4-esa7g-yo6wj-lo4pb-37fsh-aqe", amount: 600, note: ["Senior Developer"], title: ["Kenny"]},

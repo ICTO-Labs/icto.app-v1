@@ -16,7 +16,7 @@
 	const isLoading = ref(false);
 	const storeAsset = useAssetStore();
 	const walletStore = useWalletStore();
-	const token = ref({symbol: 'ICP', name: 'Internet Computer', canisterId: 'ryjl3-tyaaa-aaaaa-aaaba-cai', standard: 'icrc1', decimals: 8, fees: 10000});
+	const token = ref({symbol: 'ICP', name: 'Internet Computer', canisterId: 'ryjl3-tyaaa-aaaaa-aaaba-cai', standard: 'icrc1', decimals: 8, fee: 10000});
 	const tokenBalance = ref(walletStore.wallet.balance);
 	const totalAmount = ref(0);
 	const newRecipient = ref({amount:"", address: "", title: "", note: ""});
@@ -351,7 +351,7 @@
 					<thead>
 					<tr class="fw-bolder fs-7 text-gray-800 border-bottom border-gray-200 bg-light">
 						<th class="ps-4 w-25px ">#</th>
-						<th class="w-100px text-end">Amount</th>
+						<th class="w-150px text-end">Amount</th>
 						<th class="min-w-400px">Principal ID</th>
 						<th class="min-w-100px">Note</th>
 						<th class="w-100px text-end"></th>

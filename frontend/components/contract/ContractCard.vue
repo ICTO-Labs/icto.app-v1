@@ -3,7 +3,7 @@
     import { onMounted, ref } from 'vue';
     import "vue3-circle-progress/dist/circle-progress.css";
     import CircleProgress from "vue3-circle-progress";
-    import { currencyFormat } from "@/utils/token"
+    import { currencyFormat, parseTokenAmount } from "@/utils/token"
     import { shortPrincipal, shortAccount } from '@/utils/common';
     import config from '@/config';
     import { useGetContract, useCancelContract } from "@/services/Contract";
@@ -20,14 +20,16 @@
 
 </script>
 <template>
-    <div class="card h-100">
+    <div class="card h-100 border border-2 border-gray-300 border-hover">
         <!--begin::Card header-->
         <div class="card-header">
             <div class="card-title">
                 <h4>
-                    <span class="badge bg-light text-gray-900 px-3 py-2 me-2 fw-bold fs-7"><i class="fas fa-users"></i> {{ contract?.totalRecipients}}</span>
                     <router-link :to="`/token-claim/${props.contractId}`" class="fs-5 fw-bolder mb-1 text-gray-800 text-hover-primary">{{ contract?.title }}</router-link>
                 </h4>
+            </div>
+            <div class="card-toolbar" data-bs-toggle="tooltip" data-bs-placement="top" data-bs-trigger="hover" title="" data-bs-original-title="Click to add a user">
+                <div class="badge bg-light text-muted px-3 py-2 me-2 fw-normal fs-7 fw-bold">{{ contract?.totalRecipients}} recipients</div>
             </div>
         </div>
         
@@ -45,24 +47,24 @@
                 <div class="d-flex fs-6 fw-semibold align-items-center mb-3">
                     <div class="bullet bg-success me-3"></div>
                     <div class="text-gray-500">Total Amount</div>
-                    <div class="ms-auto fw-bold text-gray-700">{{ currencyFormat(Number(contract?.totalAmount)/config.E8S) }}</div>
+                    <div class="ms-auto fw-bold text-gray-700">{{ currencyFormat(parseTokenAmount(contract?.totalAmount, contract?.tokenInfo.decimals)) }}</div>
                 </div>
                 <div class="d-flex fs-6 fw-semibold align-items-center mb-3">
                     <div class="bullet bg-primary me-3"></div>
                     <div class="text-gray-500">Claimed</div>
-                    <div class="ms-auto fw-bold text-gray-700">{{ currencyFormat(Number(contract?.totalClaimedAmount)/config.E8S || 0) }}</div>
+                    <div class="ms-auto fw-bold text-gray-700">{{ currencyFormat(parseTokenAmount(contract?.totalClaimedAmount, contract?.tokenInfo.decimals)) }}</div>
                 </div>
                 <div class="d-flex fs-6 fw-semibold align-items-center mb-3">
                     <div class="bullet bg-gray-400 me-3"></div>
                     <div class="text-gray-500">Remaining</div>
-                    <div class="ms-auto fw-bold text-gray-700">{{ currencyFormat(Number(contract?.totalAmount)/config.E8S - Number(contract?.totalClaimedAmount)/config.E8S || 0) }}</div>
+                    <div class="ms-auto fw-bold text-gray-700">{{ currencyFormat(parseTokenAmount(contract?.totalAmount - contract?.totalClaimedAmount, contract?.tokenInfo.decimals)) }}</div>
                 </div>
                 </div>
                 <!--end::Labels-->
             </div>
             <div class="card card-dashed h-xl-100 flex-row flex-stack flex-wrap p-4 mb-5">
                 <div class="symbol symbol-45px w-45px me-5">
-                    <img src="https://psh4l-7qaaa-aaaap-qasia-cai.raw.icp0.io/6ytv5-fqaaa-aaaap-qblcq-cai.png" alt="image">
+                    <img :src="`https://${config.CANISTER_STORAGE_ID}.raw.icp0.io/${contract?.tokenInfo?.canisterId}.png`" :alt="contract?.tokenInfo.name">
                 </div>
                 <div class="d-flex flex-stack flex-grow-1 flex-wrap flex-md-nowrap">
                     <div class="mb-3 mb-md-0 fw-bold">

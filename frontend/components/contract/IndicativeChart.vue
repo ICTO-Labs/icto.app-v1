@@ -2,9 +2,10 @@
     import { ref, watch, onMounted } from "vue";
     import {LineChart,useLineChart} from "vue-chart-3";
     import {Chart,registerables} from "chart.js";
+    import { formatTokenAmount } from "@/utils/token";
     Chart.register(...registerables);
     import moment from "moment";
-import config from "../../config";
+    import config from "@/config";
 
     const props = defineProps(['contractInfo', 'contractId']);
     const contractInfo = ref(props.contractInfo);
@@ -25,7 +26,7 @@ import config from "../../config";
         let startTime = Number(contractInfo.value.startTime);
         let unlockSchedule = Number(contractInfo.value.unlockSchedule);
         let lockDuration = Number(contractInfo.value.lockDuration);
-        let unlockAmount = Number(contractInfo.value.totalAmount)/(lockDuration/unlockSchedule)/config.E8S;
+        let unlockAmount = Number(contractInfo.value.totalAmount)/(formatTokenAmount(lockDuration/unlockSchedule, contractInfo.value.tokenInfo.decimals));
         //Generate data
         let _startCount = 0;
         let _maxLoop = 100;//Limit the loop!

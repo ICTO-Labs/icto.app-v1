@@ -155,8 +155,9 @@ export const getTokenInfo = (canisterId)=>{
   console.log('token', token);
   return token;
 }
-export const parseTokenAmount = (amount, decimals) => {
-  // return new BigNumber(amount).dividedBy(Math.pow(10, decimals)).toFormat();
+
+//Convert token amount with decimals to actual amount
+export const parseTokenAmount = (amount, decimals = 8) => {
   if (amount !== 0 && !amount) return new BigNumber(0);
   if (typeof amount === "bigint") amount = Number(amount);
   if (typeof decimals === "bigint") decimals = Number(decimals);
@@ -164,6 +165,18 @@ export const parseTokenAmount = (amount, decimals) => {
   return new BigNumber(String(amount)).dividedBy(10 ** Number(decimals));
 
 }
+//Convert actual amount to token amount with decimals
+export function formatTokenAmount(amount, decimals = 8){
+  let _amount = amount;
+  let _decimals = decimals;
+
+  if (_amount !== 0 && !_amount) return new BigNumber(0);
+  if (typeof _amount === "bigint") _amount = Number(_amount);
+  if (typeof decimals === "bigint") _decimals = Number(_decimals);
+  if (Number.isNaN(Number(amount))) return new BigNumber(_amount);
+  return new BigNumber(_amount).multipliedBy(10 ** Number(_decimals));
+}
+
 export const balanceActuallyToAccount = (amount, transferFee, decimals) => {
   const _amount = new BigNumber(amount ?? 0).minus(parseTokenAmount(transferFee, decimals));
   return _amount.isGreaterThan(0) ? _amount.toFormat() : 0;

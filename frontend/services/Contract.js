@@ -49,7 +49,7 @@ export const useGetContractRecipients = async (contractId) => {
 export const useGetClaimRecord = async (contractId) => {
     try{
         if(walletStore.isLogged){
-            return await Connect.canister(contractId, 'token_claim').getClaimHistory(walletStore._principal);
+            return await Connect.canister(contractId, 'token_claim', true).getClaimHistory(walletStore._principal);
         }else return [];
     }catch(e){
         throw new Error(e);

@@ -5,9 +5,11 @@
     import { recordForm } from '@dfinity/candid';
     import { onMounted, ref, watchEffect } from 'vue';
     import walletStore from "@/store";
-    const props = defineProps(['contractId']);
+    import { parseTokenAmount } from '@/utils/token';
+    const props = defineProps(['contractId', 'tokenDecimals']);
     // const { data: claimRecord, isLoading, isError, error} = useGetClaimRecord(props.contractId);
     const claimRecords = ref([]);
+    const tokenDecimals = ref(props.tokenDecimals);
 
     const getMyClaim = async()=>{
         claimRecords.value = await useGetClaimRecord(props.contractId);
@@ -33,7 +35,7 @@
                 <tr>
                     <th class="min-w-20px sorting" rowspan="1" colspan="1">#</th>
                     <th class="min-w-250px sorting" rowspan="1" colspan="1">Recipient</th>
-                    <th class="min-w-90px sorting text-center" rowspan="1" colspan="1">Unlock Amount</th>
+                    <th class="min-w-90px sorting text-center" rowspan="1" colspan="1">Claimed Amount</th>
                     <th class="min-w-90px sorting" rowspan="1" colspan="1">Time</th>
                     <th class="min-w-90px sorting" rowspan="1" colspan="1">TxId</th>
                 </tr>
@@ -48,7 +50,7 @@
                             {{ walletStore.principal }}
                         </span>
                     </td>
-                    <td class="text-center">{{ Number(record.amount)/config.E8S }}</td>
+                    <td class="text-center">{{ parseTokenAmount(record.amount, tokenDecimals) }}</td>
                     <td> {{ moment.unix(Number(record.claimedAt)).format('lll') }} </td>
                     <td> #{{ record.txId }} </td>
                 </tr>

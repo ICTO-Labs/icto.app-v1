@@ -15,7 +15,7 @@ shared ({ caller }) actor class () = self {
     private stable var _admins : [Text] = [Principal.toText(caller)];
     // private stable var _userContracts : [(Text, Buffer.Buffer<Text>)] = [];
     // private let userContracts: HashMap.HashMap<Text, Buffer.Buffer<Text>> =  HashMap.fromIter<Text, Buffer.Buffer<Text>>(_userContracts.vals(), 0, Text.equal, Text.hash);
-    private var _userContracts : [(Text, Buffer.Buffer<Text>)] = [];
+    private stable var _userContracts : [(Text, Buffer.Buffer<Text>)] = [];
     private let userContracts: HashMap.HashMap<Text, Buffer.Buffer<Text>> =  HashMap.fromIter<Text, Buffer.Buffer<Text>>(_userContracts.vals(), 0, Text.equal, Text.hash);
 
     // upgrade functions
@@ -81,6 +81,10 @@ shared ({ caller }) actor class () = self {
     public shared({ caller }) func addUserContract(user: Text, contractId: Text) : async () {
         assert(_isAdmin(Principal.toText(caller)));
         _addUserContract(user, contractId);
+    };
+    public shared({ caller }) func removeUserContract(user: Text, contractId: Text) : async () {
+        assert(_isAdmin(Principal.toText(caller)));
+        _removeUserContract(user, contractId);
     };
 
     public shared({ caller }) func addAdmin(p : Text) : async () {

@@ -12,6 +12,7 @@
     import IndicativeChart from '@/components/contract/IndicativeChart.vue';
     import ClaimRecord from '@/components/contract/ClaimRecord.vue';
     import { showLoading, showSuccess, showError, closeMessage } from '@/utils/common';
+    import { parseTokenAmount } from '@/utils/token';
     import walletStore from '@/store';
     const route = useRoute();
     const isLoading = ref(false);
@@ -40,6 +41,11 @@
     }
     const fetchContractInfo = async()=>{
         contractInfo.value = await useGetContract(contractId);
+    }
+
+    const copyLink = ()=>{
+        navigator.clipboard.writeText(window.location.href);
+        showSuccess('Link copied to clipboard!');
     }
 
     watchEffect(() => {
@@ -97,8 +103,7 @@
             <!--begin::Details-->
             <div class="d-flex flex-wrap flex-sm-nowrap mb-6">
                 <div class="d-flex flex-center flex-shrink-0 bg-light rounded w-100px h-100px w-lg-150px h-lg-150px me-7 mb-4">
-                <img class="mw-50px mw-lg-125px" :src="`https://psh4l-7qaaa-aaaap-qasia-cai.raw.icp0.io/6ytv5-fqaaa-aaaap-qblcq-cai.png`" alt="image">
-                <!-- <img class="mw-50px mw-lg-75px" :src="`https://${config.CANISTER_STORAGE_ID}.raw.icp0.io/${contractInfo?.tokenId}.png`" alt="image"> -->
+                    <img class="mw-50px mw-lg-125px" :src="`https://${config.CANISTER_STORAGE_ID}.raw.icp0.io/${contractInfo?.tokenInfo?.canisterId}.png`" :alt="contractInfo?.tokenInfo.name">
                 </div>
                 <!--begin::Wrapper-->
                 <div class="flex-grow-1">
@@ -128,7 +133,7 @@
                     </div>
                     <div class="d-flex mb-4">
                     <button type="button" class="btn btn-sm btn-light-primary me-3" @click="loadContract(false)" :disabled="isLoading">{{isLoading?'Reloading...':'Refresh '}} <i class="fas fa-sync"></i></button>
-                    <button type="button" class="btn btn-sm btn-success" @click="claimToken()">Claim {{claimAbleAmount?Number(claimAbleAmount)/config.E8S:0}} ICP <i class="fas fa-coins"></i></button>
+                    <button type="button" class="btn btn-sm btn-success" @click="claimToken()">Claim {{claimAbleAmount?Number(claimAbleAmount)/config.E8S:0}} {{contractInfo?.tokenInfo.symbol}} <i class="fas fa-coins"></i></button>
                     <!-- <button type="button" class="btn btn-sm btn-light-danger" @click="cancelContract()">Cancel <i class="fas fa-ban"></i></button> -->
 
                     </div>
@@ -153,19 +158,19 @@
                     <div class="border border-gray-300 border-dashed rounded min-w-125px py-3 px-4 me-6 mb-3">
                     <!--begin::Number-->
                     <div class="d-flex align-items-center text-hover-primary">
-                        <div class="fs-4 fw-bold">{{ moment.unix(Number(contractInfo?.startTime)).utc().format("lll") }}</div>
+                        <div class="fs-5 fw-bold">{{ moment.unix(Number(contractInfo?.startTime)).format("lll") }}</div>
                     </div>
-                    <div class="fw-semibold fs-6 text-gray-500">Start Date (UTC)</div>
+                    <div class="fw-semibold fs-6 text-gray-500">Start Date</div>
                     </div>
                     <div class="border border-gray-300 border-dashed rounded min-w-125px py-3 px-4 me-6 mb-3 hover-primary">
                     <div class="d-flex align-items-center text-hover-primary">
-                        <div class="fs-4 fw-bold">{{ moment.unix(Number(contractInfo?.startTime)+(Number(contractInfo.lockDuration))).utc().format("lll") }}</div>
+                        <div class="fs-5 fw-bold">{{ moment.unix(Number(contractInfo?.startTime)+(Number(contractInfo.lockDuration))).format("lll") }}</div>
                     </div>
-                    <div class="fw-semibold fs-6 text-gray-500">End Date (UTC)</div>
+                    <div class="fw-semibold fs-6 text-gray-500">End Date</div>
                     </div>
                     <div class="border border-gray-300 border-dashed rounded min-w-125px py-3 px-4 me-6 mb-3">
                     <div class="d-flex align-items-center">
-                        <div class="fs-4 fw-bold counted" v-if="contractInfo">
+                        <div class="fs-5 fw-bold counted" v-if="contractInfo">
                             {{ SCHEDULE[Number(contractInfo.unlockSchedule)] }}
                         </div>
                     </div>
@@ -173,23 +178,23 @@
                     </div>
                     <div class="border border-gray-300 border-dashed rounded min-w-125px py-3 px-4 me-6 mb-3">
                     <div class="d-flex align-items-center ">
-                        <div class="fs-4 fw-bold counted">
-                            <count-up :end-val="Number(contractInfo.totalAmount)/config.E8S" v-if="contractInfo && contractInfo.totalAmount"></count-up>
+                        <div class="fs-5 fw-bold counted">
+                            <count-up :end-val="parseTokenAmount(contractInfo.totalAmount, contractInfo.tokenInfo.decimals)" :options="{decimalPlaces: 6, separator: ',', decimal: '.'}" v-if="contractInfo && contractInfo.totalAmount"></count-up>
                         </div>
                     </div>
                     <div class="fw-semibold fs-6 text-gray-500">Total Amount</div>
                     </div>
                     <div class="border border-gray-300 border-dashed rounded min-w-125px py-3 px-4 me-6 mb-3">
                     <div class="d-flex align-items-center">
-                        <div class="fs-4 fw-bold counted">
-                            <count-up :end-val="contractInfo.totalClaimedAmount?Number(contractInfo.totalClaimedAmount)/config.E8S:0" v-if="contractInfo"></count-up>
+                        <div class="fs-5 fw-bold counted">
+                            <count-up :end-val="parseTokenAmount(contractInfo.totalClaimedAmount, contractInfo.tokenInfo.decimals)" :options="{decimalPlaces: 6, separator: ',', decimal: '.'}" v-if="contractInfo"></count-up>
                         </div>
                     </div>
                     <div class="fw-bold fs-6 text-gray-500">Claimed Amount</div>
                     </div>
                     <div class="border border-gray-300 border-dashed rounded min-w-125px py-3 px-4 me-6 mb-3">
                     <div class="d-flex align-items-center">
-                        <div class="fs-4 fw-bold counted">
+                        <div class="fs-5 fw-bold counted">
                             <count-up :end-val="Number(contractInfo.totalRecipients)" v-if="contractInfo"></count-up>
                         </div>
                     </div>
@@ -232,7 +237,7 @@
                         <!--end::Card title-->
                         <!--begin::Card toolbar-->
                         <div class="card-toolbar">
-                        <a href="#" class="btn btn-light btn-sm">Copy Link</a>
+                        <a href="javascript:void(0)" @click="copyLink" class="btn btn-light btn-sm" title="Copy link to share">Copy Link</a>
                         </div>
                         <!--end::Card toolbar-->
                     </div>
@@ -253,17 +258,17 @@
                             <div class="d-flex fs-6 fw-semibold align-items-center mb-3">
                                 <div class="bullet bg-success me-3"></div>
                                     <div class="text-gray-500">Total Amount</div>
-                                <div class="ms-auto fw-bold text-gray-700">{{ currencyFormat(Number(contractInfo?.totalAmount)/config.E8S) }}</div>
+                                <div class="ms-auto fw-bold text-gray-700">{{ currencyFormat(parseTokenAmount(contractInfo.totalAmount, contractInfo.tokenInfo.decimals))}}</div>
                             </div>
                             <div class="d-flex fs-6 fw-semibold align-items-center mb-3">
                                 <div class="bullet bg-primary me-3"></div>
                                     <div class="text-gray-500">Claimed</div>
-                                <div class="ms-auto fw-bold text-gray-700">{{ currencyFormat(Number(contractInfo?.totalClaimedAmount)/config.E8S) }}</div>
+                                <div class="ms-auto fw-bold text-gray-700">{{ currencyFormat(parseTokenAmount(contractInfo?.totalClaimedAmount, contractInfo.tokenInfo.decimals)) }}</div>
                             </div>
                             <div class="d-flex fs-6 fw-semibold align-items-center mb-3">
                                 <div class="bullet bg-gray-300 me-3"></div>
                                     <div class="text-gray-500">Remaining</div>
-                                <div class="ms-auto fw-bold text-gray-700">{{ currencyFormat(Number(contractInfo?.totalAmount)/config.E8S - Number(contractInfo?.totalClaimedAmount)/config.E8S) }}</div>
+                                <div class="ms-auto fw-bold text-gray-700">{{ currencyFormat(parseTokenAmount(contractInfo?.totalAmount - contractInfo?.totalClaimedAmount, contractInfo.tokenInfo.decimals)) }}</div>
                             </div>
                             <div class="d-flex fs-6 fw-semibold align-items-center">
                                 <div class="bullet bg-danger me-3"></div>
@@ -323,7 +328,7 @@
                     <!--begin::Card title-->
                     <div class="card-title flex-column">
                     <h3 class="fw-bold mb-1">Recipients</h3>
-                    <div class="fs-6 text-gray-500">Total <span v-if="contractInfo">{{ contractInfo.totalClaimedAmount?Number(contractInfo.totalClaimedAmount)/config.E8S:0 }} ICP</span> claimed so far</div>
+                    <div class="fs-6 text-gray-500 fw-normal">Total <span v-if="contractInfo" class="text-danger fw-bold">{{ parseTokenAmount(contractInfo.totalClaimedAmount, contractInfo?.tokenInfo.decimals) }} {{contractInfo?.tokenInfo.symbol}}</span> claimed so far.</div>
                     </div>
                     <!--begin::Card title-->
                 </div>
@@ -362,9 +367,9 @@
                                     </div>
                                     <!--end::User-->
                                     </td>
-                                    <td> <span class="fs-6 text-success">{{ Number(recipient.remainingAmount)/config.E8S }}</span> </td>
-                                    <td> <span class="fs-6 text-danger">{{ Number(recipient.claimedAmount)/config.E8S }}</span> </td>
-                                    <td> <span class="fs-7 text-gray">{{ recipient.lastClaimedTime>0?moment.unix(Number(recipient.lastClaimedTime)).fromNow():'None' }}</span> </td>
+                                    <td> <span class="fs-6 text-success">{{ parseTokenAmount(recipient.remainingAmount, contractInfo.tokenInfo.decimals) }}</span> </td>
+                                    <td> <span class="fs-6 text-danger">{{ parseTokenAmount(recipient.claimedAmount, contractInfo.tokenInfo.decimals) }}</span> </td>
+                                    <td> <span class="fs-7 text-gray">{{ recipient.lastClaimedTime>0?moment.unix(Number(recipient.lastClaimedTime)).fromNow():'-' }}</span> </td>
                                 </tr>
                             </tbody>
                         </table>
@@ -379,7 +384,7 @@
             </div>
             <div :class="`tab-pane fade ${activeTab == 'record'?'show active':''}`" id="payment-history" role="tabpanel">
                 <div class="card card-flush mt-6 mt-xl-9">
-                    <ClaimRecord :contractId="contractId"/>
+                    <ClaimRecord :contractId="contractId" :tokenDecimals="contractInfo.tokenInfo.decimals"/>
                 </div>
             </div>
         </div>
