@@ -42,6 +42,8 @@ export interface Recipient {
   'address' : string,
   'amount' : bigint,
 }
+export type Result = { 'ok' : Principal } |
+  { 'err' : string };
 export type Time = bigint;
 export interface TokenInfo {
   'fee' : bigint,
@@ -57,7 +59,7 @@ export interface _SERVICE {
   'addController' : ActorMethod<[canister_id, Array<Principal>], undefined>,
   'cancelContract' : ActorMethod<[Principal], undefined>,
   'canister_status' : ActorMethod<[canister_id], CanisterStatus>,
-  'createContract' : ActorMethod<[ContractData], string>,
+  'createContract' : ActorMethod<[ContractData], Result>,
   'getAdmins' : ActorMethod<[], Array<string>>,
   'removeAdmin' : ActorMethod<[string], undefined>,
   'updateIndexingCanister' : ActorMethod<[string], undefined>,

@@ -95,10 +95,10 @@
 			showError("Please use a valid Principal ID!");
 			return;
 		}
-		// if(newRecipient.value.amount <= 0 || newRecipient.value.amount > (tokenBalance.value-totalAmount.value)){
-		// 	showError("Not enough "+token.value.symbol+", check remaining amount!");
-		// 	return;
-		// }
+		if(newRecipient.value.amount <= 0){
+			showError("Please enter a valid amount!");
+			return;
+		}
 		let idx = findRecipientIdx(_to);
 		if(idx > -1){//Update amount if existed
 			recipients.value[idx].amount += Number(newRecipient.value.amount);

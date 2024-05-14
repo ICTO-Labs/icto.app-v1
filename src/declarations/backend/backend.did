@@ -9,6 +9,11 @@ type TokenInfo =
    symbol: text;
  };
 type Time = int;
+type Result = 
+ variant {
+   err: text;
+   ok: principal;
+ };
 type Recipient = 
  record {
    address: text;
@@ -61,7 +66,7 @@ service : {
   addController: (canister_id, vec principal) -> ();
   cancelContract: (principal) -> ();
   canister_status: (canister_id) -> (CanisterStatus);
-  createContract: (ContractData) -> (text);
+  createContract: (ContractData) -> (Result);
   getAdmins: () -> (vec text) query;
   removeAdmin: (text) -> ();
   updateIndexingCanister: (text) -> ();

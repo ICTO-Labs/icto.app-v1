@@ -14,16 +14,24 @@ import Actor "./Actor";
 import ContractTypes "../contract/types/Common";//Common
 import Trie "mo:base/Trie";
 import TokenClaim "../contract/TokenClaim";
+import Debug "mo:base/Debug";
+import Result "mo:base/Result";
+import ICRCLedger "../token_deployer/ICRCLedger";
 
 actor {
     stable var currentValue: Nat = 0;
     stable var CONTRACT_VERSION: Text = "0.1.1";
-    stable var INIT_CONTRACT_CYCLES: Nat = 300_000_000_000;
+    stable var CYCLES_FOR_INSTALL: Nat = 300_000_000_000;
+    private stable var MIN_CYCLES_IN_DEPLOYER: Nat = 2_000_000_000_000;//Minimum cycles in deployer
     let ic: IC.Self = actor "aaaaa-aa";
     private stable var _admins : [Text] = ["lekqg-fvb6g-4kubt-oqgzu-rd5r7-muoce-kppfz-aaem3-abfaj-cxq7a-dqe"];
     private stable var _contracts : [Text] = [];
     private stable var INDEXING_CANISTER : Text = "avqkn-guaaa-aaaaa-qaaea-cai";
-    
+    private let icrcLedger : ICRCLedger.Self = actor ("ryjl3-tyaaa-aaaaa-aaaba-cai");//For ICRC transfer
+
+    private func createICRC1Actor(id : Text) : async ICRCLedger.Self {
+        actor(id);
+    };
     private func mapCanister(user: Text, canister_id: Text): async (){
         let INDEXING = actor(INDEXING_CANISTER) : actor {
             addUserContract : shared (Text, Text) -> async ();
@@ -74,10 +82,12 @@ actor {
             }
         });
     };
-    public shared (msg) func createContract(contract: ContractTypes.ContractData): async Text{
+    public shared (msg) func createContract(contract: ContractTypes.ContractData): async Result.Result<Principal, Text>{
         assert not Principal.isAnonymous(msg.caller);
         let _controllers = [msg.caller];
-        Cycles.add(INIT_CONTRACT_CYCLES);
+        let _cycleBalance = Cycles.balance();
+        if (_cycleBalance < CYCLES_FOR_INSTALL + MIN_CYCLES_IN_DEPLOYER) return #err("Not enough cycles in deployer, balance: "# debug_show(_cycleBalance) #"T");
+        Cycles.add(CYCLES_FOR_INSTALL);
 
         //must add VERSION to contract data
         let newContractId = await TokenClaim.Contract(contract);
@@ -100,7 +110,16 @@ actor {
             await mapCanister(recipient.address, _contractId);
         };
 
-        _contractId;
+        //Transfer token to new contract, skipp admin for testing purpose
+        if (not _isAdmin(Principal.toText(msg.caller))){
+            let _tokenActor = await createICRC1Actor(contract.tokenInfo.canisterId);
+            switch (await _tokenActor.icrc2_transfer_from({ from = { owner = msg.caller; subaccount = null }; spender_subaccount = null; to = { owner = newContractPrincipal; subaccount = null }; fee = null; memo = null; from_subaccount = null; created_at_time = null; amount = contract.totalAmount })) {
+            case (#Ok(_)) ();
+            case (#Err(e)) return #err("Payment error: " # debug_show(e));
+            };
+        };
+
+        #ok(newContractPrincipal);
     };
 
     public shared({ caller }) func cancelContract(canister_id: Principal) : async (){

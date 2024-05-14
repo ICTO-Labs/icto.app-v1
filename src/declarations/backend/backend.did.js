@@ -52,12 +52,13 @@ export const idlFactory = ({ IDL }) => {
     'unlockSchedule' : IDL.Nat,
     'unlockedAmount' : IDL.Nat,
   });
+  const Result = IDL.Variant({ 'ok' : IDL.Principal, 'err' : IDL.Text });
   return IDL.Service({
     'addAdmin' : IDL.Func([IDL.Text], [], []),
     'addController' : IDL.Func([canister_id, IDL.Vec(IDL.Principal)], [], []),
     'cancelContract' : IDL.Func([IDL.Principal], [], []),
     'canister_status' : IDL.Func([canister_id], [CanisterStatus], []),
-    'createContract' : IDL.Func([ContractData], [IDL.Text], []),
+    'createContract' : IDL.Func([ContractData], [Result], []),
     'getAdmins' : IDL.Func([], [IDL.Vec(IDL.Text)], ['query']),
     'removeAdmin' : IDL.Func([IDL.Text], [], []),
     'updateIndexingCanister' : IDL.Func([IDL.Text], [], []),

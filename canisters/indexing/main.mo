@@ -15,7 +15,7 @@ shared ({ caller }) actor class () = self {
     private stable var _admins : [Text] = [Principal.toText(caller)];
     // private stable var _userContracts : [(Text, Buffer.Buffer<Text>)] = [];
     // private let userContracts: HashMap.HashMap<Text, Buffer.Buffer<Text>> =  HashMap.fromIter<Text, Buffer.Buffer<Text>>(_userContracts.vals(), 0, Text.equal, Text.hash);
-    private stable var _userContracts : [(Text, Buffer.Buffer<Text>)] = [];
+    private var _userContracts : [(Text, Buffer.Buffer<Text>)] = [];
     private let userContracts: HashMap.HashMap<Text, Buffer.Buffer<Text>> =  HashMap.fromIter<Text, Buffer.Buffer<Text>>(_userContracts.vals(), 0, Text.equal, Text.hash);
 
     // upgrade functions

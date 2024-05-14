@@ -69,7 +69,7 @@
                 showLoading('Claiming...');
                 let _claimRs = await useClaim(contractId);
                 if(_claimRs && "ok" in _claimRs){
-                    showSuccess('All '+Number(_claimRs.ok)/config.E8S+' tokens has been claimed successfuly!', true);
+                    showSuccess(parseTokenAmount(_claimRs.ok, contractInfo.value.tokenInfo.decimals)+ ' ' +contractInfo.value.tokenInfo.symbol+' has been claimed successfuly!', true);
                 }else{
                     showError(_claimRs?_claimRs.err:"Claim failed, please try again later!", true);
                 }
@@ -118,33 +118,53 @@
                         <!-- <span class="badge badge-light-success me-auto" v-else>Ongoing...</span> -->
                     </div>
                     <div class="d-flex flex-wrap fw-bold fs-6 mb-4 pe-2">
-                        <span href="#" class="d-flex align-items-center text-gray-800 text-hover-primary me-5 mb-2">
-                        {{contractInfo?.tokenInfo.symbol}} ({{contractInfo?.tokenInfo.name}}) </span>
-                        <span class="d-flex align-items-center text-gray-800 text-hover-primary me-5 mb-2">
-                        <span class="menu-bullet d-flex align-items-center me-2">
-                            <span class="bullet bg-gray-300 me-3"></span>
-                        </span> <span class="me-2">{{contractInfo?.tokenInfo.canisterId}}</span> <Copy :text="contractInfo?.tokenInfo.canisterId"></Copy>
-                        </span>
-                        <span href="#" class="d-flex align-items-center text-gray-400 text-hover-primary mb-2">
-                        <span class="badge badge-light-primary ms-auto" v-if="contractInfo">{{contractInfo?.tokenInfo.standard}}</span>
+                        <div class="d-flex align-items-center text-gray-800 text-hover-primary me-5 mb-2">
+                            <span class="me-2">
+                                {{contractId}}</span> <Copy :text="contractId"></Copy>
+                            </div>
+                            <span href="#" class="d-flex align-items-center text-gray-400 text-hover-primary mb-2">
+                            <span class="badge badge-light ms-auto" v-if="contractInfo">{{(Number(contractInfo?.cyclesBalance)/config.CYCLES).toFixed(3)}}T</span>
                         </span>
                     </div>
                     
                     </div>
                     <div class="d-flex mb-4">
-                    <button type="button" class="btn btn-sm btn-light-primary me-3" @click="loadContract(false)" :disabled="isLoading">{{isLoading?'Reloading...':'Refresh '}} <i class="fas fa-sync"></i></button>
-                    <button type="button" class="btn btn-sm btn-success" @click="claimToken()">Claim {{claimAbleAmount?Number(claimAbleAmount)/config.E8S:0}} {{contractInfo?.tokenInfo.symbol}} <i class="fas fa-coins"></i></button>
+                        <button type="button" class="btn btn-sm btn-light-primary me-3" @click="loadContract(false)" :disabled="isLoading">{{isLoading?'Reloading...':'Refresh '}} <i class="fas fa-sync"></i></button>
+                        <!-- <button type="button" class="btn btn-sm btn-success" @click="claimToken()">Claim {{parseTokenAmount(claimAbleAmount, contractInfo.tokenInfo.decimals)}} {{contractInfo?.tokenInfo.symbol}} <i class="fas fa-coins"></i></button> -->
+
+                        <div class="input-group py-0 w-auto">
+                            <!-- <input type="text" class="form-control" :value="parseTokenAmount(claimAbleAmount, contractInfo.tokenInfo.decimals)" disabled> -->
+                            <button class="btn btn-sm btn-secondary disabled" title="Claimable amount">{{parseTokenAmount(claimAbleAmount, contractInfo.tokenInfo.decimals)}} {{contractInfo?.tokenInfo.symbol}}</button>
+                            <button type="button" class="btn btn-sm btn-success" @click="claimToken()">Claim <i class="fas fa-coins"></i></button>
+                        </div>
+
                     <!-- <button type="button" class="btn btn-sm btn-light-danger" @click="cancelContract()">Cancel <i class="fas fa-ban"></i></button> -->
 
                     </div>
                     <!--end::Actions-->
                 </div>
                 <!--end::Head-->
-                <div class="d-flex flex-wrap fw-semibold mb-4 fs-5 text-gray-600">
-                        {{ contractInfo?.description }}
-                        <!-- <span v-if="isLoading">Loading...</span>
-                        <span v-if="isRefetching">isRefetching...</span>
-                        <span v-else-if="isError">Error: {{ error.message }}</span> -->
+                <div class="fw-semibold fs-5 text-gray-600">
+                        <div class="flex-row">
+                            {{ contractInfo?.description }}
+                        </div>
+                        <div class="mt-5">
+                            <div class="separator"></div>
+                            <div class="card flex-row flex-stack flex-wrap">
+                                <div class="text-primary px-3 py-2 me-5 fw-bold">
+                                    <img class="mw-20px mw-lg-25px" :src="`https://${config.CANISTER_STORAGE_ID}.raw.icp0.io/${contractInfo?.tokenInfo?.canisterId}.png`">
+                                    {{ contractInfo?.tokenInfo.name }} <span class="badge badge-light ms-auto">{{contractInfo?.tokenInfo.standard.toUpperCase()}}</span>
+                                </div>
+                                <div class=" text-primary px-3 py-2 fw-bold">
+                                    {{ contractInfo?.tokenInfo.canisterId }} <Copy :text="contractInfo?.tokenInfo.canisterId"></Copy>
+                                </div>
+                                <div></div>
+                                <div></div>
+                                <div></div>
+                                <div></div>
+                            </div>  
+                        </div>
+                        
                 </div>
                 </div>
                 <!--end::Wrapper-->

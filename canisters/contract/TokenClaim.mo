@@ -15,6 +15,7 @@ import Bool "mo:base/Bool";
 import Result "mo:base/Result";
 import Ledger "Ledger";
 import Types "./types/Common";//Common
+import ICRCLedger "../token_deployer/ICRCLedger";
 
 shared ({ caller = creator }) actor class Contract({
     title: Text;
@@ -199,6 +200,39 @@ shared ({ caller = creator }) actor class Contract({
 
     processRecipent();//Init process recipients
 
+
+    func toBaseResult<Ok, Err>(icrc1_result: Types.TokenResult<Ok, Err>) : Result.Result<Ok, Err> {
+        switch(icrc1_result){
+        case(#Ok(ok)) {
+            #ok(ok);
+        };
+        case(#Err(err)) {
+            #err(err);
+        };
+        };
+    };
+    private func _transfer(to: Principal, amount: Nat) : async* Result.Result<Nat, ICRCLedger.TransferError> {
+        let transfer_result = toBaseResult(await ICRC1.icrc1_transfer({
+            to = {
+                owner = to;
+                subaccount = null;
+            };
+            fee = null;
+            amount = amount-contractInfo.tokenInfo.fee;
+            memo = null;
+            from_subaccount = null;
+            created_at_time = null;
+        }));
+
+        Result.iterate(transfer_result, func(tx_index: Nat){
+        // ignore //Add to transaction
+        //Set.put(_airdropped_users, Set.phash, principal);
+        });
+
+        transfer_result;
+    };
+
+
     public shared({ caller }) func transferOwnership(newOwner: Principal) : async Result.Result<Bool, Text> {
         if(contractInfo.allowTransfer == false){
             return #err("Ownership transfer is not allowed");
@@ -308,31 +342,63 @@ shared ({ caller = creator }) actor class Contract({
                 let claimableAmount: Nat = calculateClaimableAmount(principal, pickTime);
                 if (claimableAmount > 0) {
                     //Transfer Token
-                    let txId = 1;//TODO: Implement token transfer
+                    let transferResult = await* _transfer(principal, claimableAmount);
+                    switch(transferResult){
+                        case(#ok(txId)) {
+                            // let txId = ok.transferResult;
+                            // Update claim info
+                            let newClaimedAmount = claimInfo.claimedAmount + claimableAmount;
+                            let newRemainingAmount = claimInfo.remainingAmount - claimableAmount;
+                            let newClaimHistory = Array.append<ClaimRecord>(
+                                                claimInfo.claimHistory,
+                                                [{
+                                                    amount = claimableAmount;
+                                                    claimedAt = pickTime;
+                                                    txId = txId;
+                                                }]
+                                            );
+                            //increase totalClaimedAmount
+                            totalClaimedAmount += claimableAmount;
 
-                    // Update claim info
-                    let newClaimedAmount = claimInfo.claimedAmount + claimableAmount;
-                    let newRemainingAmount = claimInfo.remainingAmount - claimableAmount;
-                    let newClaimHistory = Array.append<ClaimRecord>(
-                                        claimInfo.claimHistory,
-                                        [{
-                                            amount = claimableAmount;
-                                            claimedAt = pickTime;
-                                            txId = txId;
-                                        }]
-                                    );
-                    //increase totalClaimedAmount
-                    totalClaimedAmount += claimableAmount;
+                            //Update recipientClaimInfo
+                            recipientClaimInfo.put(principal, {
+                                claimInfo with
+                                claimedAmount = newClaimedAmount;
+                                remainingAmount = newRemainingAmount;
+                                lastClaimedTime = pickTime; // update lastClaimedTime to pickTime
+                                claimHistory = newClaimHistory;
+                            });
+                            return #ok(claimableAmount);
+                        };
+                        case(#err(err)) {
+                            return #err(debug_show(err));
+                        };
+                    }
+                    // let txId = transferResult;//TODO: Implement token transfer
 
-                    //Update recipientClaimInfo
-                    recipientClaimInfo.put(principal, {
-                        claimInfo with
-                        claimedAmount = newClaimedAmount;
-                        remainingAmount = newRemainingAmount;
-                        lastClaimedTime = pickTime; // update lastClaimedTime to pickTime
-                        claimHistory = newClaimHistory;
-                    });
-                    return #ok(claimableAmount);
+                    // // Update claim info
+                    // let newClaimedAmount = claimInfo.claimedAmount + claimableAmount;
+                    // let newRemainingAmount = claimInfo.remainingAmount - claimableAmount;
+                    // let newClaimHistory = Array.append<ClaimRecord>(
+                    //                     claimInfo.claimHistory,
+                    //                     [{
+                    //                         amount = claimableAmount;
+                    //                         claimedAt = pickTime;
+                    //                         txId = txId;
+                    //                     }]
+                    //                 );
+                    // //increase totalClaimedAmount
+                    // totalClaimedAmount += claimableAmount;
+
+                    // //Update recipientClaimInfo
+                    // recipientClaimInfo.put(principal, {
+                    //     claimInfo with
+                    //     claimedAmount = newClaimedAmount;
+                    //     remainingAmount = newRemainingAmount;
+                    //     lastClaimedTime = pickTime; // update lastClaimedTime to pickTime
+                    //     claimHistory = newClaimHistory;
+                    // });
+                    // return #ok(claimableAmount);
                 }else{
                     return #err("No claimable amount");
                 }

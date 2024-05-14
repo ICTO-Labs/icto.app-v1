@@ -24,7 +24,7 @@ const NETWORK = {
         deployer_id: canisters.deployer.ic,//"p7bu5-uyaaa-aaaap-qca3q-cai",
         token_deployer_id: canisters.token_deployer.ic,//"p7bu5-uyaaa-aaaap-qca3q-cai",
         backend_id: canisters.backend.ic, //"ys3lq-iiaaa-aaaap-qb7ba-cai",
-        // indexing_id: canisters.indexing_canister.ic,//Mapping canister
+        indexing_id: canisters.indexing_canister.ic,//Mapping canister
         host: "https://icp-api.io",
         scan: "https://dashboard.internetcomputer.org/canister/",
         identityProvider: "https://identity.ic0.app/#authorize"

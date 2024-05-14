@@ -7,7 +7,7 @@
     import moment from 'moment';
     import Copy from "@/components/icons/Copy.vue";
     import _api from "@/ic/api";
-    import { currencyFormat, formatTokenAmount } from "@/utils/token";
+    import { currencyFormat, formatTokenAmount, parseTokenAmount } from "@/utils/token";
     import {Principal} from "@dfinity/principal";
     import { useCreateContract } from "@/services/Contract";
     import LoadingButton from '@/components/LoadingButton.vue';
@@ -58,7 +58,7 @@
             //Step 2.
             console.log('contractData.value: ', contractData.value.token);
             let tokenInfo = await contractData.value.token;
-            let _totalAmount = 0;
+            let _totalAmount = 0;//Add fee for the contract transfer!!!!
             let recipients = contractData.value.recipients.map(recipient=>{
                 _totalAmount += Number(formatTokenAmount(recipient.amount, tokenInfo.decimals));
                 return {address: recipient.address, amount: Number(formatTokenAmount(recipient.amount, tokenInfo.decimals)), note: [""+recipient.note+""]}
@@ -99,28 +99,30 @@
             };
             console.log('creating contract...', _data);
             //Step 1. Approved
-
-            // let _approve = await useTokenApprove(tokenInfo.canisterId, {spender: config.BACKEND_CANISTER_ID, amount: _totalAmount});
+            let _extendAmount = _totalAmount+(tokenInfo.fee*2);//Extend the amount for the transfer fee
+            showLoading("Approving token...");
+            let _approve = await useTokenApprove(tokenInfo.canisterId, {spender: config.BACKEND_CANISTER_ID, amount: parseTokenAmount(_extendAmount,tokenInfo.decimals)}, tokenInfo.decimals);
+            console.log('_approve', _approve, _extendAmount);
             // let _transfer = await useTransferFrom(tokenInfo.canisterId, {from: walletStore.principal, to: config.BACKEND_CANISTER_ID, amount: _totalAmount});
             // return;
             showLoading("Deploying your contract data...");
             let _rs = await useCreateContract(_data);
             isLoading.value = false;
             console.log('rs', _rs);
-            if(_rs && typeof(_rs) == 'string'){
+            if(_rs && "ok" in _rs){
                 // showSuccess("Contract has been created successfully. View contract: "+_rs);
                 EventBus.on("showContractDetailsModal", {status: false});//Close the preview
                 Swal.fire({
-                            icon: 'success',
-                            title: 'Success',
-                            html: '<p>Your contract has been created successfully.</p><p>View contract: <a href="/token-claim/'+_rs+'">'+_rs+'</a></p>',
-                        })
+                    icon: 'success',
+                    title: 'Success',
+                    html: '<p>Your contract has been created successfully.</p><p>View contract: <a href="/token-claim/'+principalToText(_rs.ok)+'">'+principalToText(_rs.ok)+'</a></p>',
+                })
             }else{
                 Swal.fire({
-                            icon: 'error',
-                            title: 'Oops...',
-                            text: (_rs && typeof(_rs) == 'object' && ("err" in _rs))?_rs.err:'Something went wrong, please try again!',
-                        })
+                    icon: 'error',
+                    title: 'Oops...',
+                    text: (_rs && typeof(_rs) == 'object' && ("err" in _rs))?_rs.err:'Something went wrong, please try again!',
+                })
             }
         
 		}

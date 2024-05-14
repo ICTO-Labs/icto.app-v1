@@ -1,7 +1,7 @@
 import { useQuery, useMutation } from "@tanstack/vue-query";
 import Connect from "@/ic/actor/Connect";
 import { useStorage } from '@vueuse/core'
-import { decodeICRCMetadata, decodeTransaction, getTokenInfo } from "@/utils/token";
+import { decodeICRCMetadata, decodeTransaction, getTokenInfo, formatTokenAmount } from "@/utils/token";
 import RosettaApi from '@/services/RosettaApi';
 import config from '@/config';
 import walletStore from "@/store";
@@ -68,9 +68,10 @@ export const useTransferFrom = async(tokenId, payload, standard="icrc2")=>{
         })
     console.log('useTransferFrom', response);    
 }
-export const useTokenApprove = async(tokenId, payload, standard="icrc2")=>{
+export const useTokenApprove = async(tokenId, payload, decimals=8, standard="icrc2")=>{
     let _token = getTokenInfo(tokenId);
-    const _amount = BigInt(parseFloat(payload.amount) * (_token ? Math.pow(10, _token.decimals) : config.E8S));
+    const _amount = formatTokenAmount(payload.amount, decimals);
+    // const _amount = BigInt(parseFloat(payload.amount) * (_token ? Math.pow(10, _token.decimals) : config.E8S));
     const _fee = BigInt(_token?_token.fee:0);
     const _spender = txtToPrincipal(payload.spender);
     try{
