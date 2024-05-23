@@ -9,6 +9,7 @@
 	import { useGetMyBalance } from '@/services/Token';
 	import PreviewChart from '@/components/contract/PreviewChart.vue';
     import { DURATION, SCHEDULE} from "@/config/constants"
+    import Codemirror from "codemirror-editor-vue3";
 
 
 	import VueMultiselect from 'vue-multiselect'
@@ -30,6 +31,8 @@
 	const contractData = ref({
 		name: "",
 		description: "",
+		editMode: false,
+		unlockImmediately: false,
 		startNow: true,
 		startDate: new Date(),
 		startTime: new Date(),
@@ -43,19 +46,91 @@
 		canView: 'both',
 		canCancel: 'neither',
 		canChange: 'neither',
-	})
+	});
+
+    const codemirror = ref(null);
+	const recipientsEdit = ref("");
+	const cmOptions = ref({
+        mode: "text/javascript", // Language mode
+        theme: "dracula", // Theme
+    });
 	const customLabel = ({ name, canisterId })=>{
 		return `${name} | Canister ID: ${canisterId}`
+    }
+	const toggleUnlock = ()=>{
+		contractData.value.unlockImmediately = !contractData.value.unlockImmediately;
+		if(contractData.value.unlockImmediately){
+			contractData.value.durationUnit = 0;
+			contractData.value.cliffUnit = 0;
+		}else{
+			contractData.value.durationUnit = 1;
+		}
+	}
+	const switchMode = ()=>{
+		contractData.value.editMode = !contractData.value.editMode;
+		switchData(!contractData.value.editMode);
+	}
+	const loadSampleData = ()=>{
+        recipientsEdit.value = `vkdhi-vlxfv-56jyt-tcyxp-qlhlk-4lnpb-k2r4q-uctef-ppvdr-iphm5-zqe,10,developer
+sarfp-y2id5-s2kqj-dgkrz-tk7ft-fpvhy-drpzc-bq7t3-sbqp7-txxlv-iqe,20,marketing
+7mrjg-jibqe-nd4lb-xxksz-lv4vu-emumn-jgml4-gqlcy-cqq3z-rypfs-jae,10
+5s246-2xf3s-vym4q-rxwf5-k6snu-anhsz-2tze5-vaxuh-alkvb-dudii-bqe,15,designer
+zxcjx-7yvay-ow7hh-nbocq-5aaru-n7nwq-xyhau-jnr6m-f36ho-xzufk-rae,50`;
+		calTotalToken();
     }
 	const setSelectedToken = async ()=>{
 		resetRecipients();
 		tokenBalance.value = 0;
 		await getTokenBalance();
 	}
+	const checkingRecipients = ()=>{
+		let _recipients = recipientsEdit.value.split('\n');
+        let _totalAmount = 0;
+        let _totalError = 0;
+        let _totalRecipients = 0;
+        _recipients.forEach((item, idx)=>{
+            let _item = item.split(',');
+            if(_item.length >= 2){
+                //Check recipient principal
+                if(validatePrincipal(_item[0])){
+                    _totalAmount += parseInt(_item[1])|0;
+                    _totalRecipients++;
+                    codemirror.value.cminstance.removeLineClass(idx, "background", "codemirror-error-line");
+                }else{
+                    codemirror.value.cminstance.addLineClass(idx, "background", "codemirror-error-line");
+                    _totalError++;
+                }
+            }
+        });
+		calTotalToken();
+	}
+
+	//Switch data from GUI to Edit mode
+	const switchData = (fromEditMode=true)=>{
+		if(fromEditMode){
+			recipients.value = JSON.stringify(recipientsEdit.value);
+			let _recipients = recipientsEdit.value.split('\n');
+			let _recipientsTmp = [];
+			_recipients.forEach((item, idx)=>{
+				let _item = item.split(',');
+				if(_item.length >= 2){
+					//Switch only validate principal
+					if(validatePrincipal(_item[0])){
+						_recipientsTmp.push({address: _item[0], amount: parseInt(_item[1])|0, note: _item[2]??""});
+					}
+				}
+			});
+			recipients.value = _recipientsTmp;
+		}else{
+			recipientsEdit.value = recipients.value.map(recipient => `${recipient.address},${recipient.amount},${recipient.note}`).join('\n');
+		}
+		//Recall total amount
+		calTotalToken();
+	};
 	const validateVesting = ()=>{
+		if(contractData.value.durationUnit == 0) toggleUnlock(); return;
 		if(contractData.value.cliffUnit < 0) contractData.value.cliffUnit = 0;
 		if(contractData.value.durationUnit < 0) contractData.value.durationUnit = 0;
-		
 		let cliffInSeconds = contractData.value.cliffUnit*contractData.value.cliffTime;
 		let durationInSeconds = contractData.value.durationUnit*contractData.value.durationTime;
 		let unlockSchedule = contractData.value.unlockSchedule;
@@ -69,7 +144,17 @@
 
 	}
 	const calTotalToken = ()=>{
-		totalAmount.value = recipients.value.reduce((acc,cur) => acc + Number(cur.amount), 0);
+		if(contractData.value.editMode){
+			totalAmount.value = recipientsEdit.value.split('\n').reduce((acc,cur) => {
+				let _cur = cur.split(',');
+				if(_cur.length >= 2 && validatePrincipal(_cur[0])){
+					return acc + Number(_cur[1]);
+				}
+				return acc;
+			}, 0);
+		}else{
+			totalAmount.value = recipients.value.reduce((acc,cur) => acc + Number(cur.amount), 0);
+		}
 	}
 	const getTokenBalance = async ()=>{
 		isLoading.value = true;
@@ -79,7 +164,7 @@
 		calTotalToken();
 	}
 	const resetInput = ()=>{
-		newRecipient.value = {amount:0, address: "", title: "", note: ""};
+		newRecipient.value = {amount:0, address: "", note: ""};
 	}
 	const resetRecipients = ()=>{ recipients.value = []};
 	const removeRecipient = (idx)=>{
@@ -122,6 +207,7 @@
 	})
 
 	const reviewContract = ()=>{
+		switchData(true);//Trigger switch data from edit mode to GUI mode
 		if(recipients.value.length == 0){
 			showError("No recipient!")
 			return;
@@ -212,15 +298,15 @@
 									<input type="text" readonly class="form-control form-control-solid" :value="currencyFormat(tokenBalance)">
 								</div>
 							</div>
-							<div class="row mb-10">
+							<div class="row mb-3">
 								<div class="col-md-4 fv-row">
 									<label class="required fs-6 fw-bold form-label mb-2">Vesting Duration</label>
 									<div class="row fv-row">
 										<div class="col-4">
-											<input type="text" class="form-control" v-model="contractData.durationUnit" required placeholder="Number" @change="validateVesting"/>
+											<input type="text" class="form-control" v-model="contractData.durationUnit" required placeholder="Number" @change="validateVesting" :disabled="contractData.durationUnit==0" />
 										</div>
 										<div class="col-8">
-											<select name="duration" class="form-select" @change="validateVesting" v-model="contractData.durationTime" >
+											<select name="duration" class="form-select" @change="validateVesting" v-model="contractData.durationTime" :disabled="contractData.durationUnit==0" >
 												<option value="1">Second</option>
 												<option value="60">Minute</option>
 												<option value="3600">Hour</option>
@@ -238,10 +324,10 @@
 									<label class="required fs-6 fw-bold form-label mb-2">Cliff</label>
 									<div class="row fv-row">
 										<div class="col-4">
-											<input type="text" class="form-control" v-model="contractData.cliffUnit" @change="validateVesting" required placeholder="Number"/>
+											<input type="text" class="form-control" v-model="contractData.cliffUnit" @change="validateVesting" required placeholder="Number" :disabled="contractData.durationUnit==0" />
 										</div>
 										<div class="col-8">
-											<select name="cliff" class="form-select" @change="validateVesting" v-model="contractData.cliffTime" >
+											<select name="cliff" class="form-select" @change="validateVesting" v-model="contractData.cliffTime" :disabled="contractData.durationUnit==0" >
 												<option value="1">Second</option>
 												<option value="60">Minute</option>
 												<option value="3600">Hour</option>
@@ -259,7 +345,7 @@
 									<label class="required fs-6 fw-bold form-label mb-2">Unlock schedule</label>
 									<div class="row fv-row">
 										<div class="col-12">
-											<select name="releaseFrequencyPeriod" class="form-select" v-model="contractData.unlockSchedule" @change="validateVesting">
+											<select name="releaseFrequencyPeriod" class="form-select" v-model="contractData.unlockSchedule" @change="validateVesting" :disabled="contractData.durationUnit==0" >
 												<option value="1">Per Second</option>
 												<option value="60">Per Minute</option>
 												<option value="3600">Hourly</option>
@@ -273,6 +359,17 @@
 									</div>
 								</div>
 							</div>
+							<div class="row mb-0">
+								<div class="">
+									<div class="form-check form-switch form-check-custom form-check-solid">
+										<input class="form-check-input h-20px w-30px" type="checkbox" value="true" id="vestingType" @click="toggleUnlock()" v-model="contractData.unlockImmediately"/>
+										<label class="form-check-label text-primary fw-bold" for="vestingType" title="Unlock immediately">
+											Unlock immediately <span class="fw-normal text-danger">(all recipients can claim their tokens one contract is started)</span>
+										</label>
+									</div>
+								</div>
+							</div>
+
 						</div>
 					</div>
 				</div>
@@ -316,7 +413,19 @@
 	
 	<div class="card mb-xl-8" >
 		<div class="card-header align-items-center">
-			<label class="fs-4 fw-bold form-label mb-2 text-primary">Recipients <span class="badge badge-light-primary">{{recipients.length}}</span></label>
+			<h3 class="card-title align-items-start flex-column">
+				<div class="card-label fw-bolder fs-3 mb-1">
+					Recipients <span class="badge badge-light-primary">{{recipients.length}}</span>
+				</div>
+				<div class="text-muted mt-1 fw-bold fs-7">
+					<div class="form-check form-switch form-check-custom form-check-solid">
+						<input class="form-check-input  h-20px w-30px" type="checkbox" value="true" id="flexSwitchChecked" @click="switchMode" />
+						<label class="form-check-label" for="flexSwitchChecked" title="Switch to code edit">
+							Edit mode
+						</label>
+					</div>
+				</div>
+			</h3>
 			<div class="card-toolbar">
 				<div class="d-flex">
 					<div class="fw-bolder fs-2 text-primary px-10">
@@ -345,75 +454,96 @@
 			</div>
 
 		</div>
-		<div class="card-body pt-5  pb-2">
-			<div class="table-responsive border-bottom mb-5 border table-rounded ">
+		<div class="card-body pt-5 pb-2">
+			<div v-if="contractData.editMode">
+				<Codemirror
+					v-model:value="recipientsEdit"
+					:options="cmOptions"
+					border
+					placeholder=""
+					:height="200"
+					@change="checkingRecipients"
+					ref="codemirror"
+				/>
+				<div class="d-flex flex-wrap w-100">
+					<div class="flex-grow-1"><strong>Format: </strong>principal,amount,note (opt) | <span class="text-danger">Maximum: 200 recipients</span></div>
+					<div class="">
+						<a href="javascript:void(0);" @click="loadSampleData()">Load sample data</a>
+					</div>
+				</div>
+			</div>
+			<div class="table-responsive border-bottom mb-5 border table-rounded" v-if="!contractData.editMode">
 				<table class="table align-middle gs-0 table-row-dashed fs-6 gy-2 mb-0 table-hover">
 					<thead>
-					<tr class="fw-bolder fs-7 text-gray-800 border-bottom border-gray-200 bg-light">
-						<th class="ps-4 w-25px ">#</th>
-						<th class="w-150px text-end">Amount</th>
-						<th class="min-w-400px">Principal ID</th>
-						<th class="min-w-100px">Note</th>
-						<th class="w-100px text-end"></th>
-					</tr>
+						<tr class="fw-bolder fs-7 text-gray-800 border-bottom border-gray-200 bg-light">
+							<th class="ps-4 w-25px ">#</th>
+							<th class="min-w-400px">Principal ID</th>
+							<th class="w-150px text-end">Amount</th>
+							<th class="min-w-100px">Note</th>
+							<th class="w-100px text-end"></th>
+						</tr>
+					</thead>
+					<thead>
+						<tr class="bg-light fw-bolder">
+							<td class="text-center fs-7">
+								
+							</td>
+							<td>
+								<input type="text" class="form-control form-control-sm d-block" v-model="newRecipient.address" placeholder="Enter Principal ID" ref="address">
+							</td>
+							<td>
+								<input type="number" class="form-control form-control-sm text-red text-end" v-model="newRecipient.amount" min="0" placeholder="0">
+							</td>
+							<td>
+								<span class="text-muted fw-bold text-muted d-block fs-7">
+									<input type="text" class="form-control d-block form-control-sm"  v-model="newRecipient.note" placeholder="Note (Option)">
+								</span>
+							</td>
+							<td class="text-end">
+								<button type="button" class="btn btn-primary d-block btn-sm px-4 me-2" @click="addRecipient()"> Add <i class="fas fa-plus fs-7"></i> </button>
+							</td>
+						</tr>
 					</thead>
 					<tbody>
-					<tr v-if="recipients.length == 0">
-						<td colspan="6" class="bg-white">
-							<div class="fw-bold text-danger p-2">No recipient!</div>
-						</td>
-					</tr>
-					<tr v-else v-for="(recipient, idx) in recipients">
-						<td class="text-center">
-							{{idx+1}}.
-						</td>
-						<td>
-							<span class="text-muted fw-bold text-gray-800 d-block fs-7 text-end">
-								{{currencyFormat(recipient.amount)}} {{tokenInfo.symbol.toUpperCase()}}
-							</span>
-						</td>
-						<td>
-							<span class="text-muted fw-bold text-gray-800 d-block fs-7">
-								<ClickToCopy :text="recipient.address">{{recipient.address}}</ClickToCopy>
-							</span>
-						</td>
-						<td>
-							<span class="fw-bold text-gray-800 d-block fs-7">
-								{{recipient.note}}
-							</span>
-						</td>
-						<td class="text-center">
-							<button type="button" class="btn btn-icon btn-danger btn-sm" @click="removeRecipient(idx)">
-								<i class="fas fa-trash"></i>
-							</button>
-						</td>
-					</tr>
+						<tr v-if="recipients.length == 0">
+							<td colspan="6" class="bg-white">
+								<div class="fw-bold text-danger p-2">No recipient!</div>
+							</td>
+						</tr>
+						<tr v-else v-for="(recipient, idx) in recipients">
+							<td class="text-center ps-4">
+								{{idx+1}}.
+							</td>
+							<td>
+								<span class="text-muted fw-bold text-gray-800 d-block fs-7">
+									<ClickToCopy :text="recipient.address">{{recipient.address}}</ClickToCopy>
+								</span>
+							</td>
+							<td>
+								<span class="text-muted fw-bold text-gray-800 d-block fs-7 text-end">
+									{{currencyFormat(recipient.amount)}} {{tokenInfo.symbol.toUpperCase()}}
+								</span>
+							</td>
+							<td>
+								<span class="fw-bold text-gray-800 d-block fs-7">
+									{{recipient.note}}
+								</span>
+							</td>
+							<td class="text-center">
+								<button type="button" title="Remove" class="btn btn-icon btn-danger btn-sm  h-20px w-20px" @click="removeRecipient(idx)">
+									<i class="fas fa-trash"></i>
+								</button>
+							</td>
+						</tr>
 					</tbody>
 					<tfoot>
-					<tr class="bg-light fw-bolder">
-						<td class="">
-							<span class="badge badge-light-success">New</span>
-						</td>
-						<td>
-							<label class="required fs-7 form-label mb-2">Amount</label>
-							<input type="number" class="form-control form-control-sm text-red" v-model="newRecipient.amount" min="0" placeholder="---">
-						</td>
-						<td>
-							<label class="required fs-7 form-label mb-2">Recipient Principal ID</label>
-							<input type="text" class="form-control form-control-sm d-block" v-model="newRecipient.address" placeholder="Enter Principal ID" ref="address">
-						</td>
-						<td>
-							<label class=" fs-7 form-label mb-2">Note <span class="text-muted fs-8">(optional)</span></label>
-							<span class="text-muted fw-bold text-muted d-block fs-7">
-								<input type="text" class="form-control d-block form-control-sm"  v-model="newRecipient.note" placeholder="Note">
-							</span>
-						</td>
-						<td class="text-end">
-							<label class="fs-7 form-label mb-2">&nbsp;</label>
-							<button type="button" class="btn btn-primary d-block btn-sm px-4 me-2" @click="addRecipient()"> + Add</button>
-
-						</td>
-					</tr>
+						<tr class="fw-bolder fs-7 text-gray-800 border-bottom border-gray-200 bg-light">
+							<th class="ps-4 w-25px">#</th>
+							<th class="min-w-400px">Principal ID</th>
+							<th class="w-150px text-end">Amount</th>
+							<th class="min-w-100px">Note</th>
+							<th class="w-100px text-end"></th>
+						</tr>
 					</tfoot>
 				</table>
 			</div>

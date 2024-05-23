@@ -77,7 +77,7 @@
         chartOptions.value.plugins.annotation.annotations.fullyVested.value = start;
         if(start == 0){
             chartOptions.value.plugins.annotation.annotations.fullyVested.label.rotation = '0';
-            chartOptions.value.plugins.annotation.annotations.fullyVested.label.content = 'Instant unlock';
+            chartOptions.value.plugins.annotation.annotations.fullyVested.label.content = 'Unlock immediately';
         }else{
             chartOptions.value.plugins.annotation.annotations.fullyVested.label.rotation = 'vertical';
             chartOptions.value.plugins.annotation.annotations.fullyVested.label.content = 'Fully vested';
