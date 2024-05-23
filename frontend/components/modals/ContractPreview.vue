@@ -218,38 +218,31 @@
                                     <div class="table-responsive border-bottom mb-9 table-rounded border">
                                         <table class="table table-hover align-middle table-row-dashed fs-7 gy-1 mb-0">
                                             <thead>
-                                                <tr class="border-bottom fs-6 fw-bold text-gray-800 bg-light">
-                                                    <th class="min-w-50px pb-2 text-center">#</th>
-                                                    <th class="min-w-70px text-end fs-6 pb-2">Amount</th>
-                                                    <th class="min-w-175px pb-2">Recipient</th>
+                                                <tr class="border-bottom fs-7 fw-bold text-gray-800 bg-light">
+                                                    <th class="pb-2 text-center">#</th>
+                                                    <th class="min-w-155px pb-2">Recipient</th>
+                                                    <th class="min-w-70px text-end pb-2 pe-2">Amount</th>
                                                 </tr>
                                             </thead>
 
                                             <tbody class="fw-semibold text-gray-600">
                                                 <tr v-for="(recipient, idx) in contractData.recipients">
                                                     <td class="text-center">{{ idx+1 }}.</td>
-                                                    <td class="text-end text-gray-800 fw-bold">{{ (recipient.amount) }}</td>
-                                                    <td>
-                                                        <div class="mb-1">       
-															<div class="fw-bold text-gray-800 fs-7" v-if="recipient.note">
-                                                                {{ recipient.note }}
-                                                            </div> 
-															<div class="fw-bold text-gray-600 fs-7" v-else>Recipient #{{ idx+1 }}</div> 
-															<div class="text-gray-800 fs-7">
-                                                                <ClickToCopy :text="recipient.address">{{ recipient.address }}</ClickToCopy>   
-                                                            </div>
-														</div>
+                                                    <td class="fw-semibold">
+                                                        <ClickToCopy :text="recipient.address">{{ recipient.address }}
+                                                        <span class="badge badge-light-primary fw-normal" v-if="recipient.note">{{ recipient.note }}</span></ClickToCopy>
                                                     </td>
+                                                    <td class="text-end text-gray-800 fw-bold  pe-2">{{ (recipient.amount) }} {{ contractData.token.symbol }}</td>
                                                 </tr>
-                                                <tr class="bg-light fs-6">
+                                                <tr class="bg-light fs-7">
+                                                    <td></td>
                                                     <td class="text-end fw-bold">Total:</td>
-                                                    <td class="text-end fw-bold text-danger">{{currencyFormat(contractData.totalAmount)}}</td>
-                                                    <td>{{ contractData.token.symbol }}</td>
+                                                    <td class="text-end fw-bold text-danger pe-2">{{currencyFormat(contractData.totalAmount)}} {{ contractData.token.symbol }}</td>
                                                 </tr>
-                                                <tr class="bg-light fs-6">
+                                                <tr class="bg-light fs-7">
+                                                    <td></td>
                                                     <td class="text-end fw-bold">Creation Fee:</td>
-                                                    <td class="text-end fw-bold text-danger">0</td>
-                                                    <td>ICP</td>
+                                                    <td class="text-end fw-bold text-danger pe-2">0 ICP </td>
                                                 </tr>
                                             </tbody>
                                         </table>

@@ -2,7 +2,7 @@
     import {ref, watch, onMounted, watchEffect} from 'vue'
     import {useRoute} from 'vue-router';
     import moment from 'moment';
-    import { useGetContract, useCancelContract, useGetContractRecipients, useGetMyClaimedAmount, useClaim } from "@/services/Contract";
+    import { useGetContract, useCancelContract, useGetContractRecipients, useGetMyClaimedAmount, useGetRecipientInfo, useClaim } from "@/services/Contract";
     import CountUp from 'vue-countup-v3'
     import "vue3-circle-progress/dist/circle-progress.css";
     import CircleProgress from "vue3-circle-progress";
@@ -25,6 +25,7 @@
     };
     const claimAbleAmount = ref(0);
     const contractInfo = ref(null);
+    const recipientInfo = ref(null);
     const recipients = ref([]);
     const loadContract = async (init) => {
         isLoading.value = true;
@@ -32,6 +33,7 @@
             fetchContractInfo(),
             fetchRecipients(),
             fetchMyClaimedAmount(),
+            fetchRecipientInfo(),
         ]);
         isLoading.value = false;
         if(!init) showSuccess('Contract reloaded!');
@@ -42,6 +44,10 @@
     const fetchContractInfo = async()=>{
         contractInfo.value = await useGetContract(contractId);
     }
+    const fetchRecipientInfo = async()=>{
+        recipientInfo.value = await useGetRecipientInfo(contractId);
+        console.log('recipientInfo.value', recipientInfo.value);
+    }
 
     const copyLink = ()=>{
         navigator.clipboard.writeText(window.location.href);
@@ -51,14 +57,19 @@
     watchEffect(() => {
         if(walletStore.isLogged){
             fetchMyClaimedAmount();
+            fetchRecipientInfo();
         }
     });
 
 
     const claimToken = async()=>{
+        if(!walletStore.isLogged){
+            showError('Please connect your wallet to claim tokens!');
+            return;
+        }
         Swal.fire({
 		title: "Are you sure?",
-		text: "Claim all available tokens from this contract",
+		html: "Claim all available tokens from this contract. <div class='fs-7 pt-5 text-danger'><strong>Please note: </strong>Network fees may apply to each claim transaction!</div>",
 		icon: "warning",
 		showCancelButton: true,
 		confirmButtonColor: "#3085d6",
@@ -83,10 +94,6 @@
         recipients.value = await useGetContractRecipients(contractId);
     }
 
-    const cancelContract = async()=>{
-        let _me = await useCancelContract(contractId);
-        console.log(_me.toText());
-    }
     onMounted(() => {
         loadContract(true);
     });
@@ -130,8 +137,6 @@
                     </div>
                     <div class="d-flex mb-4">
                         <button type="button" class="btn btn-sm btn-light-primary me-3" @click="loadContract(false)" :disabled="isLoading">{{isLoading?'Reloading...':'Refresh '}} <i class="fas fa-sync"></i></button>
-                        <!-- <button type="button" class="btn btn-sm btn-success" @click="claimToken()">Claim {{parseTokenAmount(claimAbleAmount, contractInfo.tokenInfo.decimals)}} {{contractInfo?.tokenInfo.symbol}} <i class="fas fa-coins"></i></button> -->
-
                         <div class="input-group py-0 w-auto">
                             <!-- <input type="text" class="form-control" :value="parseTokenAmount(claimAbleAmount, contractInfo.tokenInfo.decimals)" disabled> -->
                             <button class="btn btn-sm btn-secondary disabled" title="Claimable amount">{{parseTokenAmount(claimAbleAmount, contractInfo.tokenInfo.decimals)}} {{contractInfo?.tokenInfo.symbol}}</button>
@@ -158,9 +163,14 @@
                                 <div class=" text-primary px-3 py-2 fw-bold">
                                     {{ contractInfo?.tokenInfo.canisterId }} <Copy :text="contractInfo?.tokenInfo.canisterId"></Copy>
                                 </div>
-                                <div></div>
-                                <div></div>
-                                <div></div>
+                                <div class="px-3 py-2 fw-bold">
+                                    <div class="text-success" v-if="recipientInfo !== null">
+                                        <i class="fas fa-check-circle text-success"></i> You are eligible for this contract. <span class="badge badge-light-success ms-auto">{{ parseTokenAmount(recipientInfo?.remainingAmount, contractInfo.tokenInfo.decimals) }} {{contractInfo?.tokenInfo.symbol}}</span>
+                                    </div>
+                                    <div class="text-danger" v-else>
+                                        <i class="fas fa-times-circle text-danger"></i> You are not eligible! {{ recipientInfo }}
+                                    </div>
+                                </div>
                                 <div></div>
                             </div>  
                         </div>
@@ -176,49 +186,49 @@
                 <div class="d-flex flex-wrap">
                     <!--begin::Stat-->
                     <div class="border border-gray-300 border-dashed rounded min-w-125px py-3 px-4 me-6 mb-3">
-                    <!--begin::Number-->
-                    <div class="d-flex align-items-center text-hover-primary">
-                        <div class="fs-5 fw-bold">{{ moment.unix(Number(contractInfo?.startTime)).format("lll") }}</div>
-                    </div>
-                    <div class="fw-semibold fs-6 text-gray-500">Start Date</div>
+                        <!--begin::Number-->
+                        <div class="d-flex align-items-center text-hover-primary">
+                            <div class="fs-5 fw-bold">{{ moment.unix(Number(contractInfo?.startTime)).format("lll") }}</div>
+                        </div>
+                        <div class="fs-6 text-gray-500">Start Date</div>
                     </div>
                     <div class="border border-gray-300 border-dashed rounded min-w-125px py-3 px-4 me-6 mb-3 hover-primary">
-                    <div class="d-flex align-items-center text-hover-primary">
-                        <div class="fs-5 fw-bold">{{ moment.unix(Number(contractInfo?.startTime)+(Number(contractInfo.lockDuration))).format("lll") }}</div>
-                    </div>
-                    <div class="fw-semibold fs-6 text-gray-500">End Date</div>
+                        <div class="d-flex align-items-center text-hover-primary">
+                            <div class="fs-5 fw-bold">{{ moment.unix(Number(contractInfo?.startTime)+(Number(contractInfo.lockDuration))).format("lll") }}</div>
+                        </div>
+                        <div class="fs-6 text-gray-500">End Date</div>
                     </div>
                     <div class="border border-gray-300 border-dashed rounded min-w-125px py-3 px-4 me-6 mb-3">
-                    <div class="d-flex align-items-center">
-                        <div class="fs-5 fw-bold counted" v-if="contractInfo">
-                            {{ SCHEDULE[Number(contractInfo.unlockSchedule)] }}
+                        <div class="d-flex align-items-center">
+                            <div class="fs-5 fw-bold counted" v-if="contractInfo">
+                                {{ SCHEDULE[Number(contractInfo.unlockSchedule)] }}
+                            </div>
                         </div>
-                    </div>
-                    <div class="fw-semibold fs-6 text-gray-500">Unlock Schedule</div>
+                        <div class="fs-6 text-gray-500">Unlock Schedule</div>
                     </div>
                     <div class="border border-gray-300 border-dashed rounded min-w-125px py-3 px-4 me-6 mb-3">
-                    <div class="d-flex align-items-center ">
-                        <div class="fs-5 fw-bold counted">
-                            <count-up :end-val="parseTokenAmount(contractInfo.totalAmount, contractInfo.tokenInfo.decimals)" :options="{decimalPlaces: 6, separator: ',', decimal: '.'}" v-if="contractInfo && contractInfo.totalAmount"></count-up>
+                        <div class="d-flex align-items-center ">
+                            <div class="fs-5 fw-bold counted">
+                                <count-up :end-val="parseTokenAmount(contractInfo.totalAmount, contractInfo.tokenInfo.decimals)" :options="{decimalPlaces: 6, separator: ',', decimal: '.'}" v-if="contractInfo && contractInfo.totalAmount"></count-up>
+                            </div>
                         </div>
-                    </div>
-                    <div class="fw-semibold fs-6 text-gray-500">Total Amount</div>
+                        <div class="fs-6 text-gray-500">Total Amount</div>
                     </div>
                     <div class="border border-gray-300 border-dashed rounded min-w-125px py-3 px-4 me-6 mb-3">
-                    <div class="d-flex align-items-center">
-                        <div class="fs-5 fw-bold counted">
-                            <count-up :end-val="parseTokenAmount(contractInfo.totalClaimedAmount, contractInfo.tokenInfo.decimals)" :options="{decimalPlaces: 6, separator: ',', decimal: '.'}" v-if="contractInfo"></count-up>
+                        <div class="d-flex align-items-center">
+                            <div class="fs-5 fw-bold counted">
+                                <count-up :end-val="parseTokenAmount(contractInfo.totalClaimedAmount, contractInfo.tokenInfo.decimals)" :options="{decimalPlaces: 6, separator: ',', decimal: '.'}" v-if="contractInfo"></count-up>
+                            </div>
                         </div>
-                    </div>
-                    <div class="fw-bold fs-6 text-gray-500">Claimed Amount</div>
+                        <div class="fs-6 text-gray-500">Claimed Amount</div>
                     </div>
                     <div class="border border-gray-300 border-dashed rounded min-w-125px py-3 px-4 me-6 mb-3">
-                    <div class="d-flex align-items-center">
-                        <div class="fs-5 fw-bold counted">
-                            <count-up :end-val="Number(contractInfo.totalRecipients)" v-if="contractInfo"></count-up>
+                        <div class="d-flex align-items-center">
+                            <div class="fs-5 fw-bold counted">
+                                <count-up :end-val="Number(contractInfo.totalRecipients)" v-if="contractInfo"></count-up>
+                            </div>
                         </div>
-                    </div>
-                    <div class="fw-semibold fs-6 text-gray-500">Recipients</div>
+                        <div class="fs-6 text-gray-500">Recipients</div>
                     </div>
                 </div>
                 </div>

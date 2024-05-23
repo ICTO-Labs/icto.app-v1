@@ -29,6 +29,14 @@ export const useGetMyClaimedAmount = async (contractId)=>{
         return await Connect.canister(contractId, 'token_claim', true).checkClaimable(walletStore._principal);
     }else return 0;
 }
+export const useGetRecipientInfo = async (contractId)=>{
+    if(walletStore.isLogged){
+        let _rs = await Connect.canister(contractId, 'token_claim', true).getRecipientClaimInfo(walletStore._principal);
+        if(_rs && _rs.length > 0){
+            return _rs[0];
+        }else return null;
+    }else return null;
+}
 export const useClaim = async (contractId)=>{
     return await Connect.canister(contractId, 'token_claim').claim();
 }
