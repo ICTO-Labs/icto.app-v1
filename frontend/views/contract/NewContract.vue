@@ -36,8 +36,8 @@
 		startNow: true,
 		startDate: new Date(),
 		startTime: new Date(),
-		durationUnit: 1,
-		durationTime: 2628002,
+		durationUnit: 30,
+		durationTime: 86400,
 		unlockSchedule: 86400,
 		cliffUnit: 0,
 		cliffTime: 2628002,
@@ -47,6 +47,7 @@
 		canCancel: 'neither',
 		canChange: 'neither',
 	});
+	const unlockFrequency = ref(86400);
 
     const codemirror = ref(null);
 	const recipientsEdit = ref("");
@@ -127,8 +128,33 @@ zxcjx-7yvay-ow7hh-nbocq-5aaru-n7nwq-xyhau-jnr6m-f36ho-xzufk-rae,50`;
 		//Recall total amount
 		calTotalToken();
 	};
+
+	const changeFrequency = (e)=>{
+		if(e.target.value == -2){ //Linear
+			contractData.value.unlockSchedule = 0;//Number(contractData.value.durationUnit)*Number(contractData.value.durationTime);
+		}else if(e.target.value == -1){ //Single
+			contractData.value.durationUnit = 1;
+			contractData.value.cliffUnit = 0;
+			contractData.value.unlockSchedule = 0;
+		}else if(e.target.value == 0){ //Immediately
+			contractData.value.durationUnit = 0;
+			contractData.value.cliffUnit = 0;
+			contractData.value.unlockSchedule = 0;
+		}else{ //Others schedule
+			contractData.value.unlockSchedule = Number(e.target.value);
+		}
+		validateVesting();
+	}
 	const validateVesting = ()=>{
-		if(contractData.value.durationUnit == 0) toggleUnlock(); return;
+		if(unlockFrequency.value == -1){
+			contractData.value.unlockSchedule = Number(contractData.value.durationUnit)*Number(contractData.value.durationTime);
+		}else if(unlockFrequency.value == 0){
+			contractData.value.durationUnit = 0;
+			contractData.value.cliffUnit = 0;
+		}else{
+			contractData.value.unlockSchedule = unlockFrequency.value;
+		}
+
 		if(contractData.value.cliffUnit < 0) contractData.value.cliffUnit = 0;
 		if(contractData.value.durationUnit < 0) contractData.value.durationUnit = 0;
 		let cliffInSeconds = contractData.value.cliffUnit*contractData.value.cliffTime;
@@ -138,10 +164,9 @@ zxcjx-7yvay-ow7hh-nbocq-5aaru-n7nwq-xyhau-jnr6m-f36ho-xzufk-rae,50`;
 			contractData.value.cliffUnit = contractData.value.durationUnit;
 			contractData.value.cliffTime = contractData.value.durationTime;
 		}
-		if (Number(contractData.value.unlockSchedule) > Number(contractData.value.durationTime)){
+		if (contractData.value.unlockSchedule > 0 && Number(contractData.value.durationTime)*Number(contractData.value.durationUnit) < Number(contractData.value.unlockSchedule)){
 			contractData.value.unlockSchedule = contractData.value.durationTime;
 		}
-
 	}
 	const calTotalToken = ()=>{
 		if(contractData.value.editMode){
@@ -300,16 +325,43 @@ zxcjx-7yvay-ow7hh-nbocq-5aaru-n7nwq-xyhau-jnr6m-f36ho-xzufk-rae,50`;
 							</div>
 							<div class="row mb-3">
 								<div class="col-md-4 fv-row">
+									<label class="required fs-6 fw-bold form-label mb-2">Unlock frequency</label>
+									<div class="row fv-row">
+										<div class="col-12">
+											<select name="releaseFrequencyPeriod" class="form-select" @change="changeFrequency" v-model="unlockFrequency">
+												<optgroup label="Unlock Immediately">
+													<option value="0">Unlock Immediately</option>
+												</optgroup>
+												<optgroup label="Single">
+													<option value="-1">Fully unlocks after...</option>
+												</optgroup>
+												<!-- <optgroup label="Unlock linear">
+													<option value="60">Unlock Linear</option>
+												</optgroup> -->
+												<optgroup label="Or choose schedule">
+													<!-- <option value="60">Per Minute</option>
+													<option value="3600">Hourly</option> -->
+													<option value="86400">Daily</option>
+													<option value="604800">Weekly</option>
+													<option value="2628002">Monthly</option>
+													<option value="7884006">Quarterly</option>
+													<option value="31536000">Yearly</option>
+												</optgroup>
+											</select>
+										</div>
+									</div>
+								</div>
+								<div class="col-md-4 fv-row">
 									<label class="required fs-6 fw-bold form-label mb-2">Vesting Duration</label>
 									<div class="row fv-row">
 										<div class="col-4">
-											<input type="text" class="form-control" v-model="contractData.durationUnit" required placeholder="Number" @change="validateVesting" :disabled="contractData.durationUnit==0" />
+											<input type="text" class="form-control" v-model="contractData.durationUnit" required placeholder="Number" @change="validateVesting" :disabled="unlockFrequency==0" />
 										</div>
 										<div class="col-8">
-											<select name="duration" class="form-select" @change="validateVesting" v-model="contractData.durationTime" :disabled="contractData.durationUnit==0" >
-												<option value="1">Second</option>
+											<select name="duration" class="form-select" @change="validateVesting" v-model="contractData.durationTime" :disabled="unlockFrequency==0" >
+												<!-- <option value="1">Second</option>
 												<option value="60">Minute</option>
-												<option value="3600">Hour</option>
+												<option value="3600">Hour</option> -->
 												<option value="86400">Day</option>
 												<option value="604800">Week</option>
 												<option value="2628002" selected>Month</option>
@@ -324,13 +376,13 @@ zxcjx-7yvay-ow7hh-nbocq-5aaru-n7nwq-xyhau-jnr6m-f36ho-xzufk-rae,50`;
 									<label class="required fs-6 fw-bold form-label mb-2">Cliff</label>
 									<div class="row fv-row">
 										<div class="col-4">
-											<input type="text" class="form-control" v-model="contractData.cliffUnit" @change="validateVesting" required placeholder="Number" :disabled="contractData.durationUnit==0" />
+											<input type="text" class="form-control" v-model="contractData.cliffUnit" @change="validateVesting" required placeholder="Number" :disabled="unlockFrequency==0" />
 										</div>
 										<div class="col-8">
-											<select name="cliff" class="form-select" @change="validateVesting" v-model="contractData.cliffTime" :disabled="contractData.durationUnit==0" >
-												<option value="1">Second</option>
+											<select name="cliff" class="form-select" @change="validateVesting" v-model="contractData.cliffTime" :disabled="unlockFrequency==0" >
+												<!-- <option value="1">Second</option>
 												<option value="60">Minute</option>
-												<option value="3600">Hour</option>
+												<option value="3600">Hour</option> -->
 												<option value="86400">Day</option>
 												<option value="604800">Week</option>
 												<option value="2628002" selected>Month</option>
@@ -341,32 +393,21 @@ zxcjx-7yvay-ow7hh-nbocq-5aaru-n7nwq-xyhau-jnr6m-f36ho-xzufk-rae,50`;
 										
 									</div>
 								</div>
-								<div class="col-md-4 fv-row">
-									<label class="required fs-6 fw-bold form-label mb-2">Unlock schedule</label>
-									<div class="row fv-row">
-										<div class="col-12">
-											<select name="releaseFrequencyPeriod" class="form-select" v-model="contractData.unlockSchedule" @change="validateVesting" :disabled="contractData.durationUnit==0" >
-												<option value="1">Per Second</option>
-												<option value="60">Per Minute</option>
-												<option value="3600">Hourly</option>
-												<option value="86400">Daily</option>
-												<option value="604800">Weekly</option>
-												<option value="2628002">Monthly</option>
-												<option value="7884006">Quarterly</option>
-												<option value="31536000">Yearly</option>
-											</select>
-										</div>
-									</div>
-								</div>
+								
 							</div>
 							<div class="row mb-0">
 								<div class="">
-									<div class="form-check form-switch form-check-custom form-check-solid">
-										<input class="form-check-input h-20px w-30px" type="checkbox" value="true" id="vestingType" @click="toggleUnlock()" v-model="contractData.unlockImmediately"/>
-										<label class="form-check-label text-primary fw-bold" for="vestingType" title="Unlock immediately">
-											Unlock immediately <span class="fw-normal text-danger">(all recipients can claim their tokens one contract is started)</span>
-										</label>
-									</div>
+									<span class="fw-normal text-info">
+										<i class="fas fa-info-circle"></i> 
+										<span v-if="unlockFrequency == -1"> All token will be unlocked after <span class="badge badge-light-primary" v-if="contractData.cliffUnit>0">{{contractData.cliffUnit}} {{DURATION[contractData.cliffTime]}} (cliff)</span> <span v-if="contractData.cliffUnit>0">+</span> <span class="badge badge-light-primary">{{contractData.durationUnit}} {{DURATION[contractData.durationTime]}} (vesting)</span></span>
+										<span v-else-if="unlockFrequency == 60"> Tokens unlock linearly at a constant rate per block 1 minutes</span>
+										<span v-else-if="unlockFrequency == 0"> All recipients can claim their tokens one contract is started</span>
+										<span v-else> Token can be claimed <span class="badge badge-light-primary">{{SCHEDULE[contractData.unlockSchedule]}}</span> in <span class="badge badge-light-primary">{{contractData.durationUnit}} {{DURATION[contractData.durationTime]}}</span>
+										from <span class="badge badge-light-primary" v-if="contractData.cliffUnit>0">{{contractData.cliffUnit}} {{DURATION[contractData.cliffTime]}} (cliff)</span>
+
+
+									</span>
+									</span>
 								</div>
 							</div>
 

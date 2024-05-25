@@ -17,6 +17,7 @@
     const chatSeries = ref([]);
     const chartData = ref({});
     watch(props, async() =>{
+        console.log('contract', props.contractInfo);
         generateChartData();
     })
 
@@ -45,10 +46,11 @@
         let cliffTime = Number(contractInfo.value.cliffTime);
         let unlockAmount = Number(durationUnit*durationTime/unlockSchedule);
         let unlockUnit = Number(durationUnit*durationTime/unlockSchedule);
-        let blockCliff = Math.ceil(cliffUnit*cliffTime / unlockSchedule);
+        let blockCliff = Math.ceil(cliffUnit*cliffTime / durationTime);
 
         //For line chart
-        const numSteps = Math.floor(durationTime*durationUnit/ unlockSchedule);
+        const vestingType = durationTime*durationUnit === unlockSchedule ? 'single' : 'step';
+        const numSteps = Math.floor(durationTime*durationUnit/ (vestingType == 'single'?durationTime:unlockSchedule));
         const vestingValue = 1 / numSteps;
 
         lineChartData.value = [];
@@ -70,24 +72,41 @@
         for (let i = 1; i <= numSteps; i++) {
             start ++;
             currentValue = Math.min(currentValue + vestingValue, 1); // Not greater than 1
-            lineChartData.value.push({ x: cliffUnit*cliffTime + i * Number(contractInfo.value.unlockSchedule), y: currentValue });
+            if(vestingType == 'single'){//Single
+                //Set fullyVested value if single
+                if(start == durationUnit+blockCliff){
+                    currentValue = 1;
+                }else currentValue = 0;
+                lineChartData.value.push({ x: i * Number(durationTime), y: currentValue });
+            }else{//Step
+                lineChartData.value.push({ x: i * Number(durationTime), y: currentValue });
+            }
+            // lineChartData.value.push({ x: cliffUnit*cliffTime + i * Number(durationTime), y: currentValue });
             lineChartLabel.value.push(start);
         }
         //Settting fully vested
-        chartOptions.value.plugins.annotation.annotations.fullyVested.value = start;
+        if(vestingType == 'single'){
+            chartOptions.value.plugins.annotation.annotations.fullyVested.value = start;
+        }else{
+            chartOptions.value.plugins.annotation.annotations.fullyVested.value = start;
+        }
         if(start == 0){
             chartOptions.value.plugins.annotation.annotations.fullyVested.label.rotation = '0';
             chartOptions.value.plugins.annotation.annotations.fullyVested.label.content = 'Unlock immediately';
         }else{
             chartOptions.value.plugins.annotation.annotations.fullyVested.label.rotation = 'vertical';
             chartOptions.value.plugins.annotation.annotations.fullyVested.label.content = 'Fully vested';
+            //Rotation label limit
+            if(start > 30){
+                chartOptions.value.plugins.annotation.annotations.fullyVested.label.rotation = '90';
+            }
         }
         
 
         // Adding more 3 points for the chart
         for (let i = 0; i < 3; i++) {
             start ++;
-            lineChartData.value.push({ x: durationTime*durationUnit + i * Number(contractInfo.value.unlockSchedule), y: 1 });
+            lineChartData.value.push({ x: durationTime*durationUnit + i * Number(contractInfo.value.durationTime), y: 1 });
             lineChartLabel.value.push(start);
         }
 
@@ -97,10 +116,10 @@
             datasets: [
                 {
                     data: lineChartData.value,
-                    backgroundColor: ['#77CEFF'],
+                    backgroundColor: ['#77CEFF', '#ccc'],
                     borderColor: '#018FFB',
                     fill: true,
-                    stepped: true,
+                    stepped: true, //vestingType == 'step' ? true : false,
                     pointStyle: 'circle',
                     pointRadius: 0,
                     pointHoverRadius: 0,
@@ -109,7 +128,6 @@
             ],
         };
     }
-
     const chartOptions = ref({
         responsive: true,
         plugins: {
@@ -132,7 +150,10 @@
                             rotation: 'vertical',
                             content: 'Cliff',
                             display: true,
-                            position: 'center'
+                            position: 'center',
+                            backgroundColor: 'rgba(245, 245, 245)',
+                            color: 'gray',
+                            borderColor: '#ccc',
                         },
                     },
                     fullyVested: {
@@ -144,7 +165,10 @@
                         label: {
                             rotation: 'vertical',
                             content: 'Fully vested',
-                            display: true
+                            display: true,
+                            borderColor: '#ccc',
+                            backgroundColor: 'rgba(245, 245, 245)',
+                            color: 'gray',
                         },
                     }
                 }
