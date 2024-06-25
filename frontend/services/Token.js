@@ -237,7 +237,7 @@ export const useCreateToken = async (payload)=>{
 export const useInstallToken = async (payload)=>{
     try {
         const _payload = {...payload};
-        _payload.transfer_fee = _payload.transfer_fee*config.E8S;
+        _payload.transfer_fee = formatTokenAmount(_payload.transfer_fee, config.E8S);
         const canisterId = await Connect.canister(config.TOKEN_DEPLOYER_CANISTER_ID, 'token_deployer').install(_payload);
         return canisterId;
     } catch (error) {
