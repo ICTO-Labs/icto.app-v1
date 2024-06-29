@@ -10,8 +10,8 @@
     })
 </script>
 <template>
-    <Toolbar :current="`Token Locks`" v-if="route.path=='/token-locks'" :showBtn="{label: 'New locks', icon: 'fa-plus', modal: 'showNewLockModal'}" />
-    <div class="row" v-if="route.name == 'token-locks'">
+    <Toolbar :current="`Token Locks`" v-if="route.path=='/locks'" :showBtn="{label: 'New locks', icon: 'fa-plus', modal: 'showNewLockModal'}" />
+    <div class="row" v-if="route.name == 'locks'">
         <div class="col-xl-4">
             <div class="card bgi-no-repeat card-xl-stretch mb-xl-8 border-hover">
                 <div class="card-body">
@@ -28,7 +28,7 @@
                         </span>
                     </div>
                     <div class="d-flex flex-column gap-7 gap-md-10">
-						<router-link to="/token-locks/liquidity" class="btn btn-sm btn-primary"><span class="fw-bolder">Continue <i class="fas fa-arrow-right"></i> </span> </router-link>
+						<router-link to="/locks/liquidity" class="btn btn-sm btn-primary"><span class="fw-bolder">Continue <i class="fas fa-arrow-right"></i> </span> </router-link>
 					</div>
                 </div>
             </div>
@@ -49,7 +49,7 @@
                         </span>
                     </div>
                     <div class="d-flex flex-column gap-7 gap-md-10">
-						<router-link to="/token-locks/token" class="btn btn-sm btn-primary"><span class="fw-bolder">Continue <i class="fas fa-arrow-right"></i> </span> </router-link>
+						<router-link to="/locks/token" class="btn btn-sm btn-primary"><span class="fw-bolder">Continue <i class="fas fa-arrow-right"></i> </span> </router-link>
 					</div>
                 </div>
             </div>
@@ -71,7 +71,7 @@
                         </span>
                     </div>
                     <div class="d-flex flex-column gap-7 gap-md-10">
-						<router-link to="/token-locks/nft" class="btn btn-sm btn-primary"><span class="fw-bolder">Continue <i class="fas fa-arrow-right"></i> </span> </router-link>
+						<router-link to="/locks/nft" class="btn btn-sm btn-primary"><span class="fw-bolder">Continue <i class="fas fa-arrow-right"></i> </span> </router-link>
 					</div>
                 </div>
             </div>

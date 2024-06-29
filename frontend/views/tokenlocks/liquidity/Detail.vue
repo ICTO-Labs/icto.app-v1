@@ -204,7 +204,7 @@
     }
 </script>
 <template>
-    <Toolbar :current="contractId" :parents="[{title: 'Token Locks', to: '/token-locks'}, {title: 'Liquidity', to: '/token-locks/liquidity'}]" :modal="modalInfo" :showBtn="btnObj"/>
+    <Toolbar :current="contractId" :parents="[{title: 'Token Locks', to: '/locks'}, {title: 'Liquidity', to: '/locks/liquidity'}]" :modal="modalInfo" :showBtn="btnObj"/>
     <div class="col-xl-12">
         <!--begin::Mixed Widget 1-->
         <div class="card card-xl-stretch mb-xl-8">

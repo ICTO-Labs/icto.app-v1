@@ -11,7 +11,7 @@
     }
 </script>
 <template>
-    <Toolbar current="Liquidity" :parents="[{title: 'Token Locks', to: '/token-locks'}]" :modal="modalInfo" :showBtn="btnObj"/>
+    <Toolbar current="Liquidity" :parents="[{title: 'Token Locks', to: '/locks'}]" :modal="modalInfo" :showBtn="btnObj"/>
 
     NFT
 </template>
