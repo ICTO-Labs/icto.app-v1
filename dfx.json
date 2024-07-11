@@ -35,6 +35,10 @@
 		"main": "canisters/contract/TokenClaim.mo",
 		"type": "motoko"
 	},
+	"launchpad_contract": {
+		"main": "canisters/launchpad/Contract.mo",
+		"type": "motoko"
+	},
 	"frontend": {
 		"dependencies": [
 		"backend"

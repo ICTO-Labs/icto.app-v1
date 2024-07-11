@@ -170,6 +170,21 @@
                             backgroundColor: 'rgba(245, 245, 245)',
                             color: 'gray',
                         },
+                    },
+                    copyright: {
+                        type: 'box',
+                        backgroundColor: 'transparent',
+                        borderWidth: 0,
+                        label: {
+                            drawTime: 'afterDatasetsDraw',
+                            display: true,
+                            color: 'rgba(208, 208, 208, 0.2)',
+                            content: 'ICTO.APP',
+                            font: {
+                            size: (ctx) => ctx.chart.chartArea.height / 10
+                            },
+                            position: 'center'
+                        }
                     }
                 }
             }

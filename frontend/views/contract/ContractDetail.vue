@@ -190,13 +190,13 @@
                         <div class="d-flex align-items-center text-hover-primary">
                             <div class="fs-5 fw-bold">{{ moment.unix(Number(contractInfo?.startTime)).format("lll") }}</div>
                         </div>
-                        <div class="fs-6 text-gray-500">Start Date</div>
+                        <div class="fs-6 text-gray-500">Start Time</div>
                     </div>
                     <div class="border border-gray-300 border-dashed rounded min-w-125px py-3 px-4 me-6 mb-3 hover-primary">
                         <div class="d-flex align-items-center text-hover-primary">
                             <div class="fs-5 fw-bold">{{ moment.unix(Number(contractInfo?.startTime)+(Number(contractInfo.lockDuration))).format("lll") }}</div>
                         </div>
-                        <div class="fs-6 text-gray-500">End Date</div>
+                        <div class="fs-6 text-gray-500">Release Time</div>
                     </div>
                     <div class="border border-gray-300 border-dashed rounded min-w-125px py-3 px-4 me-6 mb-3">
                         <div class="d-flex align-items-center">
@@ -237,13 +237,13 @@
             <div class="separator"></div>
             <ul class="nav nav-stretch nav-line-tabs nav-line-tabs-2x border-transparent fs-5 fw-bold">
                 <li class="nav-item">
-                <a :class="`nav-link text-active-primary py-5 me-6 ${activeTab == 'overview'?'active':''}`" data-bs-toggle="tab" href="#overview" @click.stop="loadTab('overview')">Overview</a>
+                <a :class="`nav-link text-active-primary py-5 me-6 ${activeTab == 'overview'?'active':''}`" href="javascript:void(0)" @click.stop="loadTab('overview')">Overview</a>
                 </li>
                 <li class="nav-item">
-                <a :class="`nav-link text-active-primary py-5 me-6 ${activeTab == 'record'?'active':''}`"  data-bs-toggle="tab" href="#record" @click.stop="loadTab('record')">My claim record</a>
+                <a :class="`nav-link text-active-primary py-5 me-6 ${activeTab == 'record'?'active':''}`" href="javascript:void(0)" @click.stop="loadTab('record')">My claim record</a>
                 </li>
                 <li class="nav-item">
-                <a class="nav-link text-active-primary py-5 me-6 " href="#">Settings</a>
+                <a class="nav-link text-active-primary py-5 me-6 " href="javascript:void(0)">Settings</a>
                 </li>
             </ul>
             </div>

@@ -7,7 +7,8 @@ import Tokens from './views/token/Index.vue'
 import TokenDetail from './views/token/TokenDetail.vue'
 import ContractDetail from './views/contract/ContractDetail.vue'
 import Launchpad from './views/launchpad/Launchpad.vue'
-import NewLaunchpad from './views/launchpad/NewLaunchpad.vue'
+import Create from './views/launchpad/Create.vue'
+import LaunchpadDetail from './views/launchpad/LaunchpadDetail.vue'
 import Marketplace from './views/marketplace/Marketplace.vue'
 import CollectionDetail from './views/marketplace/Collection.vue'
 import ItemDetail from './views/marketplace/Item.vue'
@@ -41,10 +42,16 @@ const router = createRouter({
       component: Launchpad,
     },
     {
-      path: '/new-launchpad',
-      meta: {title: 'New Launchpad'},
-      name: 'new-launchpad',
-      component: NewLaunchpad,
+      path: '/launchpad/create',
+      meta: {title: 'Create Fairlaunch'},
+      name: 'create-fairlaunch',
+      component: Create,
+    },
+    {
+      path: '/launchpad/:launchpadId',
+      meta: {title: 'Launchpad Detail'},
+      name: 'launchpad-detail',
+      component: LaunchpadDetail,
     },
     {
       path: '/marketplace',
@@ -71,9 +78,9 @@ const router = createRouter({
       component: Contract,
     },
     {
-      path: '/token-locks',
-      meta: {title: 'Token Locks'},
-      name: 'token-locks',
+      path: '/locks',
+      meta: {title: 'Locks'},
+      name: 'locks',
       component: LocksIndex,
       children: [
         { path: 'liquidity', component: LiquidityLocks, name: 'Liquidity'},

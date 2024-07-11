@@ -38,7 +38,11 @@ export const useGetRecipientInfo = async (contractId)=>{
     }else return null;
 }
 export const useClaim = async (contractId)=>{
-    return await Connect.canister(contractId, 'token_claim').claim();
+    try{
+        return await Connect.canister(contractId, 'token_claim').claim();
+    }catch(e){
+        throw new Error(e);
+    }
 }
 export const useGetContract = async (contractId) => {
     try{

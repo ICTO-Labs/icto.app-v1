@@ -1,0 +1,130 @@
+type VestingInfo = 
+ record {
+   cliff: nat;
+   duration: nat;
+   unlockFrequency: nat;
+ };
+type Transaction = 
+ record {
+   amount: nat;
+   method: text;
+   participant: text;
+   time: Time;
+   txId: opt nat;
+ };
+type Tokenomic = 
+ record {
+   title: text;
+   value: nat;
+ };
+type TokenInfo = 
+ record {
+   canisterId: text;
+   decimals: nat;
+   logo: text;
+   metadata: opt blob;
+   name: text;
+   symbol: text;
+   transferFee: nat;
+ };
+type Timeline = 
+ record {
+   claimTime: Time;
+   createdTime: Time;
+   endTime: Time;
+   listingTime: Time;
+   startTime: Time;
+ };
+type Time = int;
+type Result = 
+ variant {
+   err: text;
+   ok: bool;
+ };
+type Recipient = 
+ record {
+   address: text;
+   amount: nat;
+   note: opt text;
+ };
+type ProjectInfo = 
+ record {
+   banner: opt text;
+   description: text;
+   isAudited: bool;
+   isVerified: bool;
+   links: opt vec text;
+   logo: text;
+   metadata: opt vec record {
+                       text;
+                       text;
+                     };
+   name: text;
+ };
+type Participant = 
+ record {
+   commit: nat;
+   lastDeposit: opt Time;
+   totalAmount: nat;
+ };
+type LaunchpadStatus = 
+ record {
+   affiliate: nat;
+   cycle: nat;
+   installed: bool;
+   status: text;
+   totalAmountCommitted: nat;
+   totalParticipants: nat;
+   totalTransactions: nat;
+   whitelistEnabled: bool;
+ };
+type LaunchpadDetail = 
+ record {
+   affiliate: nat;
+   creator: text;
+   distribution: Distribution;
+   fee: nat;
+   launchParams: LaunchParams;
+   projectInfo: ProjectInfo;
+   purchaseToken: opt TokenInfo;
+   restrictedArea: opt vec text;
+   saleToken: opt TokenInfo;
+   timeline: Timeline;
+   tokenomics: vec Tokenomic;
+   vesting: VestingInfo;
+ };
+type LaunchpadCanister = 
+ service {
+   commit: (nat) -> (Result);
+   getParticipantInfo: (text) -> (Participant);
+   getRefundList: () -> (vec Transaction);
+   getTransactionList: () -> (vec Transaction);
+   install: (LaunchpadDetail, vec text) -> (Result);
+   launchpadInfo: () -> (LaunchpadDetail);
+   reinstall: () -> ();
+   status: () -> (LaunchpadStatus);
+ };
+type LaunchParams = 
+ record {
+   hardCap: nat;
+   maximumAmount: nat;
+   minimumAmount: nat;
+   sellAmount: nat;
+   softCap: nat;
+ };
+type Distribution = 
+ record {
+   fairlaunch: nat;
+   liquidity: nat;
+   others: vec ClaimContract;
+   team: ClaimContract;
+ };
+type ClaimContract = 
+ record {
+   description: text;
+   recipients: vec Recipient;
+   title: text;
+   total: nat;
+   vesting: VestingInfo;
+ };
+service : () -> LaunchpadCanister

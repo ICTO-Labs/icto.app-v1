@@ -403,9 +403,7 @@ zxcjx-7yvay-ow7hh-nbocq-5aaru-n7nwq-xyhau-jnr6m-f36ho-xzufk-rae,50`;
 										<span v-else-if="unlockFrequency == 60"> Tokens unlock linearly at a constant rate per block 1 minutes</span>
 										<span v-else-if="unlockFrequency == 0"> All recipients can claim their tokens one contract is started</span>
 										<span v-else> Token can be claimed <span class="badge badge-light-primary">{{SCHEDULE[contractData.unlockSchedule]}}</span> in <span class="badge badge-light-primary">{{contractData.durationUnit}} {{DURATION[contractData.durationTime]}}</span>
-										from <span class="badge badge-light-primary" v-if="contractData.cliffUnit>0">{{contractData.cliffUnit}} {{DURATION[contractData.cliffTime]}} (cliff)</span>
-
-
+										<span v-if="contractData.cliffUnit>0">after</span> <span class="badge badge-light-primary" v-if="contractData.cliffUnit>0">{{contractData.cliffUnit}} {{DURATION[contractData.cliffTime]}} (cliff)</span>
 									</span>
 									</span>
 								</div>

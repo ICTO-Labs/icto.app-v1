@@ -44,17 +44,17 @@
                 
                 <!--begin::Labels-->
                 <div class="d-flex flex-column justify-content-center flex-row-fluid pe-11 mb-5">
-                <div class="d-flex fs-6 fw-semibold align-items-center mb-3">
+                <div class="d-flex fs-7 fw-semibold align-items-center mb-3">
                     <div class="bullet bg-success me-3"></div>
                     <div class="text-gray-500">Total Amount</div>
                     <div class="ms-auto fw-bold text-gray-700">{{ currencyFormat(parseTokenAmount(contract?.totalAmount, contract?.tokenInfo.decimals)) }}</div>
                 </div>
-                <div class="d-flex fs-6 fw-semibold align-items-center mb-3">
+                <div class="d-flex fs-7 fw-semibold align-items-center mb-3">
                     <div class="bullet bg-primary me-3"></div>
                     <div class="text-gray-500">Claimed</div>
                     <div class="ms-auto fw-bold text-gray-700">{{ currencyFormat(parseTokenAmount(contract?.totalClaimedAmount, contract?.tokenInfo.decimals)) }}</div>
                 </div>
-                <div class="d-flex fs-6 fw-semibold align-items-center mb-3">
+                <div class="d-flex fs-7 fw-semibold align-items-center mb-3">
                     <div class="bullet bg-gray-400 me-3"></div>
                     <div class="text-gray-500">Remaining</div>
                     <div class="ms-auto fw-bold text-gray-700">{{ currencyFormat(parseTokenAmount(contract?.totalAmount - contract?.totalClaimedAmount, contract?.tokenInfo.decimals)) }}</div>
@@ -88,7 +88,7 @@
                 </div>
                 <div class="d-flex flex-column">
                     <span class="fs-8 text-gray-400 text-hover-primary">Status</span>
-                    <span class="badge badge-light-success me-auto">Ongoing</span>
+                    <span class="badge badge-light-success me-auto">Started</span>
                 </div>
             </div>
             

@@ -44,7 +44,7 @@
 			description: "Seal your commitment to the project by visibly locking liquidity. Unlike burning tokens (hard to track), lock them securely for added transparency and trust. Ideal for token sales, ensuring fair distribution and milestone-based releases.",
 			link: {
 				label: "Configure your Token lock",
-				url: "/token-locks"
+				url: "/locks"
 			}
 		},
 		{
@@ -53,7 +53,7 @@
 			description: "Investors can now visualize the locked value of their position relative to the entire TVL pool - providing the clearest insight into actual exposure.",
 			link: {
 				label: "Explore locked liquidity",
-				url: "/token-locks/liquidity"
+				url: "/locks/liquidity"
 			}
 		},
 		{
@@ -93,7 +93,7 @@
 							</h3>
 							<div class="mt-10 d-flex">
 								<router-link to="/tokens" class="btn btn-danger me-3">Launch your Token <i class="fas fa-angle-double-up"></i></router-link>
-								<router-link to="/token-locks" class="btn btn-success">Configure a Token lock <i class="fas fa-lock"></i></router-link>
+								<router-link to="/locks" class="btn btn-success">Configure a Token lock <i class="fas fa-lock"></i></router-link>
 							</div>
 						</div>
 						
@@ -405,7 +405,7 @@
 							<router-link to="/tokens" class="mb-3">
 								<span>Deploy Token</span>
 							</router-link>
-							<router-link to="/token-locks" class="mb-3">
+							<router-link to="/locks" class="mb-3">
 								<span>Liquidity Locks</span>
 							</router-link>
 							<router-link to="/airdrop" class="mb-3">

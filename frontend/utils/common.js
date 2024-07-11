@@ -8,6 +8,7 @@ import { getCrc32 } from '@dfinity/principal/lib/esm/utils/getCrc';
 import EventBus from "@/services/EventBus";
 
 import RosettaApi from '@/services/RosettaApi';
+import moment from 'moment/moment';
 const rosettaApi = new RosettaApi();
 
 export const getAccountBalance = async(address)=>{
@@ -192,6 +193,37 @@ export const prettyValue = (value, replace)=>{
         return value;
     }
 }
+
+//Format time to UTC, bigint
+export const timeFromNano = (nanoseconds)=>{
+    return moment.unix(Number(nanoseconds)/1e9).format('YYYY-MM-DD HH:mm:ss');
+}
+export const getPoolStatus = (status)=>{
+    console.log('status', status);
+        let text, colorClass;
+        switch (status) {
+        case 'UPCOMING':
+            text = 'Not Started';
+            colorClass = 'primary';
+            break;
+        case 'LIVE':
+            text = 'Live';
+            colorClass = 'success';
+            break;
+        case 'FINISHED':
+            text = 'Finished';
+            colorClass = 'info';
+            break;
+        case 'CLAIMING':
+            text = 'Claiming';
+            colorClass = 'warning';
+            break;
+        default:
+            text = 'Unknown';
+            colorClass = 'muted';
+        }
+        return `<div class="badge badge-light-${colorClass} text-${colorClass} fs-7 fw-bold">${status == 'LIVE'?'<div class="bullet bg-success bullet-dot me-1 h-10px w-10px animation-blink"></div>':''} ${status}</div>`;
+    }
 export default {
     validateAddress,
     showError
