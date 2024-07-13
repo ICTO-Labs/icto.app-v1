@@ -6,6 +6,7 @@
     import { txtToPrincipal } from "@/utils/common";
     import { install } from "@/services/Launchpad";
     import Tokenomic from "@/components/launchpad/Tokenomic.vue";
+    import TokenDistribution from "@/components/launchpad/TokenDistribution.vue";
 
     import moment from "moment";
     const icpPrice = ref(13.75);
@@ -14,6 +15,7 @@
     const currentStep = ref(0);
     const steps = ref([
                 "current",
+                "pending",
                 "pending",
                 "pending",
                 "pending",
@@ -36,8 +38,17 @@
         if(launchpad.value.listing == 'manually'){
             launchpad.value.listingLiquidity = 0;
             launchpad.value.listingTime = 0;
+            launchpad.value.listingTokenAmount = 0;
+        }else{
+            launchpad.value.listingLiquidity = 51;
+            calTokenLiquidity();
         }
     }   
+    const calTokenLiquidity = ()=>{
+        if(launchpad.value.listingLiquidity > 0){
+            launchpad.value.listingTokenAmount = (launchpad.value.launchParams.sellAmount*launchpad.value.listingLiquidity/100);
+        }
+    }
     const addMorePie = ()=>{
         launchpad.value.tokenomics.push({
             title: "Allocation #"+(launchpad.value.tokenomics.length+1),
@@ -55,7 +66,7 @@
         controllers: "lekqg-fvb6g-4kubt-oqgzu-rd5r7-muoce-kppfz-aaem3-abfaj-cxq7a-dqe"
     })
     const launchpad = ref({
-        DAOModel: false,
+        governanceModel: 1,//0: Standard, 1: Governance
         whitelist: false,
         whitelistType: 0,
         whitelistAllocation: 100,
@@ -70,9 +81,63 @@
         affiliate: false,
         affiliateAmount: 5,
         currency: config.LEDGER_CANISTER_ID,
-        listingLiquidity: 0,
+        listingLiquidity: 51,
+        listingTokenAmount: 0,
         listing: 'ICPSwap',
-        tokenomics: [{ title: "Public Sale", value: 25 }]
+        tokenomics: [{ title: "Public Sale", value: 25 }],
+        distribution: {
+            fairlaunch: 0,
+            liquidity: 0,
+            team: {
+                title: "Team",
+                description: "Team allocation",
+                total: 100_000_000,
+                vesting: {
+                    cliff: 0,//Seconds
+                    duration: 30*24*60*60,//Seconds
+                    unlockFrequency: 0,//0: unlock immediately, 1: fully unlock after, others: unlock after each period
+                },
+                recipients: [
+                    {
+                        amount: 60_000_000,
+                        address: "lekqg-fvb6g-4kubt-oqgzu-rd5r7-muoce-kppfz-aaem3-abfaj-cxq7a-dqe",
+                        note: ["Founder"]
+                    },
+                    {
+                        amount: 40_000_000,
+                        address: "v57dj-hev4p-lsvdl-dckvv-zdcvg-ln2sb-tfqba-nzb4g-iddrv-4rsq3-mae",
+                        note: ["Developer"]
+                    }
+                ]
+            },
+            others: []
+
+        },
+        saleToken: {
+            name: "",
+            symbol: "",
+            decimals : 8,
+            transferFee: 0,
+            metadata : [],
+            logo: "",
+            canisterId: ""
+        },
+        purchaseToken: {
+            name: "Internet Computer",
+            symbol: "ICP",
+            decimals : 8,
+            transferFee: 0.0001,
+            metadata : [],
+            logo: "",
+            canisterId: config.LEDGER_CANISTER_ID
+        },
+        launchParams: {
+            sellAmount: 0,
+            softCap: 0,
+            hardCap: 0,
+            minimumAmount: 0,
+            maximumAmount: 0
+        },
     })
     const money3Config = {
         masked: true,
@@ -91,9 +156,10 @@
         focusOnRight: false,
     };
     const calTokenPrice = ()=>{
-        if(launchpad.value.totalToken > 0){
-            if(launchpad.value.softcap) launchpad.value.minPrice = launchpad.value.softcap/launchpad.value.totalToken;
-            if(launchpad.value.hardcap) launchpad.value.maxPrice = launchpad.value.hardcap/launchpad.value.totalToken;
+        if(launchpad.value.launchParams.sellAmount > 0){
+            if(launchpad.value.launchParams.softCap) launchpad.value.minPrice = launchpad.value.launchParams.softCap/launchpad.value.launchParams.sellAmount;
+            if(launchpad.value.launchParams.hardCap) launchpad.value.maxPrice = launchpad.value.launchParams.hardCap/launchpad.value.launchParams.sellAmount;
+            calTokenLiquidity();
         }
     }
 
@@ -253,7 +319,7 @@
                             <!--end::Icon-->
                             <!--begin::Label-->
                             <div class="stepper-label">
-                                <h3 class="stepper-title">Launch Info</h3>
+                                <h3 class="stepper-title">Launch Setting</h3>
                                 <div class="stepper-desc fw-bold">All details about your sales
                         </div>
                             </div>
@@ -273,13 +339,13 @@
                             <!--end::Icon-->
                             <!--begin::Label-->
                             <div class="stepper-label">
-                                <h3 class="stepper-title">Additional Info</h3>
-                                <div class="stepper-desc fw-bold">Introduce about your project</div>
+                                <h3 class="stepper-title">Token Distribution</h3>
+                                <div class="stepper-desc fw-bold">Setting your allocation</div>
                             </div>
                             <!--end::Label-->
                         </div>
                         <!--end::Step 4-->
-                        <!--begin::Step 5-->
+                        <!--begin::Step 4-->
                         <div :class="`stepper-item ${steps[4]}`" data-kt-stepper-element="nav">
                             <!--begin::Line-->
                             <div class="stepper-line w-40px"></div>
@@ -288,6 +354,25 @@
                             <div class="stepper-icon w-40px h-40px">
                                 <i class="stepper-check fas fa-check"></i>
                                 <span class="stepper-number">5</span>
+                            </div>
+                            <!--end::Icon-->
+                            <!--begin::Label-->
+                            <div class="stepper-label">
+                                <h3 class="stepper-title">Additional Info</h3>
+                                <div class="stepper-desc fw-bold">Introduce about your project</div>
+                            </div>
+                            <!--end::Label-->
+                        </div>
+                        <!--end::Step 4-->
+                        <!--begin::Step 5-->
+                        <div :class="`stepper-item ${steps[5]}`" data-kt-stepper-element="nav">
+                            <!--begin::Line-->
+                            <div class="stepper-line w-40px"></div>
+                            <!--end::Line-->
+                            <!--begin::Icon-->
+                            <div class="stepper-icon w-40px h-40px">
+                                <i class="stepper-check fas fa-check"></i>
+                                <span class="stepper-number">6</span>
                             </div>
                             <!--end::Icon-->
                             <!--begin::Label-->
@@ -320,7 +405,7 @@
                                 <!--end::Title-->
                                 <!--begin::Notice-->
                                 <div class="text-muted fw-bold fs-6">If you need more info, please check out
-                                <a href="#" class="link-primary fw-bolder">Help Page</a>.</div>
+                                <a href="https://docs.icto.app" target="_blank" class="link-primary fw-bolder">Document</a>.</div>
                                 <!--end::Notice-->
                             </div>
                             <!--end::Heading-->
@@ -331,49 +416,54 @@
                                     <!--begin::Col-->
                                     <div class="col-lg-6">
                                         <!--begin::Option-->
-                                        <input type="radio" class="btn-check" name="account_type" value="personal" checked="checked" id="normal">
-                                        <label class="btn btn-outline btn-outline-dashed btn-outline-default p-7 d-flex align-items-center mb-10" for="normal">
-                                            <!--begin::Svg Icon | path: icons/duotune/communication/com005.svg-->
-                                            <span class="svg-icon svg-icon-3x me-5">
-                                                <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none">
-                                                    <path d="M20 14H18V10H20C20.6 10 21 10.4 21 11V13C21 13.6 20.6 14 20 14ZM21 19V17C21 16.4 20.6 16 20 16H18V20H20C20.6 20 21 19.6 21 19ZM21 7V5C21 4.4 20.6 4 20 4H18V8H20C20.6 8 21 7.6 21 7Z" fill="black"></path>
-                                                    <path opacity="0.3" d="M17 22H3C2.4 22 2 21.6 2 21V3C2 2.4 2.4 2 3 2H17C17.6 2 18 2.4 18 3V21C18 21.6 17.6 22 17 22ZM10 7C8.9 7 8 7.9 8 9C8 10.1 8.9 11 10 11C11.1 11 12 10.1 12 9C12 7.9 11.1 7 10 7ZM13.3 16C14 16 14.5 15.3 14.3 14.7C13.7 13.2 12 12 10.1 12C8.10001 12 6.49999 13.1 5.89999 14.7C5.59999 15.3 6.19999 16 7.39999 16H13.3Z" fill="black"></path>
-                                                </svg>
+                                        <input type="radio" class="btn-check" value="0" name="governanceModel" checked="checked" id="standard" v-model="launchpad.governanceModel">
+                                        <label class="btn btn-outline btn-outline-dashed btn-outline-default p-7 d-flex align-items-center mb-10" for="standard">
+                                            <span class="me-5">
+                                                <i class="fas fa-rocket fs-3x"></i>
                                             </span>
-                                            <!--end::Svg Icon-->
                                             <!--begin::Info-->
                                             <span class="d-block fw-bold text-start">
-                                                <span class="text-dark fw-bolder d-block fs-4 mb-2">Normal</span>
-                                                <span class="text-muted fw-bold fs-6">Start launchpad from your existed Token</span>
-                                            </span>
-                                            <!--end::Info-->
-                                        </label>
-                                        <!--end::Option-->
-                                    <div class="fv-plugins-message-container invalid-feedback"></div></div>
-                                    <!--end::Col-->
-                                    <!--begin::Col-->
-                                    <div class="col-lg-6">
-                                        <!--begin::Option-->
-                                        <input type="radio" class="btn-check" name="account_type" value="corporate" id="dao-model" @click="installLaunchpad">
-                                        <label class="btn btn-outline btn-outline-dashed btn-outline-default p-7 d-flex align-items-center" for="dao-model">
-                                            <!--begin::Svg Icon | path: icons/duotune/finance/fin006.svg-->
-                                            <span class="svg-icon svg-icon-3x me-5">
-                                                <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none">
-                                                    <path opacity="0.3" d="M20 15H4C2.9 15 2 14.1 2 13V7C2 6.4 2.4 6 3 6H21C21.6 6 22 6.4 22 7V13C22 14.1 21.1 15 20 15ZM13 12H11C10.5 12 10 12.4 10 13V16C10 16.5 10.4 17 11 17H13C13.6 17 14 16.6 14 16V13C14 12.4 13.6 12 13 12Z" fill="black"></path>
-                                                    <path d="M14 6V5H10V6H8V5C8 3.9 8.9 3 10 3H14C15.1 3 16 3.9 16 5V6H14ZM20 15H14V16C14 16.6 13.5 17 13 17H11C10.5 17 10 16.6 10 16V15H4C3.6 15 3.3 14.9 3 14.7V18C3 19.1 3.9 20 5 20H19C20.1 20 21 19.1 21 18V14.7C20.7 14.9 20.4 15 20 15Z" fill="black"></path>
-                                                </svg>
-                                            </span>
-                                            <!--end::Svg Icon-->
-                                            <!--begin::Info-->
-                                            <span class="d-block fw-bold text-start">
-                                                <span class="text-dark fw-bolder d-block fs-4 mb-2">DAO Model</span>
-                                                <span class="text-muted fw-bold fs-6">Tokens will be governed by the community</span>
+                                                <span class="text-dark fw-bolder d-block fs-4 mb-2">Standard Launchpad</span>
+                                                <span class="text-muted fw-bold fs-6">Launch your project with automated, smart contract-controlled fundraising.</span>
                                             </span>
                                             <!--end::Info-->
                                         </label>
                                         <!--end::Option-->
                                     </div>
                                     <!--end::Col-->
+                                    <!--begin::Col-->
+                                    <div class="col-lg-6">
+                                        <!--begin::Option-->
+                                        <input type="radio" class="btn-check" value="1" name="governanceModel" id="governance-model" v-model="launchpad.governanceModel">
+                                        <label class="btn btn-outline btn-outline-dashed btn-outline-default p-7 d-flex align-items-center" for="governance-model">
+                                            <span class="me-5">
+                                                <i class="fas fa-user-shield fs-3x"></i>
+                                            </span>
+                                            <!--begin::Info-->
+                                            <span class="d-block fw-bold text-start">
+                                                <span class="text-dark fw-bolder d-block fs-4 mb-2">DAO-Governed Launchpad</span>
+                                                <span class="text-muted fw-bold fs-6">Leverage community trust and oversight for your fundraising campaign.</span>
+                                            </span>
+                                            <!--end::Info-->
+                                        </label>
+                                        <!--end::Option-->
+                                    </div>
+                                    <!--end::Col-->
+                                </div>
+
+                                <div class="row">
+                                    <div v-if="launchpad.governanceModel==0" class="alert bg-light-warning">
+                                        <h5 class="mb-2 text-primary"><i class="fas fa-rocket text-primary"></i> Standard Launchpad</h5>
+                                        <div>
+                                            A fully automated, smart contract-controlled fundraising model. Offers transparency and security through code-enforced rules, without DAO intervention. Ideal for projects seeking a streamlined, predictable fundraising process.
+                                        </div>
+                                    </div>
+                                    <div v-show="launchpad.governanceModel==1" class="alert bg-light-warning">
+                                        <h5 class="mb-2 text-danger"><i class="fas fa-user-shield text-danger"></i> DAO-Governed Launchpad</h5>
+                                        <div>
+                                            Combines smart contract automation with community oversight. Enhances credibility through DAO monitoring and potential intervention. Suited for projects valuing community trust and willing to embrace decentralized governance in their fundraising efforts!
+                                        </div>
+                                    </div>
                                 </div>
                                 <!--end::Row-->
                             </div>
@@ -387,91 +477,77 @@
                         <!--begin::Wrapper-->
                         <div class="w-100">
                             <div class="pb-10 pb-lg-15">
-                                <h2 class="fw-bolder d-flex align-items-center text-dark">Verify Token</h2>
-                                <div class="text-muted fw-bold fs-6">Verify token and choose currency, fees etc...</div>
+                                <h2 class="fw-bolder d-flex align-items-center text-dark">Token infomation</h2>
+                                <div class="text-muted fw-bold fs-6">Enter token and choose currency, fee etc...</div>
                             </div>
                             <div class="fv-row fv-plugins-icon-container fv-plugins-bootstrap5-row-valid">
                                 <div class="row mb-5">
-                            <div class="col-md-12 fv-row">
-                                <label class="d-flex flex-stack fs-6 fw-bold mb-2"><span class="required">Token Canister ID</span>
-                                    <a href="#" class="badge badge-light-danger ms-5" v-if="tokenId">- Remove</a>
-                                    <a href="#" class="badge badge-light-primary ms-5" v-if="tokenId==''">+ Paste</a>
-                                </label>
-                                <input type="text" class="form-control fs-6" v-model="tokenId" placeholder="Enter Token Canister ID" required />
-                            </div>
-                        </div>
-                        <div class="d-flex align-items-center mb-5" v-if="tokenInfo">
-                            
-							<div class="symbol symbol-50px symbol-circle me-3">
-								<img src="https://psh4l-7qaaa-aaaap-qasia-cai.raw.icp0.io/6ytv5-fqaaa-aaaap-qblcq-cai.png" />
-								<!-- <span class="symbol-label fs-2x fw-bold text-primary bg-light-primary">{{ tokenInfo?tokenInfo.symbol.charAt(0):'IC' }}</span> -->
-							</div>
-							<!--begin::Info-->
-							<div class="d-flex flex-column">
-								<!--begin::Name-->
-								<a href="#" class="fs-4 fw-bolder text-gray-900 text-hover-primary me-2">{{ tokenInfo.name }}</a>
-								<!--end::Name-->
-								<a href="#" class="fs-7 text-gray-600 text-hover-primary">{{tokenInfo.symbol }} <span class="badge badge-light-info">{{ tokenInfo.standard }}</span></a>
-                                
-							</div>
-							<!--end::Info-->
-						</div>
-                    <!--end::Summary-->
-                    
-                    <div class="separator separator-dashed my-0"></div>
-                    <div class="py-1 fs-6 px-5 notice bg-light-primary rounded border-primary border border-dashed p-6">
-                        <div class="fw-bolder mt-2">Canister ID</div>
-                        <div class="text-primary"><ClickToCopy :text="tokenId">{{ tokenId }}</ClickToCopy></div>
-                        <div class="fw-bolder mt-3">Total supply</div>
-                        <div class="text-gray-600">{{ currencyFormat(tokenInfo.supply) }}</div>
-                        <div class="fw-bolder mt-3">Controllers</div>
-                        <div class="text-gray-600">{{ tokenInfo.controllers }}</div>
-                    </div>
-                    <div class="separator separator-dashed mb-10"></div>
-
-                        <div class="row mb-3">
-                            <div class="col-md-6 fv-row">
-                                <label class="fs-6 fw-bold form-label mb-2">Currency</label>
-                                <div class="row fv-row">
-                                    <div class="col-12">
-                                        <select name="listing" class="form-select" v-model="launchpad.currency" readonly>
-                                            <option :value="config.LEDGER_CANISTER_ID">ICP</option>
-                                            <option value="icto" disabled>ICTO</option>
-                                        </select>
-                                        <div class="form-text">Participants will pay with <strong>ICP</strong> for your token</div>
+                                    <div class="col-md-6 fv-row">
+                                        <label class="d-flex align-items-center fs-6 fw-bold mb-2"><span class="required">Token Name</span></label>
+                                        <input type="text" class="form-control" v-model="launchpad.saleToken.name" required placeholder="Enter token name">
+                                    </div>
+                                    <div class="col-md-6 fv-row">
+                                        <label class="d-flex align-items-center fs-6 fw-bold mb-2"><span class="required">Token Symbol</span></label>
+                                        <input type="text" class="form-control" v-model="launchpad.saleToken.symbol" required placeholder="Enter token symbol">
                                     </div>
                                 </div>
-                            </div>
-                            <div class="col-md-6 fv-row">
-                            <label class="d-flex align-items-center fs-6 fw-bold mb-2"><span class="">Launch Fee</span></label>
+                                <div class="row mb-5">
+                                    <div class="col-md-6 fv-row">
+                                        <label class="d-flex align-items-center fs-6 fw-bold mb-2"><span class="required">Token Decimals</span></label>
+                                        <input type="text" class="form-control" v-model="launchpad.saleToken.decimals" required placeholder="Enter token decimals">
+                                    </div>
+                                    <div class="col-md-6 fv-row">
+                                        <label class="d-flex align-items-center fs-6 fw-bold mb-2"><span class="required">Transfer Fee</span></label>
+                                        <input type="text" class="form-control" v-model="launchpad.saleToken.transferFee" required placeholder="Enter transfer fee">
+                                    </div>
+                                </div>
+                                <div class="row mb-5">
+                                    <div class="col-md-12 fv-row">
+                                        <label class="d-flex align-items-center fs-6 fw-bold mb-2"><span class="required">Logo</span></label>
+                                        <input type="file" class="form-control" required>
+                                    </div>
+                                </div>
+                    
+                                <div class="separator separator-dashed mb-5"></div>
 
-                            <div class="input-group mb-3">
-                                <span class="input-group-text" id="hardcap">%</span>
-                                <input type="text" class="form-control" :value="config.LAUNCHPAD_FEE" disabled>
-                            </div>
-                            <div class="form-text">ICP raised only (Recommended)</div>
-                            
-                        </div>
-                        </div>
-                        <div class="row mb-2">
-                            <div class="col-md-6 fv-row">
-                                <label class="d-flex align-items-center fs-6 fw-bold mb-2"><span class="">Affiliate Program</span></label>
-                                <div class="form-check form-check-solid form-switch fv-row">
-                                    <input class="form-check-input w-45px h-30px" type="checkbox" id="allowmarketing" checked="checked" v-model="launchpad.affiliate">
-                                    <label class="form-check-label" for="allowmarketing"></label>
+                                <div class="row mb-3">
+                                    <div class="col-md-6 fv-row">
+                                        <label class="fs-6 fw-bold form-label mb-2">Currency</label>
+                                        <div class="row fv-row">
+                                            <div class="col-12">
+                                                <select name="listing" class="form-select" v-model="launchpad.currency" readonly>
+                                                    <option :value="config.LEDGER_CANISTER_ID">ICP</option>
+                                                    <option value="icto" disabled>ICTO</option>
+                                                </select>
+                                                <div class="form-text">Participants will pay with <strong>ICP</strong> for your token</div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <div class="col-md-6 fv-row">
+                                    <label class="d-flex align-items-center fs-6 fw-bold mb-2"><span class="">Launch Fee</span></label>
+
+                                    <div class="input-group mb-3">
+                                        <span class="input-group-text" id="hardcap">%</span>
+                                        <input type="text" class="form-control" :value="config.LAUNCHPAD_FEE" disabled>
+                                    </div>
+                                    <div class="form-text">ICP raised only (Recommended)</div>
+                                    
                                 </div>
-                            
                             </div>
-                            <div class="col-md-6 fv-row" v-if="launchpad.affiliate">
-                                <label class="d-flex align-items-center fs-6 fw-bold mb-2"><span class="">Affiliate amount (%)</span></label>
-                                <div class="input-group">
-                                    <input type="number" min="0" max="5" class="form-control fw-normal" v-model="launchpad.affiliateAmount" placeholder="Min:1 - Max: 5, Set 0 = disable" />
+                            <div class="row mb-2">
+                                <div class="col-md-6 fv-row">
+                                    <div class="form-check form-switch form-check-custom form-check-solid mb-2">
+                                        <input class="form-check-input h-20px w-30px" type="checkbox" id="allowmarketing"  v-model="launchpad.affiliate">
+                                        <label class="form-check-label fw-bold fs-6" for="allowmarketing" title="Affiliate"> Affiliate Program (%)</label>
+                                    </div>
+                                    <div class="input-group" v-if="launchpad.affiliate">
+                                        <input type="number" min="0" max="5" class="form-control fw-normal" v-model="launchpad.affiliateAmount" placeholder="Min:1 - Max: 5, Set 0 = disable" />
+                                    </div>
+                                    <div class="form-text" v-if="launchpad.affiliate">The amount of raised currency that uses for the affiliate program.</div>
                                 </div>
-                                <div class="form-text">The amount of raised currency that uses for the affiliate program.</div>
+                                
                             </div>
                         </div>
-                        
-                    </div>
                     </div>
                     </div>
                     <!--end::Step 2-->
@@ -479,15 +555,14 @@
                     <div data-kt-stepper-element="content" :class="steps[2]">
                         <div class="w-100">
                             <div class="pb-10 pb-lg-15">
-                                <h2 class="fw-bolder d-flex align-items-center text-dark">Launch Info</h2>
-                                <div class="text-muted fw-bold fs-6">All details about your sales
-</div>
+                                <h2 class="fw-bolder d-flex align-items-center text-dark">Launch Settings</h2>
+                                <div class="text-muted fw-bold fs-6">Setting sales params</div>
                             </div>
                             <div class="fv-row fv-plugins-icon-container fv-plugins-bootstrap5-row-valid">
                                 <div class="row mb-5">
                                     <div class="col-md-12 fv-row">
-                                        <label class="d-flex align-items-center fs-6 fw-bold mb-2"><span class="required">Total <span v-if="tokenInfo" class="text-primary">{{tokenInfo.symbol }}</span> for sell</span></label>
-                                        <money3 v-model.number="launchpad.totalToken" class="form-control"  v-bind="money3Config" @change="calTokenPrice"></money3>
+                                        <label class="d-flex align-items-center fs-6 fw-bold mb-2"><span class="required">Total <span v-if="tokenInfo" class="text-primary">{{launchpad.saleToken.symbol }}</span> for sell</span></label>
+                                        <money3 v-model.number="launchpad.launchParams.sellAmount" class="form-control"  v-bind="money3Config" @change="calTokenPrice"></money3>
                                     </div>
                                 </div>
                                 <div class="row mb-5">
@@ -496,7 +571,7 @@
 
                                         <div class="input-group mb-3">
                                             <span class="input-group-text" id="softcap">ICP</span>
-                                            <money3 v-model.number="launchpad.softcap" class="form-control"  v-bind="money3Config" @change="calTokenPrice"></money3>
+                                            <money3 v-model.number="launchpad.launchParams.softCap" class="form-control"  v-bind="money3Config" @change="calTokenPrice"></money3>
                                         </div>
                                         <div class="form-text">Minimum ICP amount</div>
 
@@ -506,7 +581,7 @@
 
                                         <div class="input-group mb-3">
                                             <span class="input-group-text" id="hardcap">$</span>
-                                            <input type="text" class="form-control" :value="currencyFormat(launchpad.softcap*icpPrice)" disabled>
+                                            <input type="text" class="form-control" :value="currencyFormat(launchpad.launchParams.softCap*icpPrice)" disabled>
                                         </div>
                                     </div>
                                     <div class="col-md-3 fv-row">
@@ -529,7 +604,7 @@
                                         <label class="d-flex align-items-center fs-6 fw-bold mb-2"><span class="required">Hard cap</span></label>
                                         <div class="input-group mb-3">
                                             <span class="input-group-text" id="hardcap">ICP</span>
-                                            <money3 v-model.number="launchpad.hardcap" class="form-control"  v-bind="money3Config" @change="calTokenPrice"></money3>
+                                            <money3 v-model.number="launchpad.launchParams.hardCap" class="form-control"  v-bind="money3Config" @change="calTokenPrice"></money3>
                                         </div>
                                         <div class="form-text">Maximum ICP amount</div>
                                     </div>
@@ -537,7 +612,7 @@
                                         <label class="d-flex align-items-center fs-6 fw-bold mb-2"><span class="">&nbsp;</span></label>
                                         <div class="input-group mb-3">
                                             <span class="input-group-text" id="hardcap">$</span>
-                                            <input type="text" class="form-control" :value="currencyFormat(launchpad.hardcap*icpPrice)" disabled>
+                                            <input type="text" class="form-control" :value="currencyFormat(launchpad.launchParams.hardCap*icpPrice)" disabled>
                                         </div>
                                     </div>
                                     <div class="col-md-3 fv-row">
@@ -560,14 +635,14 @@
                                         <label class="d-flex align-items-center fs-6 fw-bold mb-2"><span class="required">Minimum contribution</span></label>
                                         <div class="input-group mb-3">
                                             <span class="input-group-text" id="minbuy">ICP</span>
-                                            <input type="text" class="form-control" v-model="launchpad.minBuy" required>
+                                            <input type="text" class="form-control" v-model="launchpad.launchParams.minimumAmount" required>
                                         </div>
                                     </div>
                                     <div class="col-md-6 fv-row">
                                         <label class="d-flex align-items-center fs-6 fw-bold mb-2"><span class="required">Maximum contribution</span></label>
                                         <div class="input-group mb-3">
                                             <span class="input-group-text" id="maxbuy">ICP</span>
-                                            <money3 v-model.number="launchpad.maxBuy" class="form-control"  v-bind="money3Config" @change="calTokenPrice" required></money3>
+                                            <money3 v-model.number="launchpad.launchParams.maximumAmount" class="form-control"  v-bind="money3Config" @change="calTokenPrice" required></money3>
                                         </div>
                                     </div>
                                 </div>
@@ -581,25 +656,25 @@
                                         <VueDatePicker v-model="launchpad.endTime" :min-date="new Date()" :enable-time-picker="true" time-picker-inline auto-apply  placeholder="End time"></VueDatePicker>
                                     </div>
                                 </div>
-                                <!-- <div class="separator separator-dashed mb-7"></div>
+                                <div class="separator separator-dashed mb-7"></div>
                                 <div class="row mb-5">
                                     <div class="col-md-12 fv-row">
                                         <div class="form-check form-switch form-check-custom">
                                             <input class="form-check-input" type="checkbox" id="whitelist" checked="checked" v-model="launchpad.whitelist">
                                             <label class="form-check-label  fs-6 fw-bold" for="whitelist">Enable Whitelist</label>
                                         </div>
-                                        <div class="form-text text-primary">The public sale will begin one hour after the whitelist sale starts!</div>
+                                        <div class="form-text text-primary">Only wallet principal on the whitelist can participate</div>
                                     </div>
                                 </div>
-                                <div class="row mb-5" v-if="launchpad.whitelist">
+                                <!-- <div class="row mb-5" v-if="launchpad.whitelist">
                                     <div class="col-md-12 fv-row">
                                         <label class="d-flex align-items-center fs-6 fw-bold mb-2"><span class="">Whitelist allocation (%)</span></label>
                                         <input type="number" min="10" max="100" class="form-control fw-normal" v-model="launchpad.whitelistAllocation" placeholder="Percent" required />
                                         <div class="form-text">The remaining tokens after the whitelist sale will be transferred to the public sale!</div>
                                     </div>
-                                </div>
+                                </div> -->
 
-                                <div class="mb-5 fv-row fv-plugins-icon-container" v-if="launchpad.whitelist">
+                                <!-- <div class="mb-5 fv-row fv-plugins-icon-container" v-if="launchpad.whitelist">
                                     <label class="d-flex align-items-center fs-6 form-label mb-3">Specify whitelist type
                                     </label>
                                     <div class="row mb-2" data-kt-buttons="true">
@@ -622,16 +697,16 @@
                                             </label>
                                         </div>
                                     </div>
-                                </div>
+                                </div> -->
                                 <div class="row mb-5" v-if="launchpad.whitelist">
-                                    <div class="col-md-12 fv-row"  v-if="launchpad.whitelistType==0">
+                                    <!-- <div class="col-md-12 fv-row"  v-if="launchpad.whitelistType==0">
                                         <input type="text" class="form-control fw-normal fs-7" v-model="launchpad.whitelistData" placeholder="Enter NFT Canister ID, Ex: oeee4-qaaaa-aaaak-qaaeq-cai" required />
                                         <div class="form-text">Support EXT NFT Collection (From Entrepot, Toniq marketplace)</div>
+                                    </div> -->
+                                    <div class="col-md-12 fv-row">
+                                        <textarea class="form-control fw-normal fs-7" v-model="launchpad.whitelistData" placeholder="Each Principal will be listed on a separate line" rows="6"></textarea>
                                     </div>
-                                    <div class="col-md-12 fv-row" v-if="launchpad.whitelistType==1" >
-                                        <textarea class="form-control fw-normal fs-7" v-model="launchpad.whitelistData" placeholder="Each Principal will be listed on a separate line" rows="4"></textarea>
-                                    </div>
-                                </div> -->
+                                </div>
                         
                                 <div class="separator separator-dashed mb-3"></div>
                                 <div class="row mb-10">
@@ -647,12 +722,20 @@
                                                 </div>
                                             </div>
                                         </div>
-                                    <div class="col-md-6 fv-row">
+                                    <div class="col-md-3 fv-row">
                                         <label class="d-flex align-items-center fs-6 fw-bold mb-2"><span class="">{{ launchpad.listing !='manually'?launchpad.listing:'' }} Liquidity(%)</span></label>
-                                        <input type="number" min="51" max="100" class="form-control" v-model="launchpad.listingLiquidity" placeholder="Min: 51, Max: 100" :disabled="launchpad.listing == 'manually'" />
+                                        <input type="number" min="51" max="100" class="form-control" v-model="launchpad.listingLiquidity" placeholder="Min: 51, Max: 100" :disabled="launchpad.listing == 'manually'" @change="calTokenLiquidity" />
 
                                         <div class="form-text">
                                             The percentage of raised funds that should be allocated to LP
+                                        </div>
+                                    </div>
+                                    <div class="col-md-3 fv-row">
+                                        <label class="d-flex align-items-center fs-6 fw-bold mb-2"><span class="">Token for Liquidity</span></label>
+                                        <input type="text" class="form-control" disabled :value="currencyFormat(launchpad.listingTokenAmount)" />
+
+                                        <div class="form-text">
+                                            Token amount for liquidity
                                         </div>
                                     </div>
                                 </div>
@@ -668,19 +751,8 @@
                                 </div>
                                 <div class="separator separator-dashed mb-3"></div>
                                 <div class="row mb-10">
-                                    <div class="col-md-12 fv-row">
-                                        <label class="fs-5 fw-bolder form-label mb-2"><i class="fas fa-chart-pie text-primary"></i> Tokenomics design</label>
-                                        <div v-for="(allocate, index) in launchpad.tokenomics" :key="index" class="row fv-row mb-2">
-                                            <div class="col-7"><input type="text" v-model="allocate.title" class="form-control form-control-sm" placeholder="Allocation" /></div>
-                                            <div class="col-3"><input type="number" v-model="allocate.value" min="0" max="100" class="form-control form-control-sm" placeholder="%" /></div>
-                                            <div class="col-2 d-flex flex-column">
-                                                <button type="button" class="btn btn-sm btn-light-primary" @click="addMorePie()" v-show="index == 0">+ Add more</button>
-                                                <button type="button" class="btn btn-sm btn-light-danger" @click="removePie(index)" v-show="index != 0">Remove</button>
-                                            </div>
-                                        </div>
-                                    </div>
                                     <div class="col-md-12 fv-row p-40 mh-250">
-                                        <Tokenomic :data="launchpad.tokenomics"></Tokenomic>
+                                        <!-- <Tokenomic :data="launchpad.tokenomics"></Tokenomic> -->
                                     </div>
                                 </div>
                                 
@@ -689,89 +761,76 @@
                                         </div>
                                     </div>
                                 </div>
-                                <!--end::Step 3-->
-                                <!--begin::Step 4-->
                                 <div data-kt-stepper-element="content" :class="steps[3]">
-                                    <!--begin::Wrapper-->
                                     <div class="w-100">
-                                        <!--begin::Heading-->
+                                        <div class="pb-8 pb-lg-10">
+                                            <h2 class="fw-bolder text-dark">Token Distribution</h2>
+                                            <div class="text-muted fw-bold fs-6">
+                                                Config your token distribution
+                                            </div>
+                                        </div>
+                                        <div class="mb-0">
+                                            <TokenDistribution />
+                                        </div>
+                                    </div>
+                                </div>
+                                <div data-kt-stepper-element="content" :class="steps[4]">
+                                    <div class="w-100">
                                         <div class="pb-10 pb-lg-15">
-                                            <!--begin::Title-->
                                             <h2 class="fw-bolder text-dark">Additional Info</h2>
-                                            <!--end::Title-->
-                                            <!--begin::Notice-->
                                             <div class="text-muted fw-bold fs-6">If you need more info, please check out
                                             <a href="#" class="text-primary fw-bolder">Help Page</a>.</div>
-                                            <!--end::Notice-->
                                         </div>
-                                        <!--end::Heading-->
-                                        <!--begin::Input group-->
                                         <div class="d-flex flex-column mb-7 fv-row fv-plugins-icon-container">
-                                            <!--begin::Label-->
                                             <label class="d-flex align-items-center fs-6 fw-bold form-label mb-2">
                                                 <span class="required">Project Name</span>
                                             </label>
-                                            <!--end::Label-->
                                             <input type="text" class="form-control " placeholder="" name="card_name" value="">
                                         </div>
                                         <div class="d-flex flex-column mb-7 fv-row fv-plugins-icon-container">
-                                            <!--begin::Label-->
                                             <label class="d-flex align-items-center fs-6 fw-bold form-label mb-2">
                                                 <span class="required">Description</span>
                                             </label>
-                                            <!--end::Label-->
                                             <textarea class="form-control"></textarea>
                                         </div>
                                         <div class="d-flex flex-column mb-7 fv-row fv-plugins-icon-container">
-                                            <!--begin::Label-->
                                             <label class="d-flex align-items-center fs-6 fw-bold form-label mb-2">
                                                 <span class="required">Twitter Link</span>
                                             </label>
-                                            <!--end::Label-->
                                             <input type="text" class="form-control fw-normal" name="twitter" placeholder="https://twitter.com/icto_app" >
                                             <div class="fs-7 fw-normal text-muted">Create a public post with launchpad id (will be available after completing the steps) using this twitter account, we will review and issue a project verification checkmark <Verified></Verified></div>
 
                                         </div>
                                         <div class="d-flex flex-column mb-7 fv-row fv-plugins-icon-container">
-                                            <!--begin::Label-->
                                             <label class="d-flex align-items-center fs-6 fw-bold form-label mb-2">
                                                 <span class="">Official Website</span>
                                             </label>
-                                            <!--end::Label-->
                                             <input type="text" class="form-control fw-normal" name="twitter" placeholder="https://website.com" >
                                         </div>
                                         <div class="d-flex flex-column mb-7 fv-row fv-plugins-icon-container">
-                                            <!--begin::Label-->
                                             <label class="d-flex align-items-center fs-6 fw-bold form-label mb-2">
                                                 <span class="">Telegram</span>
                                             </label>
-                                            <!--end::Label-->
                                             <input type="text" class="form-control fw-normal" name="twitter" placeholder="https://t.me/icto_app" >
                                         </div>
                                         <div class="d-flex flex-column mb-7 fv-row fv-plugins-icon-container">
-                                            <!--begin::Label-->
                                             <label class="d-flex align-items-center fs-6 fw-bold form-label mb-2">
                                                 <span class="">Discord</span>
                                             </label>
-                                            <!--end::Label-->
                                             <input type="text" class="form-control fw-normal" name="twitter" placeholder="https://dg.gg/icto_app" >
                                         </div>
                                         <div class="d-flex flex-column mb-7 fv-row fv-plugins-icon-container">
-                                            <!--begin::Label-->
                                             <label class="d-flex align-items-center fs-6 fw-bold form-label mb-2">
                                                 <span class="">Open Chat</span>
                                             </label>
-                                            <!--end::Label-->
                                             <input type="text" class="form-control fw-normal" name="twitter" placeholder="https://oc.app/icto_app" >
                                         </div>
-                                        <!--end::Input group-->
-                                        
                                     </div>
                                     <!--end::Wrapper-->
                                 </div>
                                 <!--end::Step 4-->
                                 <!--begin::Step 5-->
-                                <div data-kt-stepper-element="content" :class="steps[4]">
+                                <div data-kt-stepper-element="content" :class="steps[5]">
                                     <!--begin::Wrapper-->
                                     <div class="w-100">
                                         <!--begin::Heading-->
@@ -855,7 +914,7 @@
                                             <span class="indicator-progress">Please wait...
                                             <span class="spinner-border spinner-border-sm align-middle ms-2"></span></span>
                                         </button>
-                                        <button type="button" class="btn btn-lg btn-primary" @click="changeStep(currentStep+1)" v-if="currentStep<=3">Continue
+                                        <button type="button" class="btn btn-lg btn-primary" @click="changeStep(currentStep+1)" v-if="currentStep<=4">Continue
                                         <!--begin::Svg Icon | path: icons/duotune/arrows/arr064.svg-->
                                         <span class="svg-icon svg-icon-4 ms-1 me-0">
                                             <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none">

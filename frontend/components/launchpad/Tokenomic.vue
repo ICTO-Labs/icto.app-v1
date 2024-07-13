@@ -7,9 +7,12 @@
     const props = defineProps(['data', 'legend']);
     console.log('props', props.data);
     const chartData = ref(props.data);//Key, value pair
-    watch(props.data, async() =>{
+    watch(() => [props.data, props.legend], ([newData, newTimeline]) => {
+        console.log('newStatus', newData);
+        chartData.value = newData;
         generateChartData();
-    })
+    });
+
     //Extract key/value to two arrays
     const _labels = ref([]);
     const _data = ref([]);
