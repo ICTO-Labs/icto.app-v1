@@ -1,8 +1,26 @@
 <script setup>
-    import { ref, reactive, computed } from 'vue';
+    import { ref, reactive, watch , computed } from 'vue';
     import Tokenomic from '@/components/launchpad/Tokenomic.vue';
+    import { Money3Component as money3 } from 'v-money3'
+
     const activeTab = ref("fairlaunch");
     import { currencyFormat } from '@/utils/token';
+    const props = defineProps({
+        initialDistribution: {
+            type: Object,
+            required: true
+        }
+    });
+
+    //Define emits
+    const emit = defineEmits(['update:distribution']);
+
+    //Distribution
+    const distribution = reactive(props.initialDistribution);
+
+    watch(distribution, (newValue) => {
+        emit('update:distribution', newValue);
+    }, { deep: true });
 
     const showTab = (tab) => {
         if(activeTab.value === tab) activeTab.value = "";
@@ -13,43 +31,22 @@
         return activeTab.value === tab;
     }
 
-    const distribution = reactive({
-        fairlaunch: {
-            title: "Fairlaunch",
-            description: "Tokens available for public sale",
-            total: 25_000,
-            vesting: {
-                cliff: 0,
-                duration: 0,
-                unlockFrequency: 0,
-            },
-            recipients: []
-        },
-        liquidity: {
-            title: "Liquidity",
-            description: "Tokens reserved for liquidity",
-            total: 15_000,
-            vesting: {
-                cliff: 0,
-                duration: 365 * 24 * 60 * 60,
-                unlockFrequency: 0,
-            },
-            recipients: []
-        },
-        team: {
-            title: "Team",
-            description: "Team allocation",
-            total: 100_000_000,
-            vesting: {
-                cliff: 0,
-                duration: 2 * 365 * 24 * 60 * 60,
-                unlockFrequency: 0,
-            },
-            recipients: []
-        },
-        others: []
-    });
-
+    const money3Config = {
+        masked: true,
+        prefix: '',
+        suffix: '',
+        thousands: ',',
+        decimal: '.',
+        precision: 0,
+        disableNegative: false,
+        disabled: false,
+        min: 0,
+        max: null,
+        allowBlank: false,
+        minimumNumberOfCharacters: 0,
+        shouldRound: true,
+        focusOnRight: false,
+    };
     const addRecipient = (key, otherIndex = null) => {
         if (key === 'others') {
             if (otherIndex !== null) {
@@ -129,8 +126,10 @@
             others: 0,
         };
         distribution.others.forEach((_, index) => {
-            result[`others_${index}`] = calculateTotal(`others_${index}`);
-            result['others'] += result[`others_${index}`];
+            const totalAmount = calculateTotal(`others_${index}`);
+            result[`others_${index}`] = totalAmount;
+            result['others'] += totalAmount;
+            distribution.others[index].total = totalAmount;
         });
         return result;
     });
@@ -290,7 +289,7 @@
 
                         
                         <h6 v-if="key=='team'">Recipients <span class="badge badge-light fw-bold py-2 px-2 ms-2 text-primary">{{ config.recipients.length }}</span></h6>
-                            <div class="row mb-0">
+                            <div class="row mb-0" v-if="key=='team'">
                                 <div class="col-md-2">
                                     <label class="fs-7 fw-bold form-label mb-2 required">Amount:</label>
                                 </div>
@@ -307,7 +306,10 @@
                             <div v-for="(recipient, index) in config.recipients" :key="index" v-if="key=='team'">
                                 <div class="row mb-2">
                                     <div class="col-md-2">
-                                        <input v-model.number="recipient.amount" type="number" min="0" placeholder="Amount" class="form-control form-control-sm" />
+                                        <money3 v-model.number="recipient.amount" class="form-control form-control-sm"
+                                        v-bind="money3Config"></money3>
+
+                                        <!-- <input v-model.number="recipient.amount" type="number" min="0" placeholder="Amount" class="form-control form-control-sm" /> -->
                                     </div>
                                     <div class="col-md-6">
                                         <input v-model="recipient.address" :placeholder="`Principal #${index+1}`"  class="form-control form-control-sm" />
@@ -336,7 +338,7 @@
                             <div class="row mb-5">
                                 <div class="col-md-4">
                                     <label class="fs-7 fw-bold form-label mb-2">Total amount:</label>
-                                    <input :value="totals[`others_${otherIndex}`].toLocaleString()" type="text" readonly class="form-control form-control-sm" />
+                                    <input :value="totals[`others_${otherIndex}`].toLocaleString()" type="text" disabled class="form-control form-control-sm" />
                                     <!-- <input v-model.number="otherConfig.total" type="number" placeholder="Total" class="form-control form-control-sm" /> -->
                                 </div>
                                 <div class="col-md-8">
@@ -445,7 +447,9 @@
                             <div v-for="(recipient, recipientIndex) in otherConfig.recipients" :key="recipientIndex">
                                 <div class="row mb-2">
                                     <div class="col-md-2">
-                                        <input v-model.number="recipient.amount" type="number" min="0" placeholder="Amount" class="form-control form-control-sm" />
+                                        <money3 v-model.number="recipient.amount" class="form-control form-control-sm"
+                                        v-bind="money3Config"></money3>
+                                        <!-- <input v-model.number="recipient.amount" type="number" min="0" placeholder="Amount" class="form-control form-control-sm" /> -->
                                     </div>
                                     <div class="col-md-6">
                                         <input v-model="recipient.address" :placeholder="`Principal #${recipientIndex+1}`" class="form-control form-control-sm" />

@@ -57,8 +57,7 @@ shared ({ caller = deployer }) actor class LaunchpadCanister() = this {
         launchpadDetail := ?_info;
         installed := true;
         //Setting ledger for fee payment
-            let _purchaseToken = await getTokenInfo(_info.purchaseToken);
-            PurchaseLedger := actor(_purchaseToken.canisterId);
+            PurchaseLedger := actor(_info.purchaseToken.canisterId);
         return #ok(installed);
     };
 
@@ -199,6 +198,8 @@ shared ({ caller = deployer }) actor class LaunchpadCanister() = this {
         installed := false;
         launchpadDetail := null;
         whitelist := [];
+        transactions.clear();
+        _participants := [];
         TOTAL_AMOUNT_COMMITED := 0;
         LAUNCH_STATUS := "NOT_STARTED";
     };

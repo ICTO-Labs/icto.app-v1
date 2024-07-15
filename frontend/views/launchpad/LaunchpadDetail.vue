@@ -3,11 +3,13 @@
     import Tokenomic from '@/components/launchpad/Tokenomic.vue';
     import VueCountdown from '@chenfengyuan/vue-countdown';
     import Timeline from '@/components/launchpad/Timeline.vue';
+    import Links from '@/components/Links.vue';
     import moment from 'moment';
     import { timeFromNano, showError, showSuccess, showLoading, getPoolStatus } from '@/utils/common';
     import { getInfo, useCommit, getStatus } from '@/services/Launchpad';
+    import { formatTokenomic } from '@/utils/launchpad';
     import { useRoute } from 'vue-router';
-    import { parseTokenAmount, formatTokenAmount } from '@/utils/token';
+    import { parseTokenAmount, formatTokenAmount, currencyFormat } from '@/utils/token';
     import { useGetMyBalance } from '@/services/Token';
     const router = useRoute();
     const launchpadId = router.params.launchpadId;
@@ -16,6 +18,7 @@
     const depositAmount = ref(0);
     const countdown = ref(10 * 24 * 60 * 60 * 1000);
     const myBalance = ref(0);
+    const tokennomics = ref([]);
 
     // const { data: tokenTransactions, isError, error, isLoading: isTransLoading, isRefetching: isTransRefetching, refetch: refreshTransactions } = useGetTransactions(tokenId, 'icrc2', 0, 100);
     const { data: launchpadInfo, isError, error, isLoading, isRefetching, refetch, isFetched } = getInfo(launchpadId);
@@ -24,9 +27,10 @@
     watchEffect(() => {
         if (isFetched.value && launchpadInfo.value) {
             console.log('changed', isFetched, launchpadInfo.value);
-            purchaseToken.value = launchpadInfo.value.purchaseToken[0];
-            saleToken.value = launchpadInfo.value.saleToken[0];
-            depositAmount.value = parseTokenAmount(launchpadInfo.value.launchParams.minimumAmount, purchaseToken.value.decimals);
+            purchaseToken.value = launchpadInfo.value.purchaseToken;
+            saleToken.value = launchpadInfo.value.saleToken;
+            // depositAmount.value = parseTokenAmount(launchpadInfo.value.launchParams.minimumAmount, purchaseToken.value.decimals);
+            tokennomics.value = formatTokenomic(launchpadInfo.value.distribution);
             //Check balance
             // checkPurchaseBalance();
             // countdown.value = moment(timeFromNano(launchpadInfo.value.timeline.startTime).valueOf()).diff(moment());
@@ -47,14 +51,6 @@
     }
     // const launchpadInfo = ref(null);
     // import { useGetLaunchpad } from "@/services/Launchpad";
-    const tokennomics = ref([
-        { title: 'Fairlaunch', value: 20 },
-        { title: 'DEXs listing', value: 61 },
-        { title: 'Incentives', value: 5 },
-        { title: 'Marketing', value: 5 },
-        { title: 'Team & Dev', value: 9 }]
-        // 'Fairlaunch': 20, 'DEXs listing': 61, 'Incentives': 5, 'Marketing': 5, 'Team & Dev': 9
-    )
 
     const checkPurchaseBalance = async()=>{
         const _balance = await useGetMyBalance(purchaseToken.value.canisterId);
@@ -86,7 +82,7 @@
         // checkAmount();
         Swal.fire({
 		title: "Are you sure?",
-		text: "Deposit amount: "+ depositAmount.value + " "+ purchaseToken.value.symbol + " to this campaign?",
+		text: "Commit amount: "+ depositAmount.value + " "+ purchaseToken.value.symbol + " to this campaign?",
 		icon: "warning",
 		showCancelButton: true,
 		confirmButtonColor: "#3085d6",
@@ -98,7 +94,7 @@
                 let _amount = Number(formatTokenAmount(depositAmount.value, purchaseToken.value.decimals));
                 let _deposit = await useCommit(_amount, launchpadId);
                 if(_deposit && "ok" in _deposit) {
-                    showSuccess('Your deposit has been successfully processed, amount: '+ depositAmount.value, true);
+                    showSuccess('Your commit has been successfully processed!', true);
                 }else{
                     showError(_deposit.err, true);
                 }
@@ -122,11 +118,14 @@
         <div class="col-xxl-8">
             <div class="card mb-5 mb-xl-10">
                 <div class="card-body pt-7 pb-0 px-0">
+                    <!-- <div class="banner" v-if="launchpadInfo.projectInfo.banner">
+                        <img :src="launchpadInfo.projectInfo.banner" alt="banner" />
+                    </div>  -->
                     <div class="d-flex flex-wrap flex-sm-nowrap mb-1 px-5">
                         <!--begin: Pic-->
                         <div class="me-7 mb-4">
                             <div class="symbol symbol-80px symbol-lg-100px symbol-fixed position-relative">
-                                <img src="https://photos.pinksale.finance/file/pinksale-logo-upload/1717078461109-c71e5c5021193a2383f5ecd6e10c4280.png" alt="image">
+                                <img :src="launchpadInfo.projectInfo.logo" alt="image">
                             </div>
                         </div>
                         <!--end::Pic-->
@@ -150,21 +149,16 @@
                                     <!--end::Name-->
                                     <!--begin::Info-->
                                     <div class="d-flex flex-wrap fw-bold fs-6 mb-2 pe-2">
-                                        <a href="#" class="btn btn-icon me-3 btn-sm"><i class="fas fa-globe fs-4"></i></a>
-                                        <a href="#" class="btn btn-icon me-3 btn-sm"><i class="fab fa-twitter fs-4"></i></a>
-                                        <a href="#" class="btn btn-icon me-3 btn-sm"><i class="fab fa-telegram fs-4"></i></a>
-                                        <a href="#" class="btn btn-icon me-3 btn-sm"><i class="fab fa-discord fs-4"></i></a>
-                                        <a href="#" class="btn btn-icon me-3 btn-sm"><i class="fab fa-facebook-f fs-4"></i></a>
-                                        <a href="#" class="btn btn-icon me-3 btn-sm"><i class="fab fa-youtube fs-4"></i></a>
+                                        <Links :links="launchpadInfo.projectInfo.links[0]" />
                                     </div>
                                     <div>
-                                        <span class="badge badge-light-warning fw-bolder me-auto px-4 py-2 ps-4"><i class="fas fa-fire text-danger"></i> HOT #2</span>
+                                        <span class="badge badge-light-danger fw-bolder me-auto px-4 py-2 ps-4"><i class="fas fa-fire text-danger"></i> HOT #1</span>
                                         <span class="badge badge-light-primary fw-bolder me-auto px-4 py-2 ps-4 ms-4" v-if="launchpadInfo.projectInfo.isAudited"><i class="fas fa-shield-alt text-primary"></i> AUDITED</span>
                                     </div>
                                     <!--end::Info-->
                                 </div>
                                 <div class="d-flex my-4">
-                                    <div class="d-flex fs-7 align-items-center " v-html="getPoolStatus(status.status)"></div>
+                                    <div class="d-flex fs-7 align-items-center " v-html="getPoolStatus(status.status)" v-if="status.status"></div>
                                 </div>
                             </div>
                         </div>
@@ -186,19 +180,19 @@
                             <tbody class="fs-7 fw-bold text-gray-600">
                                 <tr>
                                     <td>Token Name</td>
-                                    <td class="text-end fw-bolder">{{launchpadInfo.saleToken[0].name}}</td>
+                                    <td class="text-end fw-bolder"><img :src="launchpadInfo.saleToken.logo" class="w-30px" /> {{launchpadInfo.saleToken.name}}</td>
                                 </tr>
                                 <tr>
                                     <td>Token Symbol</td>
-                                    <td class="text-end fw-bolder">{{launchpadInfo.saleToken[0].symbol}}</td>
+                                    <td class="text-end fw-bolder">{{launchpadInfo.saleToken.symbol}}</td>
                                 </tr>
                                 <tr>
                                     <td>Token Decimals</td>
-                                    <td class="text-end fw-bolder">{{launchpadInfo.saleToken[0].decimals}}</td>
+                                    <td class="text-end fw-bolder">{{launchpadInfo.saleToken.decimals}}</td>
                                 </tr>
                                 <tr>
                                     <td>Token Canister</td>
-                                    <td class="text-end fw-bolder text-primary">bkyz2-fmaaa-aaaaa-qaaaq-cai <Copy :text="bkyz2-fmaaa-aaaaa-qaaaq-cai"></Copy></td>
+                                    <td class="text-end fw-bolder text-primary">--- <Copy :text="bkyz2-fmaaa-aaaaa-qaaaq-cai"></Copy></td>
                                 </tr>
                                 <tr>
                                     <td>Total Supply</td>
@@ -206,23 +200,23 @@
                                 </tr>
                                 <tr>
                                     <td>Tokens For Fairlaunch</td>
-                                    <td class="text-end fw-bolder">{{launchpadInfo.distribution.fairlaunch}}</td>
+                                    <td class="text-end fw-bolder">{{currencyFormat(parseTokenAmount(launchpadInfo.distribution.fairlaunch.total, saleToken.decimals))}}</td>
                                 </tr>
                                 <tr>
                                     <td>Tokens For Liquidity</td>
-                                    <td class="text-end fw-bolder">{{launchpadInfo.distribution.liquidity}}</td>
+                                    <td class="text-end fw-bolder">{{currencyFormat(parseTokenAmount(launchpadInfo.distribution.liquidity.total, saleToken.decimals))}}</td>
                                 </tr>
                                 <tr>
                                     <td>Initial Market Cap (estimate)</td>
-                                    <td class="text-end fw-bolder">$30.000</td>
+                                    <td class="text-end fw-bolder">---</td>
                                 </tr>
                                 <tr>
                                     <td>Soft Cap</td>
-                                    <td class="text-end fw-bolder">{{parseTokenAmount(launchpadInfo.launchParams.softCap, purchaseToken.decimals)}} {{ purchaseToken.symbol }}</td>
+                                    <td class="text-end fw-bolder">{{currencyFormat(parseTokenAmount(launchpadInfo.launchParams.softCap, purchaseToken.decimals))}} {{ purchaseToken.symbol }}</td>
                                 </tr>
                                 <tr>
                                     <td>Hard Cap</td>
-                                    <td class="text-end fw-bolder">{{parseTokenAmount(launchpadInfo.launchParams.hardCap, purchaseToken.decimals)}} {{ purchaseToken.symbol }}</td>
+                                    <td class="text-end fw-bolder">{{currencyFormat(parseTokenAmount(launchpadInfo.launchParams.hardCap, purchaseToken.decimals))}} {{ purchaseToken.symbol }}</td>
                                 </tr>
                                 <tr>
                                     <td>Min per user</td>
@@ -254,7 +248,7 @@
                     <h3 class="card-title">Tokenomics</h3>
                 </div>
                 <div class="card-body">
-                    <!--<Tokenomic :data="tokennomics" :legend="1"/>-->
+                    <Tokenomic :data="tokennomics" :legend="1"/>
                 </div>
             </div>
         </div>
@@ -270,10 +264,10 @@
                                 <span v-if="status.status == 'LIVE'">
                                     POOL ENDS IN
                                 </span>
-                                <span v-else-if="UPCOMING">
+                                <span v-else-if="status.status == 'UPCOMING'">
                                     POOL STARTS IN
                                 </span>
-                                <span v-else>
+                                <span class="text-muted" v-else>
                                     POOL ENDED
                                 </span>
                             </div>
@@ -309,7 +303,7 @@
                                 <div class="text-gray-500">Current commit</div>
                                 <div class="ms-auto fw-bold text-gray-700"></div>
                                 <div class="text-primary fw-bold">
-                                    {{parseTokenAmount(status.totalAmountCommitted, purchaseToken.decimals)}} {{ purchaseToken.symbol }}</div>
+                                    {{currencyFormat(parseTokenAmount(status.totalAmountCommitted, purchaseToken.decimals))}} {{ purchaseToken.symbol }}</div>
                             </div>
 
                             <div class="h-8px bg-light rounded mb-1">
@@ -319,8 +313,8 @@
                                 <div class="triangle" :style="`left: ${(Number(launchpadInfo.launchParams.softCap)/Number(launchpadInfo.launchParams.hardCap)*100).toFixed(2)}%;`"></div> 
                             </div>
                             <div class="d-flex justify-content-between w-100 fs-7 fw-bold mb-1">
-                                <div class="text-primary">Soft cap: {{parseTokenAmount(launchpadInfo.launchParams.softCap, purchaseToken.decimals)}} {{ purchaseToken.symbol }}</div>
-                                <div class="text-danger">Hard cap: {{parseTokenAmount(launchpadInfo.launchParams.hardCap, purchaseToken.decimals)}} {{ purchaseToken.symbol }}</div>
+                                <div class="text-primary">Soft cap: {{currencyFormat(parseTokenAmount(launchpadInfo.launchParams.softCap, purchaseToken.decimals))}} {{ purchaseToken.symbol }}</div>
+                                <div class="text-danger">Hard cap: {{currencyFormat(parseTokenAmount(launchpadInfo.launchParams.hardCap, purchaseToken.decimals))}} {{ purchaseToken.symbol }}</div>
                             </div>
                             <div class="separator"></div>
                             <div class="form-group fs-7 mt-5">

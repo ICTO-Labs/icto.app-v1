@@ -87,10 +87,16 @@ module {
         total: Nat;//Total Amount
         recipients: [Recipient];
     };
+    public type FixClaimContract = {
+        title: Text;
+        description: Text;
+        vesting: VestingInfo;
+        total: Nat;//Total Amount
+    };
 
     public type Distribution = {
-        fairlaunch: Nat;
-        liquidity: Nat;
+        fairlaunch: FixClaimContract;
+        liquidity: FixClaimContract;
         team: ClaimContract;
         others: [ClaimContract];
     };
@@ -99,11 +105,9 @@ module {
         // cid : Text;
         projectInfo : ProjectInfo;
         timeline : Timeline;
-        purchaseToken : ?TokenInfo;//Token used for purchase - default ICP
-        saleToken: ?TokenInfo;//Only ICRC standard token
+        purchaseToken : TokenInfo;//Token used for purchase - default ICP
+        saleToken: TokenInfo;//Only ICRC standard token
         launchParams : LaunchParams;
-        vesting: VestingInfo;//Token distribute to participants
-        tokenomics: [Tokenomic];
         distribution: Distribution;
         creator : Text;
         affiliate: Nat;//Percent

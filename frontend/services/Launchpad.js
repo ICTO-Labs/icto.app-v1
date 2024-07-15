@@ -1,7 +1,7 @@
 import Connect from "@/ic/actor/Connect";
 import config from "@/config";
 import { useQuery } from "@tanstack/vue-query";
-export const install = async (params, whitelist, canisterId="d6g4o-amaaa-aaaaa-qaaoq-cai") =>{
+export const install = async (params, whitelist, canisterId="2phil-viaaa-aaaap-qhoka-cai") =>{
     try{
         return await Connect.canister(canisterId, 'launchpad_detail').install(params, whitelist);
     }catch(e){

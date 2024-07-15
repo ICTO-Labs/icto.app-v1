@@ -10,9 +10,15 @@ export interface ClaimContract {
 }
 export interface Distribution {
   'team' : ClaimContract,
-  'liquidity' : bigint,
+  'liquidity' : FixClaimContract,
   'others' : Array<ClaimContract>,
-  'fairlaunch' : bigint,
+  'fairlaunch' : FixClaimContract,
+}
+export interface FixClaimContract {
+  'title' : string,
+  'vesting' : VestingInfo,
+  'total' : bigint,
+  'description' : string,
 }
 export interface LaunchParams {
   'softCap' : bigint,
@@ -33,14 +39,12 @@ export interface LaunchpadCanister {
 }
 export interface LaunchpadDetail {
   'fee' : bigint,
-  'saleToken' : [] | [TokenInfo],
-  'vesting' : VestingInfo,
+  'saleToken' : TokenInfo,
   'creator' : string,
-  'tokenomics' : Array<Tokenomic>,
   'projectInfo' : ProjectInfo,
   'launchParams' : LaunchParams,
   'restrictedArea' : [] | [Array<string>],
-  'purchaseToken' : [] | [TokenInfo],
+  'purchaseToken' : TokenInfo,
   'affiliate' : bigint,
   'distribution' : Distribution,
   'timeline' : Timeline,
@@ -94,7 +98,6 @@ export interface TokenInfo {
   'symbol' : string,
   'canisterId' : string,
 }
-export interface Tokenomic { 'title' : string, 'value' : bigint }
 export interface Transaction {
   'method' : string,
   'time' : Time,

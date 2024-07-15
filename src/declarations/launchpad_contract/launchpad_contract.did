@@ -12,11 +12,6 @@ type Transaction =
    time: Time;
    txId: opt nat;
  };
-type Tokenomic = 
- record {
-   title: text;
-   value: nat;
- };
 type TokenInfo = 
  record {
    canisterId: text;
@@ -86,12 +81,10 @@ type LaunchpadDetail =
    fee: nat;
    launchParams: LaunchParams;
    projectInfo: ProjectInfo;
-   purchaseToken: opt TokenInfo;
+   purchaseToken: TokenInfo;
    restrictedArea: opt vec text;
-   saleToken: opt TokenInfo;
+   saleToken: TokenInfo;
    timeline: Timeline;
-   tokenomics: vec Tokenomic;
-   vesting: VestingInfo;
  };
 type LaunchpadCanister = 
  service {
@@ -112,10 +105,17 @@ type LaunchParams =
    sellAmount: nat;
    softCap: nat;
  };
+type FixClaimContract = 
+ record {
+   description: text;
+   title: text;
+   total: nat;
+   vesting: VestingInfo;
+ };
 type Distribution = 
  record {
-   fairlaunch: nat;
-   liquidity: nat;
+   fairlaunch: FixClaimContract;
+   liquidity: FixClaimContract;
    others: vec ClaimContract;
    team: ClaimContract;
  };

@@ -22,12 +22,6 @@ export const idlFactory = ({ IDL }) => {
     'symbol' : IDL.Text,
     'canisterId' : IDL.Text,
   });
-  const VestingInfo = IDL.Record({
-    'duration' : IDL.Nat,
-    'unlockFrequency' : IDL.Nat,
-    'cliff' : IDL.Nat,
-  });
-  const Tokenomic = IDL.Record({ 'title' : IDL.Text, 'value' : IDL.Nat });
   const ProjectInfo = IDL.Record({
     'metadata' : IDL.Opt(IDL.Vec(IDL.Tuple(IDL.Text, IDL.Text))),
     'logo' : IDL.Text,
@@ -45,6 +39,11 @@ export const idlFactory = ({ IDL }) => {
     'maximumAmount' : IDL.Nat,
     'minimumAmount' : IDL.Nat,
   });
+  const VestingInfo = IDL.Record({
+    'duration' : IDL.Nat,
+    'unlockFrequency' : IDL.Nat,
+    'cliff' : IDL.Nat,
+  });
   const Recipient = IDL.Record({
     'note' : IDL.Opt(IDL.Text),
     'address' : IDL.Text,
@@ -57,11 +56,17 @@ export const idlFactory = ({ IDL }) => {
     'description' : IDL.Text,
     'recipients' : IDL.Vec(Recipient),
   });
+  const FixClaimContract = IDL.Record({
+    'title' : IDL.Text,
+    'vesting' : VestingInfo,
+    'total' : IDL.Nat,
+    'description' : IDL.Text,
+  });
   const Distribution = IDL.Record({
     'team' : ClaimContract,
-    'liquidity' : IDL.Nat,
+    'liquidity' : FixClaimContract,
     'others' : IDL.Vec(ClaimContract),
-    'fairlaunch' : IDL.Nat,
+    'fairlaunch' : FixClaimContract,
   });
   const Timeline = IDL.Record({
     'startTime' : Time,
@@ -72,14 +77,12 @@ export const idlFactory = ({ IDL }) => {
   });
   const LaunchpadDetail = IDL.Record({
     'fee' : IDL.Nat,
-    'saleToken' : IDL.Opt(TokenInfo),
-    'vesting' : VestingInfo,
+    'saleToken' : TokenInfo,
     'creator' : IDL.Text,
-    'tokenomics' : IDL.Vec(Tokenomic),
     'projectInfo' : ProjectInfo,
     'launchParams' : LaunchParams,
     'restrictedArea' : IDL.Opt(IDL.Vec(IDL.Text)),
-    'purchaseToken' : IDL.Opt(TokenInfo),
+    'purchaseToken' : TokenInfo,
     'affiliate' : IDL.Nat,
     'distribution' : Distribution,
     'timeline' : Timeline,
