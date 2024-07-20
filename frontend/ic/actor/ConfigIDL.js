@@ -10,6 +10,7 @@ import icrc3IDL from '@/ic/candid/icrc2.did';
 import extNFTIDL from '@/ic/candid/extNFT.did';
 import contractIDL from '@/ic/candid/contract.did';
 import swapPoolIDL from '@/ic/candid/icpswap/swapPool.did';
+import shortLinkIDL from '@/ic/candid/shortLink.did';
 import {idlFactory as deployerIDL} from '../../../src/declarations/deployer/deployer.did.js';
 import {idlFactory as tokenDeployerIDL} from '../../../src/declarations/token_deployer/token_deployer.did.js';
 import {idlFactory as backendIDL} from '../../../src/declarations/backend/backend.did.js';
@@ -30,6 +31,7 @@ export const preloadIdls = {
     'ext': ext,
     'IC': icIDL,
     'contract': contractIDL,
+    'shortLink': shortLinkIDL,
     'token_claim': claimContractIDL,
     'indexing': indexingIDL,
     'launchpad_detail': launchpadDetailIDL,

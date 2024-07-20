@@ -10,7 +10,8 @@ const NETWORK = {
         gov_token_id: "ajuq4-ruaaa-aaaaa-qaaga-cai",//governance token, required for charges
         host: "http://127.0.0.1:8000",
         identityProvider: "http://127.0.0.1:8000/?canisterId="+local_canisters.internet_identity.local+"#authorize",
-        scan: "http://127.0.0.1:8000/?canisterId=bd3sg-teaaa-aaaaa-qaaba-cai&id="
+        scan: "http://127.0.0.1:8000/?canisterId=bd3sg-teaaa-aaaaa-qaaba-cai&id=",
+        shortlink_id: "727zs-iiaaa-aaaap-qhoua-cai"
     },
     "staging": {
         canister_id: "bkyz2-fmaaa-aaaaa-qaaaq-cai",
@@ -27,7 +28,8 @@ const NETWORK = {
         indexing_id: canisters.indexing_canister.ic,//Mapping canister
         host: "https://icp-api.io",
         scan: "https://dashboard.internetcomputer.org/canister/",
-        identityProvider: "https://identity.ic0.app/#authorize"
+        identityProvider: "https://identity.ic0.app/#authorize",
+        shortlink_id: "727zs-iiaaa-aaaap-qhoua-cai"
     }
 }
 const ENV = process.env.NODE_ENV == "development" ? "dev" : "ic";
@@ -41,6 +43,7 @@ const config = {
     TOKEN_DEPLOYER_CANISTER_ID: NETWORK[ENV]['token_deployer_id'],
     BACKEND_CANISTER_ID: NETWORK[ENV]['backend_id'],
     INDEXING_CANISTER_ID: NETWORK[ENV]['indexing_id'],
+    SHORTLINK_CANISTER_ID: NETWORK[ENV]['shortlink_id'],
     CANIC_CANISTER_ID: "mxftc-eyaaa-aaaap-qanga-cai",
     CANISTER_CYCLE_MINTING: "rkp4c-7iaaa-aaaaa-aaaca-cai",
     CANISTER_IC_MANAGEMENT: "aaaaa-aa",
