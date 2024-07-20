@@ -1,16 +1,17 @@
 <script setup>
-    import { ref, onMounted, watchEffect } from 'vue';
+    import { ref, onMounted, watchEffect, computed } from 'vue';
     import Tokenomic from '@/components/launchpad/Tokenomic.vue';
     import VueCountdown from '@chenfengyuan/vue-countdown';
     import Timeline from '@/components/launchpad/Timeline.vue';
     import Links from '@/components/Links.vue';
     import moment from 'moment';
-    import { timeFromNano, showError, showSuccess, showLoading, getPoolStatus } from '@/utils/common';
-    import { getInfo, useCommit, getStatus } from '@/services/Launchpad';
+    import { timeFromNano, showError, showSuccess, showLoading, getPoolStatus, getRef, saveRef, shortPrincipal } from '@/utils/common';
+    import { getInfo, useCommit, getStatus, getTopAffiliates, useCreateShortlink } from '@/services/Launchpad';
     import { formatTokenomic } from '@/utils/launchpad';
     import { useRoute } from 'vue-router';
     import { parseTokenAmount, formatTokenAmount, currencyFormat } from '@/utils/token';
     import { useGetMyBalance } from '@/services/Token';
+    import walletStore from "@/store";
     const router = useRoute();
     const launchpadId = router.params.launchpadId;
     const purchaseToken = ref(null);
@@ -22,6 +23,7 @@
 
     // const { data: tokenTransactions, isError, error, isLoading: isTransLoading, isRefetching: isTransRefetching, refetch: refreshTransactions } = useGetTransactions(tokenId, 'icrc2', 0, 100);
     const { data: launchpadInfo, isError, error, isLoading, isRefetching, refetch, isFetched } = getInfo(launchpadId);
+    const { data: topAffiliates } = getTopAffiliates(launchpadId);
     const { data: status, isError: isStatusError, error: statusError, isLoading: isStatusLoading, isRefetching: isStatusRefetching, refetch: refetchStatus } = getStatus(launchpadId);
     console.log('launchpadInfo', launchpadInfo);
     watchEffect(() => {
@@ -92,7 +94,8 @@
             if (result.isConfirmed) {
                 showLoading('Processing your deposit, please wait...');
                 let _amount = Number(formatTokenAmount(depositAmount.value, purchaseToken.value.decimals));
-                let _deposit = await useCommit(_amount, launchpadId);
+                let _refCode = getRef();
+                let _deposit = await useCommit(launchpadId, _amount, _refCode);
                 if(_deposit && "ok" in _deposit) {
                     showSuccess('Your commit has been successfully processed!', true);
                 }else{
@@ -107,7 +110,34 @@
     
     onMounted(() => {
         // getLaunchpadInfo();
+        const urlParams = new URLSearchParams(window.location.search);
+        const ref = urlParams.get('r');
+        if (ref) {
+            console.log('have ref:', ref);
+            saveRef(ref.trim());
+            // localStorage.setItem('refBy', ref);
+        }
     });
+
+    const shortLink = ref('');
+    const validUrlId = ref('');
+    const handleShortLinkInput = ()=>{
+        validUrlId.value = toValidUrlId(shortLink.value);
+    }
+    const toValidUrlId = (input) => {
+        return input
+        .toLowerCase()
+        .replace(/[^a-z0-9\s-]/g, '')
+        .trim()
+        .replace(/\s+/g, '-')
+        .replace(/-+/g, '-');
+    };
+
+    const handleShortLink = async()=>{
+        let _target = `https://icto.app/launchpad/${launchpadId}?r=${walletStore.principal}`
+        let _rs = await useCreateShortlink(validUrlId.value, _target);
+        console.log('_s', _rs, validUrlId.value, _target);
+    }
 </script>
 
 <template>
@@ -116,7 +146,7 @@
     <div class="" v-if="isLoading">Loading...</div>
     <div class="row g-xxl-9" v-if="launchpadInfo">
         <div class="col-xxl-8">
-            <div class="card mb-5 mb-xl-10">
+            <div class="card mb-5 mb-xl-5">
                 <div class="card-body pt-7 pb-0 px-0">
                     <!-- <div class="banner" v-if="launchpadInfo.projectInfo.banner">
                         <img :src="launchpadInfo.projectInfo.banner" alt="banner" />
@@ -170,7 +200,7 @@
                     </div>
                 </div>
             </div>
-            <div class="card mb-10">
+            <div class="card mb-5 mb-xl-5">
                 <div class="card-header ps-6">
                     <h3 class="card-title">Launch info</h3>
                 </div>
@@ -243,7 +273,7 @@
                     </div>
                 </div>
             </div>
-            <div class="card">
+            <div class="card mb-5 mb-xl-5">
                 <div class="card-header ps-6">
                     <h3 class="card-title">Tokenomics</h3>
                 </div>
@@ -251,11 +281,65 @@
                     <Tokenomic :data="tokennomics" :legend="1"/>
                 </div>
             </div>
+            <div class="card" v-if="status.affiliate > 0">
+                <div class="card-header ps-6">
+                    <h3 class="card-title">Top Affiliates</h3>
+                </div>
+                <div class="card-body p-5">
+                    <div class="col-md-12 fv-row">
+                        <label class="d-flex align-items-center fs-7 fw-bold mb-2"><span class="">Your referer link</span></label>
+                        <div class="input-group mb-3">
+                            <input type="text" :value="`https://icto.app/launchpad/${launchpadId}?r=${walletStore.principal}`" class="form-control form-control-sm"  readonly/>
+                            <span class="input-group-text fs-7"><Copy :text="`https://icto.app/launchpad/${launchpadId}?r=${walletStore.principal}`"/></span>
+                        </div>
+                    </div>
+                    <div class="row mb-5">
+                        <div class="col-md-6 fv-row">
+                            <label class="d-flex align-items-center fs-7 fw-bold mb-2"><span class="">Create custom short link</span></label>
+                            <div class="input-group mb-3">
+                                <input type="text" class="form-control form-control-sm" placeholder="Enter your short link" v-model="shortLink" @input="handleShortLinkInput" />
+                                <span class="btn btn-sm btn-secondary" @click="handleShortLink">Create</span>
+                            </div>
+                        </div>
+                        <div class="col-md-6 fv-row">
+                            <label class="d-flex align-items-center fs-7 fw-bold mb-2"><span class="">Preview</span></label>
+                            <div class="input-group mb-3">
+                                <input class="form-control form-control-sm" :value="`https://icto.link/${validUrlId || 'NOT_REGISTERED'}`" readonly/>
+                                <span class="input-group-text fs-7"> <Copy /></span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="table-responsive">
+                        <table class="table table-flush align-middle table-row-bordered table-hover gy-3 gs-5">
+                            <thead>
+                                <tr class="fw-bold">
+                                    <th class="text-center pe-3">#</th>
+                                    <th>Referer</th>
+                                    <th class="text-end pe-3">Reward (estimate)</th>
+                                    <th class="text-end pe-3">Aff Volume</th>
+                                    <th class="text-end pe-3">Ref Count</th>
+                                </tr>
+                            </thead>
+                            <tbody class="fs-7 text-gray-600">
+                                <tr v-for="(affiliate, idx) in topAffiliates">
+                                    <td class="text-center pe-3">{{idx+1}}.</td>
+                                    <td>{{shortPrincipal(affiliate[0])}} <Copy :text="affiliate[0]"></Copy></td>
+                                    <td class="text-end pe-3">{{ currencyFormat(parseTokenAmount(affiliate[1].projectedReward, purchaseToken.decimals)) }} {{ purchaseToken.symbol }}</td>
+                                    <td class="text-end pe-3">{{ currencyFormat(parseTokenAmount(affiliate[1].volume, purchaseToken.decimals)) }} {{ purchaseToken.symbol }}</td>
+                                    <td class="text-end pe-3">{{ affiliate[1].refCount }}</td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                    
+                </div>
+            </div>
         </div>
         <!--end::Col-->
         <!--begin::Col-->
         <div class="col-xxl-4">
-            <div class="card mb-5  mb-xl-10">
+            <div class="card mb-5  mb-xl-5">
                 <!--begin::Body-->
                 <div class="card-body pt-0 p-0">
                     <div class="text-center countdown p-5" v-if="countdown">
@@ -345,11 +429,11 @@
                                     </tr>
                                     <tr>
                                         <td>Affiliate Program</td>
-                                        <td class="text-end text-gray">{{status.affiliate > 0 ?"ENABLED":"NOT ENABLED"}}</td>
+                                        <td class="text-end text-primary">{{status.affiliate > 0 ?"ENABLED":"NOT ENABLED"}} ({{ status.affiliate }}%)</td>
                                     </tr>
                                     <tr>
                                         <td>Pool Size</td>
-                                        <td class="text-end">{{parseTokenAmount(status.totalAmountCommitted, purchaseToken.decimals)}} {{ purchaseToken.symbol }} ({{(Number(status.totalAmountCommitted)/Number(launchpadInfo.launchParams.hardCap)*100).toFixed(2)}}%)</td>
+                                        <td class="text-end">{{currencyFormat(parseTokenAmount(status.totalAmountCommitted, purchaseToken.decimals))}} {{ purchaseToken.symbol }} ({{(Number(status.totalAmountCommitted)/Number(launchpadInfo.launchParams.hardCap)*100).toFixed(2)}}%)</td>
                                     </tr>
                                     <tr>
                                         <td>Total Participants</td>
@@ -367,9 +451,9 @@
                 <!--end: Card Body-->
             </div>
             
-            <div class="card mb-5  mb-xl-10">
+            <div class="card mb-5 mb-xl-5">
                 <!--begin::Header-->
-                <div class="card-header align-items-center border-0 mt-4">
+                <div class="card-header align-items-center border-0 mt-4 ps-5">
                     <h3 class="card-title align-items-start flex-column">
                         <span class="fw-bolder mb-2 text-dark">Timeline</span>
                         <span class="text-muted fw-bold fs-7"></span>
@@ -383,6 +467,41 @@
                 <!--end: Card Body-->
             </div>
 
+            <div class="card mb-5 mb-xl-5" v-if="status.affiliate > 0">
+                <div class="card-header align-items-center border-0 mt-4 ps-5">
+                    <h3 class="card-title align-items-start flex-column">
+                        <span class="fw-bolder mb-2 text-dark">Referer Program</span>
+                        <span class="text-muted fw-bold fs-7"></span>
+                    </h3>
+                </div>
+                <div class="card-body pt-0 p-0">
+                    <div class="px-5">
+                        <div class="table-responsive">
+                            <table class="table table-flush align-middle table-row-bordered gy-3">
+                                <tbody class="fs-7 fw-bold text-gray-600">
+                                    <tr>
+                                        <td>Total Affiliate Volume</td>
+                                        <td class="text-end text-primary">{{currencyFormat(parseTokenAmount(status.totalAffiliateVolume, purchaseToken.decimals))}} {{ purchaseToken.symbol }}</td>
+                                    </tr>
+                                    <tr>
+                                        <td>Total Rewards</td>
+                                        <td class="text-end">{{currencyFormat(parseTokenAmount(status.affiliateRewardPool, purchaseToken.decimals))}} {{ purchaseToken.symbol }}</td>
+                                    </tr>
+                                    <tr>
+                                        <td>Reward Percentage</td>
+                                        <td class="text-end text-success">{{(Number(status.totalAffiliateVolume)*100/Number(status.totalAmountCommitted))}}%</td>
+                                    </tr>
+                                    <tr>
+                                        <td>Referer Transaction Count</td>
+                                        <td class="text-end">{{status.refererTransaction}}</td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+                <!--end: Card Body-->
+            </div>
         </div>
         <!--end::Col-->
     </div>

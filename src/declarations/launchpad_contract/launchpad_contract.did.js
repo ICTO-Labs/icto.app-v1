@@ -1,5 +1,10 @@
 export const idlFactory = ({ IDL }) => {
   const Result = IDL.Variant({ 'ok' : IDL.Bool, 'err' : IDL.Text });
+  const AffiliateStats = IDL.Record({
+    'projectedReward' : IDL.Nat,
+    'volume' : IDL.Nat,
+    'refCount' : IDL.Nat,
+  });
   const Time = IDL.Int;
   const Participant = IDL.Record({
     'lastDeposit' : IDL.Opt(Time),
@@ -93,14 +98,27 @@ export const idlFactory = ({ IDL }) => {
     'totalParticipants' : IDL.Nat,
     'installed' : IDL.Bool,
     'cycle' : IDL.Nat,
+    'affiliateRewardPool' : IDL.Nat,
+    'refererTransaction' : IDL.Nat,
     'whitelistEnabled' : IDL.Bool,
     'affiliate' : IDL.Nat,
+    'totalAffiliateVolume' : IDL.Nat,
     'totalTransactions' : IDL.Nat,
   });
   const LaunchpadCanister = IDL.Service({
-    'commit' : IDL.Func([IDL.Nat], [Result], []),
+    'commit' : IDL.Func([IDL.Nat, IDL.Opt(IDL.Text)], [Result], []),
+    'getAffiliateStats' : IDL.Func(
+        [IDL.Text],
+        [IDL.Opt(AffiliateStats)],
+        ['query'],
+      ),
     'getParticipantInfo' : IDL.Func([IDL.Text], [Participant], []),
     'getRefundList' : IDL.Func([], [IDL.Vec(Transaction)], []),
+    'getTopAffiliates' : IDL.Func(
+        [IDL.Nat],
+        [IDL.Vec(IDL.Tuple(IDL.Text, AffiliateStats))],
+        ['query'],
+      ),
     'getTransactionList' : IDL.Func([], [IDL.Vec(Transaction)], []),
     'install' : IDL.Func([LaunchpadDetail, IDL.Vec(IDL.Text)], [Result], []),
     'launchpadInfo' : IDL.Func([], [LaunchpadDetail], []),

@@ -1,6 +1,11 @@
 import type { Principal } from '@dfinity/principal';
 import type { ActorMethod } from '@dfinity/agent';
 
+export interface AffiliateStats {
+  'projectedReward' : bigint,
+  'volume' : bigint,
+  'refCount' : bigint,
+}
 export interface ClaimContract {
   'title' : string,
   'vesting' : VestingInfo,
@@ -28,9 +33,11 @@ export interface LaunchParams {
   'minimumAmount' : bigint,
 }
 export interface LaunchpadCanister {
-  'commit' : ActorMethod<[bigint], Result>,
+  'commit' : ActorMethod<[bigint, [] | [string]], Result>,
+  'getAffiliateStats' : ActorMethod<[string], [] | [AffiliateStats]>,
   'getParticipantInfo' : ActorMethod<[string], Participant>,
   'getRefundList' : ActorMethod<[], Array<Transaction>>,
+  'getTopAffiliates' : ActorMethod<[bigint], Array<[string, AffiliateStats]>>,
   'getTransactionList' : ActorMethod<[], Array<Transaction>>,
   'install' : ActorMethod<[LaunchpadDetail, Array<string>], Result>,
   'launchpadInfo' : ActorMethod<[], LaunchpadDetail>,
@@ -55,8 +62,11 @@ export interface LaunchpadStatus {
   'totalParticipants' : bigint,
   'installed' : boolean,
   'cycle' : bigint,
+  'affiliateRewardPool' : bigint,
+  'refererTransaction' : bigint,
   'whitelistEnabled' : boolean,
   'affiliate' : bigint,
+  'totalAffiliateVolume' : bigint,
   'totalTransactions' : bigint,
 }
 export interface Participant {

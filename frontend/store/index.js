@@ -110,6 +110,9 @@ export const walletStore = reactive({
             console.log('Error fetching ICP price:', error);
             return null;
         }
+    },
+    async getRefLink(path){
+        return window.location.origin + path + '?ref=' + this.principal;
     }
 
 })

@@ -2,7 +2,11 @@ import Buffer "mo:base/Buffer";
 import Result "mo:base/Result";
 import Text "mo:base/Text";
 import Bool "mo:base/Bool";
+import Nat "mo:base/Nat";
 import HashMap "mo:base/HashMap";
+import Array "mo:base/Array";
+import Iter "mo:base/Iter";
+import Option "mo:base/Option";
 import Time "mo:base/Time";
 import Principal "mo:base/Principal";
 import Error "mo:base/Error";
@@ -36,6 +40,13 @@ shared ({ caller = deployer }) actor class LaunchpadCanister() = this {
     private stable var _participants : [(Text, Types.Participant)] = []; //Store Participant Info
     private var participants         : HashMap.HashMap<Text, Types.Participant> = HashMap.fromIter(_participants.vals(), 0, Text.equal, Text.hash);
 
+    private stable var AFFILIATE_PERCENTAGE = 3;
+    private stable var SOFTCAP = 0;
+    private stable var HARDCAP = 0;
+    private var totalAffiliateVolume : Nat = 0;
+    private var refererTransaction : Nat = 0;//Total affiliate transaction
+    private var affiliateStats = HashMap.HashMap<Text, Types.AffiliateStats>(10, Text.equal, Text.hash);
+
     // private let participants : Buffer.Buffer<Types.Participant> = Buffer.Buffer<Types.Participant>(0);
     private let transactions : Buffer.Buffer<Types.Transaction> = Buffer.Buffer<Types.Transaction>(0);
     private let refunds : Buffer.Buffer<Types.Transaction> = Buffer.Buffer<Types.Transaction>(0);
@@ -56,12 +67,15 @@ shared ({ caller = deployer }) actor class LaunchpadCanister() = this {
         owner := ?msg.caller;
         launchpadDetail := ?_info;
         installed := true;
+        SOFTCAP := _info.launchParams.softCap;
+        HARDCAP := _info.launchParams.hardCap;
+        AFFILIATE_PERCENTAGE := _info.affiliate;
         //Setting ledger for fee payment
             PurchaseLedger := actor(_info.purchaseToken.canisterId);
         return #ok(installed);
     };
 
-    public shared (msg) func commit(amount : Nat) : async Result.Result<Bool, Text> {
+    public shared (msg) func commit(amount : Nat, refCode: ?Text) : async Result.Result<Bool, Text> {
         if(not installed){
             return #err("LAUNCHPAD_NOT_INSTALLED");
         };
@@ -113,6 +127,12 @@ shared ({ caller = deployer }) actor class LaunchpadCanister() = this {
                     });
                     //Update participant info
                     updateParticipantInfo(participantTxt, amount);
+
+                    //Process ref transaction if not the same as the participant
+                    if(not Text.equal(Option.get(refCode, ""), participantTxt)){
+                        processRefTransaction(refCode, amount);//Process affiliate link
+                    };
+                    
                     return #ok(true);
                 }else{
                     //Moving to refund list
@@ -131,6 +151,51 @@ shared ({ caller = deployer }) actor class LaunchpadCanister() = this {
         } else {
             return #err("You are not in the whitelist");
         };
+    };
+
+    //Process if the transaction is a referral transaction
+    private func processRefTransaction(refCode: ?Text, amount: Nat) : () {
+        switch (refCode) {
+            case null { /* Non-affiliate transaction */ };
+            case (?code) {
+                totalAffiliateVolume += amount;
+                refererTransaction += 1;//Increase affiliate transaction
+                let stats = switch (affiliateStats.get(code)) {
+                    case null { { volume = 0; projectedReward = 0; refCount = 0 } };
+                    case (?s) { s };
+                };
+                affiliateStats.put(code, { volume = stats.volume + amount; projectedReward = 0; refCount = stats.refCount + 1; }); // Will update
+            };
+        };
+
+        // Update projected rewards for all affiliates
+        updateProjectedRewards();
+    };
+
+    private func updateProjectedRewards() {
+        //Only count the affiliate reward pool if there are any affiliate transactions
+        let affiliateRewardPool = totalAffiliateVolume * AFFILIATE_PERCENTAGE/100;
+
+        for ((code, stats) in affiliateStats.entries()) {
+            let projectedReward = (stats.volume / totalAffiliateVolume) * affiliateRewardPool;
+            affiliateStats.put(code, { volume = stats.volume; projectedReward = projectedReward; refCount = stats.refCount });
+        };
+    };
+
+    public query func getAffiliateStats(refCode: Text) : async ?Types.AffiliateStats {
+        affiliateStats.get(refCode)
+    };
+
+    public query func getTopAffiliates(limit: Nat) : async [(Text, Types.AffiliateStats)] {
+        let affiliateArray = Array.sort<(Text, Types.AffiliateStats)>(
+        Iter.toArray(affiliateStats.entries()),
+        func (a, b) {
+            if (a.1.volume > b.1.volume) { #less }
+            else if (a.1.volume < b.1.volume) { #greater }
+            else { #equal }
+            }
+        );
+        Array.subArray(affiliateArray, 0, Nat.min(limit, affiliateArray.size()))
     };
 
     //Check if the caller is the owner of the canister
@@ -179,6 +244,9 @@ shared ({ caller = deployer }) actor class LaunchpadCanister() = this {
             affiliate = _detail.affiliate;
             cycle = Cycles.balance();
             installed = installed;
+            totalAffiliateVolume = totalAffiliateVolume;
+            refererTransaction = refererTransaction;
+            affiliateRewardPool = totalAffiliateVolume * AFFILIATE_PERCENTAGE/100;
         };
     };
     private func getStatusByTime(_detail: Types.LaunchpadDetail) : Text {
@@ -200,8 +268,14 @@ shared ({ caller = deployer }) actor class LaunchpadCanister() = this {
         whitelist := [];
         transactions.clear();
         _participants := [];
+        participants := HashMap.fromIter(_participants.vals(), 0, Text.equal, Text.hash);
         TOTAL_AMOUNT_COMMITED := 0;
         LAUNCH_STATUS := "NOT_STARTED";
+        totalAffiliateVolume := 0;
+        affiliateStats := HashMap.HashMap<Text, Types.AffiliateStats>(10, Text.equal, Text.hash);
+        AFFILIATE_PERCENTAGE := 0;
+        SOFTCAP := 0;
+        HARDCAP := 0;
     };
     public shared (msg) func launchpadInfo() : async Types.LaunchpadDetail {
         await getLaunchpadDetail();//launchpadDetail;

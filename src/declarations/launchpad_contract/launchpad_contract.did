@@ -65,9 +65,12 @@ type Participant =
 type LaunchpadStatus = 
  record {
    affiliate: nat;
+   affiliateRewardPool: nat;
    cycle: nat;
    installed: bool;
+   refererTransaction: nat;
    status: text;
+   totalAffiliateVolume: nat;
    totalAmountCommitted: nat;
    totalParticipants: nat;
    totalTransactions: nat;
@@ -88,9 +91,14 @@ type LaunchpadDetail =
  };
 type LaunchpadCanister = 
  service {
-   commit: (nat) -> (Result);
+   commit: (nat, opt text) -> (Result);
+   getAffiliateStats: (text) -> (opt AffiliateStats) query;
    getParticipantInfo: (text) -> (Participant);
    getRefundList: () -> (vec Transaction);
+   getTopAffiliates: (nat) -> (vec record {
+                                     text;
+                                     AffiliateStats;
+                                   }) query;
    getTransactionList: () -> (vec Transaction);
    install: (LaunchpadDetail, vec text) -> (Result);
    launchpadInfo: () -> (LaunchpadDetail);
@@ -126,5 +134,11 @@ type ClaimContract =
    title: text;
    total: nat;
    vesting: VestingInfo;
+ };
+type AffiliateStats = 
+ record {
+   projectedReward: nat;
+   refCount: nat;
+   volume: nat;
  };
 service : () -> LaunchpadCanister

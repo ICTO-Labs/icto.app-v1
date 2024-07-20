@@ -57,6 +57,11 @@ module {
         amount: Nat;
         time: Time.Time;
     };
+    public type AffiliateStats = {
+        volume: Nat;
+        projectedReward: Nat;
+        refCount: Nat;
+    };
 
     //Project info
     public type ProjectInfo = {
@@ -124,5 +129,8 @@ module {
         affiliate: Nat;
         cycle: Nat;
         installed: Bool;
+        totalAffiliateVolume: Nat;
+        affiliateRewardPool: Nat;
+        refererTransaction: Nat;
     };
 }

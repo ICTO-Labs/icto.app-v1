@@ -224,6 +224,16 @@ export const getPoolStatus = (status)=>{
         }
         return `<div class="badge badge-light-${colorClass} text-${colorClass} fs-7 fw-bold">${status == 'LIVE'?'<div class="bullet bg-success bullet-dot me-1 h-10px w-10px animation-blink"></div>':''} ${status}</div>`;
     }
+
+export const saveRef = (ref) => {
+    if(ref){
+        localStorage.setItem('refCode', ref);
+    }
+}
+export const getRef = () => {
+    let _ref = localStorage.getItem('refCode');
+    return [_ref];//Optional to return array
+}
 export default {
     validateAddress,
     showError
