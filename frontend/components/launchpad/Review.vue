@@ -232,11 +232,10 @@
                 </tr> -->
                 <tr>
                     <td>Name:</td>
-                    <td class="text-end">{{ launchpad.projectInfo.name }}</td>
+                    <td class="text-end fw-bold">{{ launchpad.projectInfo.name }}</td>
                 </tr>
                 <tr>
-                    <td>Description:</td>
-                    <td class="text-end">{{ launchpad.projectInfo.description }}</td>
+                    <td class="" colspan="2" v-html="launchpad.projectInfo.description"></td>
                 </tr>
                 <tr>
                     <td>Is Audited:</td>

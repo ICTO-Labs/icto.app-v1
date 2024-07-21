@@ -6,7 +6,7 @@
     import Links from '@/components/Links.vue';
     import moment from 'moment';
     import { timeFromNano, showError, showSuccess, showLoading, getPoolStatus, getRef, saveRef, shortPrincipal } from '@/utils/common';
-    import { getInfo, useCommit, getStatus, getTopAffiliates, useCreateShortlink } from '@/services/Launchpad';
+    import { getInfo, useCommit, getStatus, getTopAffiliates, useCreateShortlink, getShortlink } from '@/services/Launchpad';
     import { formatTokenomic } from '@/utils/launchpad';
     import { useRoute } from 'vue-router';
     import { parseTokenAmount, formatTokenAmount, currencyFormat } from '@/utils/token';
@@ -24,6 +24,7 @@
     // const { data: tokenTransactions, isError, error, isLoading: isTransLoading, isRefetching: isTransRefetching, refetch: refreshTransactions } = useGetTransactions(tokenId, 'icrc2', 0, 100);
     const { data: launchpadInfo, isError, error, isLoading, isRefetching, refetch, isFetched } = getInfo(launchpadId);
     const { data: topAffiliates } = getTopAffiliates(launchpadId);
+    const { data: myShortLink } = getShortlink('launchpad', launchpadId);
     const { data: status, isError: isStatusError, error: statusError, isLoading: isStatusLoading, isRefetching: isStatusRefetching, refetch: refetchStatus } = getStatus(launchpadId);
     console.log('launchpadInfo', launchpadInfo);
     watchEffect(() => {
@@ -196,7 +197,7 @@
 
                     <div class="separator"></div>
                     <div class="px-5 py-2">
-                        {{launchpadInfo.projectInfo.description}}
+                        <div v-html="launchpadInfo.projectInfo.description"></div>
                     </div>
                 </div>
             </div>
@@ -286,30 +287,32 @@
                     <h3 class="card-title">Top Affiliates</h3>
                 </div>
                 <div class="card-body p-5">
-                    <div class="col-md-12 fv-row">
-                        <label class="d-flex align-items-center fs-7 fw-bold mb-2"><span class="">Your referer link</span></label>
-                        <div class="input-group mb-3">
-                            <input type="text" :value="`https://icto.app/launchpad/${launchpadId}?r=${walletStore.principal}`" class="form-control form-control-sm"  readonly/>
-                            <span class="input-group-text fs-7"><Copy :text="`https://icto.app/launchpad/${launchpadId}?r=${walletStore.principal}`"/></span>
-                        </div>
-                    </div>
-                    <div class="row mb-5">
-                        <div class="col-md-6 fv-row">
-                            <label class="d-flex align-items-center fs-7 fw-bold mb-2"><span class="">Create custom short link</span></label>
+                    <div class="" v-if="walletStore.isLogged">
+                        <div class="col-md-12 fv-row">
+                            <label class="d-flex align-items-center fs-7 fw-bold mb-2"><span class="">Your referer link</span></label>
                             <div class="input-group mb-3">
-                                <input type="text" class="form-control form-control-sm" placeholder="Enter your short link" v-model="shortLink" @input="handleShortLinkInput" />
-                                <span class="btn btn-sm btn-secondary" @click="handleShortLink">Create</span>
+                                <input type="text" :value="`https://icto.app/launchpad/${launchpadId}?r=${walletStore.principal}`" class="form-control form-control-sm"  readonly/>
+                                <span class="input-group-text fs-7"><Copy :text="`https://icto.app/launchpad/${launchpadId}?r=${walletStore.principal}`"/></span>
                             </div>
                         </div>
-                        <div class="col-md-6 fv-row">
-                            <label class="d-flex align-items-center fs-7 fw-bold mb-2"><span class="">Preview</span></label>
-                            <div class="input-group mb-3">
-                                <input class="form-control form-control-sm" :value="`https://icto.link/${validUrlId || 'NOT_REGISTERED'}`" readonly/>
-                                <span class="input-group-text fs-7"> <Copy /></span>
+                        <div class="row mb-5">
+                            <div class="col-md-6 fv-row">
+                                <label class="d-flex align-items-center fs-7 fw-bold mb-2"><span class="">Create custom short link {{myShortLink}}</span></label>
+                                <div class="input-group mb-3">
+                                    <input type="text" class="form-control form-control-sm" placeholder="Enter your short link" v-model="shortLink" @input="handleShortLinkInput" />
+                                    <span class="btn btn-sm btn-secondary" @click="handleShortLink">Create</span>
+                                </div>
+                            </div>
+                            <div class="col-md-6 fv-row">
+                                <label class="d-flex align-items-center fs-7 fw-bold mb-2"><span class="">Preview</span></label>
+                                <div class="input-group mb-3">
+                                    <input class="form-control form-control-sm" :value="`https://icto.link/${validUrlId || 'NOT_REGISTERED'}`" readonly/>
+                                    <span class="input-group-text fs-7"> <Copy /></span>
+                                </div>
                             </div>
                         </div>
-                    </div>
 
+                    </div>
                     <div class="table-responsive">
                         <table class="table table-flush align-middle table-row-bordered table-hover gy-3 gs-5">
                             <thead>

@@ -72,11 +72,26 @@ export const getTopAffiliates = (canisterId, num=5) =>{
 }
 
 //Create short link
-export const useCreateShortlink = async (url, targetUrl) =>{
+export const useCreateShortlink = async (shortName, path="launchpad", canisterId) =>{
     try{
-        return await Connect.canister(config.SHORTLINK_CANISTER_ID, 'shortLink').createLink(url, targetUrl, [], [], []);
+        return await Connect.canister(config.SHORTLINK_CANISTER_ID, 'shortLink').createLink(shortName, path, canisterId, [], [], []);
     }catch(e){
         console.log('createShortlink', e);
+        return {err: 'An unexpected error occurred, please check the console log!'}
+    }
+}
+//Get short link by path and canisterId
+export const getShortlink = async (path, canisterId) =>{
+    try{
+        return useQuery({
+            queryKey: ['getShortlink', canisterId],
+            queryFn: async () => await Connect.canister(config.SHORTLINK_CANISTER_ID, 'shortLink').getLinkByCanisterId(path, canisterId),
+            keepPreviousData: false,
+            retry: 3,
+            refetchInterval: 0
+        })
+    }catch(e){
+        console.log('getShortlink', e);
         return {err: 'An unexpected error occurred, please check the console log!'}
     }
 }

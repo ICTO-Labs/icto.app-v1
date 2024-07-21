@@ -10,6 +10,7 @@ import TokenDistribution from "@/components/launchpad/TokenDistribution.vue";
 import Links from "@/components/launchpad/Links.vue";
 import Review from "@/components/launchpad/Review.vue";
 import { processDataForBackend } from "@/utils/launchpad";
+import { QuillEditor } from '@vueup/vue-quill'
 
 import moment from "moment";
 const icpPrice = ref(13.75);
@@ -998,7 +999,9 @@ const installLaunchpad = async () => {
                             <label class="d-flex align-items-center fs-6 fw-bold form-label mb-2">
                                 <span class="required">Description</span>
                             </label>
-                            <textarea class="form-control" rows="5" v-model="launchpad.projectInfo.description" placeholder="Project description"></textarea>
+                            <!-- <textarea class="form-control" rows="5" v-model="launchpad.projectInfo.description" placeholder="Project description"></textarea> -->
+                            <QuillEditor theme="snow" v-model:content="launchpad.projectInfo.description" contentType="html" style="height: 150px"/>
+
                         </div>
                         <div class="d-flex flex-column mb-3 fv-row fv-plugins-icon-container">
                             <label class="d-flex align-items-center fs-6 fw-bold form-label mb-2">
