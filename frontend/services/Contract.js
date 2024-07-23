@@ -44,9 +44,16 @@ export const useClaim = async (contractId)=>{
         throw new Error(e);
     }
 }
-export const useGetContract = async (contractId) => {
+export const useGetContract = (contractId) => {
     try{
-        return await Connect.canister(contractId, 'token_claim', true).getContractInfo()
+        return useQuery({
+            queryKey: ['getContractInfo', contractId],
+            queryFn: async () => await Connect.canister(contractId, 'token_claim', true).getContractInfo(),
+            keepPreviousData: true,
+            retry: 3,
+            refetchInterval: 0
+        })
+        // return await Connect.canister(contractId, 'token_claim', true).getContractInfo()
     }catch(e){
         throw new Error(e);
     }

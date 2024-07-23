@@ -8,15 +8,12 @@
     import config from '@/config';
     import { useGetContract, useCancelContract } from "@/services/Contract";
     const props = defineProps(['contractId', 'contractInfo']);
-    // const { data: contract, error, isError, isLoading, isRefetching, refetch } = useGetContract(props.contractId);
-    const contract = ref(null);
+    const { data: contract, error, isError, isLoading, isRefetching, refetch } = useGetContract(props.contractId);
+    // const contract = ref(null);
     const getContract = async () => {
         contract.value = await useGetContract(props.contractId);
         console.log('contract valueeeeeeeeeeeeeeee', contract.value);
     }
-    onMounted(() => {
-        getContract();
-    });
 
 </script>
 <template>
