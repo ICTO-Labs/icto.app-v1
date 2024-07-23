@@ -20,8 +20,13 @@ export const idlFactory = ({ IDL }) => {
     'claimedAt' : IDL.Nat,
     'amount' : IDL.Nat,
   });
+  const DistributionType = IDL.Variant({
+    'FirstComeFirstServed' : IDL.Null,
+    'Vesting' : IDL.Null,
+  });
   const ContractData = IDL.Record({
     'startTime' : IDL.Nat,
+    'distributionType' : DistributionType,
     'title' : IDL.Text,
     'created' : Time,
     'lockDuration' : IDL.Nat,
@@ -31,11 +36,13 @@ export const idlFactory = ({ IDL }) => {
     'totalRecipients' : IDL.Nat,
     'totalClaimedAmount' : IDL.Nat,
     'description' : IDL.Text,
+    'maxRecipients' : IDL.Nat,
     'isCanceled' : IDL.Bool,
     'totalAmount' : IDL.Nat,
     'allowTransfer' : IDL.Bool,
     'tokenInfo' : TokenInfo,
     'unlockSchedule' : IDL.Nat,
+    'tokenPerRecipient' : IDL.Nat,
     'cyclesBalance' : IDL.Nat,
   });
   const Recipient__1 = IDL.Record({
@@ -70,6 +77,7 @@ export const idlFactory = ({ IDL }) => {
       ),
     'checkClaimable' : IDL.Func([IDL.Principal], [IDL.Nat], ['query']),
     'claim' : IDL.Func([], [Result_1], []),
+    'claim1' : IDL.Func([], [Result_1], []),
     'getClaimHistory' : IDL.Func(
         [IDL.Principal],
         [IDL.Opt(IDL.Vec(ClaimRecord))],
@@ -106,6 +114,7 @@ export const init = ({ IDL }) => {
   return [
     IDL.Record({
       'startTime' : Time,
+      'distributionType' : IDL.Text,
       'canChange' : IDL.Text,
       'canCancel' : IDL.Text,
       'durationTime' : IDL.Nat,
@@ -118,11 +127,11 @@ export const init = ({ IDL }) => {
       'canView' : IDL.Text,
       'cliffTime' : IDL.Nat,
       'cliffUnit' : IDL.Nat,
-      'recipients' : IDL.Vec(Recipient),
+      'maxRecipients' : IDL.Nat,
+      'recipients' : IDL.Opt(IDL.Vec(Recipient)),
       'totalAmount' : IDL.Nat,
       'tokenInfo' : TokenInfo,
       'unlockSchedule' : IDL.Nat,
-      'unlockedAmount' : IDL.Nat,
     }),
   ];
 };

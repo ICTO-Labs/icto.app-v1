@@ -13,6 +13,7 @@ export interface Contract {
   >,
   'checkClaimable' : ActorMethod<[Principal], bigint>,
   'claim' : ActorMethod<[], Result_1>,
+  'claim1' : ActorMethod<[], Result_1>,
   'getClaimHistory' : ActorMethod<[Principal], [] | [Array<ClaimRecord>]>,
   'getContractInfo' : ActorMethod<[], ContractData>,
   'getRecipientClaimInfo' : ActorMethod<[Principal], [] | [RecipientClaimInfo]>,
@@ -23,6 +24,7 @@ export interface Contract {
 }
 export interface ContractData {
   'startTime' : bigint,
+  'distributionType' : DistributionType,
   'title' : string,
   'created' : Time,
   'lockDuration' : bigint,
@@ -32,13 +34,17 @@ export interface ContractData {
   'totalRecipients' : bigint,
   'totalClaimedAmount' : bigint,
   'description' : string,
+  'maxRecipients' : bigint,
   'isCanceled' : boolean,
   'totalAmount' : bigint,
   'allowTransfer' : boolean,
   'tokenInfo' : TokenInfo,
   'unlockSchedule' : bigint,
+  'tokenPerRecipient' : bigint,
   'cyclesBalance' : bigint,
 }
+export type DistributionType = { 'FirstComeFirstServed' : null } |
+  { 'Vesting' : null };
 export interface Recipient {
   'note' : [] | [string],
   'address' : string,

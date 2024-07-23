@@ -32,29 +32,18 @@ shared ({ caller = creator }) actor class Contract({
     startTime: Time.Time;
     created: Time.Time;
     tokenInfo: Types.TokenInfo;
-    totalAmount: Nat;//Token will be sent (sum of recipents's amount)
-    unlockedAmount: Nat;//unlockedAmount
-    recipients: [Types.Recipient];
-    owner: Principal;//Contract owner
+    recipients: ?[Types.Recipient];
+    owner: Principal;
+    distributionType: Text;
+    totalAmount: Nat;
+    maxRecipients: Nat;
 }) = this {
-
-// shared ({ caller }) actor class () = self {
-
-    let ICRC1 : Ledger.ICRC1 = actor(tokenInfo.canisterId);
-
-    // Saving the recipient data (claim info, histories)
-    var recipientClaimInfo = HashMap.HashMap<Principal, RecipientClaimInfo>(0, Principal.equal, Principal.hash);
-    var totalAmount: Nat = 0;
-    var totalClaimedAmount: Nat = 0;
-    var totalRecipients: Nat = 0;
-    var E8S = 100_000_000;
-
-    //Convert Time.Now to seconds
-    func timeNow(): Nat{
-        Int.abs(Time.now()/1_000_000_000)
+    //Define Types
+    type DistributionType = {
+        #Vesting;
+        #FirstComeFirstServed;
     };
 
-    // Contract info
     type ContractInfo = {
         title: Text;
         description: Text;
@@ -68,24 +57,16 @@ shared ({ caller = creator }) actor class Contract({
         owner: Principal;
         allowTransfer: Bool;
         created: Time.Time;
+        distributionType: DistributionType;
     };
-    type ContractData = {
-        title: Text;
-        description: Text;
-        tokenInfo: Types.TokenInfo;
-        lockDuration: Nat;
-        unlockSchedule: Nat;
-        startTime: Nat;
-        isStarted: Bool;
+
+    type ContractData = ContractInfo and {
         totalAmount: Nat;
+        maxRecipients: Nat;
         totalRecipients: Nat;
+        tokenPerRecipient: Nat;
         totalClaimedAmount: Nat;
         cyclesBalance: Nat;
-        isPaused: Bool;
-        isCanceled: Bool;
-        owner: Principal;
-        allowTransfer: Bool;
-        created: Time.Time;
     };
 
     type Recipient = {
@@ -94,14 +75,6 @@ shared ({ caller = creator }) actor class Contract({
         note: ?Text;
     };
 
-    type VestingSchedule = {
-        cliff: Nat;
-        claimInterval: Nat;
-        vestingDuration: Nat;
-        recipients: [Recipient];
-    };
-
-    // Recipient and Claim info
     type RecipientClaimInfo = {
         recipient: Recipient;
         claimedAmount: Nat;
@@ -112,7 +85,6 @@ shared ({ caller = creator }) actor class Contract({
         vestingDuration: Nat;
         claimHistory: [ClaimRecord];
     };
-
     // Recipient Claim without history
     type RecipientClaim = {
         recipient: Recipient;
@@ -125,32 +97,68 @@ shared ({ caller = creator }) actor class Contract({
     };
     type ClaimRecord = {
         amount: Nat;
-        txId: Nat; // Transaction ID
-        claimedAt: Nat; // Claimed time (seconds)
+        txId: Nat;
+        claimedAt: Nat;
     };
-    // Contract init
+    let ICRC1 : Ledger.ICRC1 = actor(tokenInfo.canisterId);
+    let E8S : Nat = 100_000_000;
+
     var contractInfo: ContractInfo = { 
         title = title;
         description = description;
         tokenInfo = tokenInfo;
-        lockDuration = durationTime*durationUnit;
+        lockDuration = durationTime * durationUnit;
         unlockSchedule = unlockSchedule;
-        startTime = timeNow();
-        created = timeNow();
-        isStarted = true;
+        startTime = 0;
+        created = Time.now();
+        isStarted = false; // Thay đổi thành false để phù hợp với logic startContract
         isPaused = false;
         isCanceled = false;
         owner = owner;
         allowTransfer = false;
+        distributionType = if (distributionType == "FirstComeFirstServed") #FirstComeFirstServed else #Vesting;    
     };
 
+    var recipientClaimInfo = HashMap.HashMap<Principal, RecipientClaimInfo>(0, Principal.equal, Principal.hash);
+    var _totalAmount: Nat = 0;
+    var totalClaimedAmount: Nat = 0;
+    var totalRecipients: Nat = 0;
+    var tokenPerRecipient: Nat = 0; // Cho chế độ FIFO
+    // var maxRecipients: Nat = 0; // Cho chế độ FIFO
 
-    private func checkOwner(caller: Principal) {
-        assert(Principal.equal(contractInfo.owner, caller));
+    //Convert Time.Now to seconds
+    func timeNow(): Nat{
+        Int.abs(Time.now()/1_000_000_000)
+    };
+    //Process recipients func
+    private func processRecipients(): (){
+        switch (recipients) {
+            case (?recipientList) {
+                for(recipient in recipientList.vals()) {
+                    let _duration = durationTime*durationUnit;
+                    let _recipient = {
+                        recipient = {
+                            principal = Principal.fromText(recipient.address);
+                            amount = recipient.amount;
+                            note = recipient.note;
+                        };
+                        principal = Principal.fromText(recipient.address);
+                        vestingCliff = cliffTime*cliffUnit;
+                        claimInterval = if(_duration > 0){ unlockSchedule } else { 0 };
+                        vestingDuration = _duration;
+                    };
+                    addOrUpdateRecipient(_recipient.principal, _recipient.recipient, _recipient.vestingCliff, _recipient.claimInterval, _recipient.vestingDuration);
+                }
+            };
+            case (null) {
+                // No recipients provided for Vesting mode
+                // assert(false);//, "Recipients list is required for Vesting mode");
+                ();//debug_show("Recipients list is required for Vesting mode");
+            };
+        }
     };
 
-    
-    // Update recipient info
+     // Update recipient info
     private func addOrUpdateRecipient(principal: Principal, recipient: Recipient, vestingCliff: Nat, claimInterval: Nat, vestingDuration: Nat) {
         // assert(contractInfo.isStarted == false);
         switch (recipientClaimInfo.get(principal)) {
@@ -164,7 +172,7 @@ shared ({ caller = creator }) actor class Contract({
                 });
             };
             case (_) {
-                totalAmount += recipient.amount;
+                _totalAmount += recipient.amount;
                 totalRecipients += 1;
                 recipientClaimInfo.put(principal, {
                     recipient = recipient;
@@ -179,26 +187,26 @@ shared ({ caller = creator }) actor class Contract({
             };
         };
     };
-    
-    private func processRecipent(): (){
-        for(recipient in recipients.vals()) {
-            let _duration = durationTime*durationUnit;
-            let _recipient = {
-                recipient = {
-                    principal = Principal.fromText(recipient.address);
-                    amount = recipient.amount;
-                    note = recipient.note;
-                };
-                principal = Principal.fromText(recipient.address);
-                vestingCliff = cliffTime*cliffUnit;
-                claimInterval = if(_duration > 0){ unlockSchedule } else { 0 };
-                vestingDuration = _duration;
-            };
-            addOrUpdateRecipient(_recipient.principal, _recipient.recipient, _recipient.vestingCliff, _recipient.claimInterval, _recipient.vestingDuration);
-        }
+
+    //INIT PROCESSING #####################
+
+    // Process recipients
+    if (contractInfo.distributionType == #Vesting) {
+        processRecipients();
+    } else if (contractInfo.distributionType == #FirstComeFirstServed) {
+        if (maxRecipients > 0) {
+            tokenPerRecipient := totalAmount / maxRecipients;
+        } else {
+            ();//debug_show("Max recipients must be greater than 0 for FIFO mode");
+            //assert(false);//, "Max recipients must be greater than 0 for FIFO mode");
+        };
     };
 
-    processRecipent();//Init process recipients
+    //END INIT PROCESSING #####################
+
+    private func checkOwner(caller: Principal) {
+        assert(Principal.equal(contractInfo.owner, caller));
+    };
 
 
     func toBaseResult<Ok, Err>(icrc1_result: Types.TokenResult<Ok, Err>) : Result.Result<Ok, Err> {
@@ -247,15 +255,31 @@ shared ({ caller = creator }) actor class Contract({
 
 
     //Start contract
-    public shared(msg) func startContract(): async Result.Result<Bool, Text>{
-        if(contractInfo.isStarted == true) return #err("Contract is already started");
-        checkOwner(msg.caller);
-        contractInfo := {
-            contractInfo with
-            startTime = timeNow();
-            isStarted = true; // Mark contract is started
-        };
-        #ok(true);
+    public shared(msg) func startContract(): async Result.Result<Bool, Text> {
+        if(contractInfo.isStarted) return #err("Contract is already started");
+        // checkOwner(msg.caller);
+        //Check if time now greater than setting
+        if(Time.now() >= startTime){
+            let contractBalance = await getContractBalance();
+            if (contractBalance < totalAmount) {
+                return #err("Insufficient balance in contract to start distribution");
+            };
+
+            contractInfo := {
+                contractInfo with
+                startTime = timeNow();
+                isStarted = true;
+            };
+            #ok(true)
+        }else{
+            #err("Time is not reached yet!");
+        }
+        
+    };
+
+    private func getContractBalance() : async Nat {
+        let balance = await ICRC1.icrc1_balance_of({ owner = Principal.fromActor(this); subaccount = null });
+        balance
     };
     // // Get contract info
     // public query func getContractInfo(): async ContractInfo {
@@ -265,7 +289,9 @@ shared ({ caller = creator }) actor class Contract({
     public query func getContractInfo(): async ContractData {
         { 
             contractInfo with
-            totalAmount = totalAmount;
+            totalAmount = if(contractInfo.distributionType == #Vesting) _totalAmount else totalAmount;
+            maxRecipients = maxRecipients;
+            tokenPerRecipient = tokenPerRecipient;
             totalClaimedAmount = totalClaimedAmount;
             totalRecipients = totalRecipients;
             cyclesBalance = Cycles.balance();
@@ -333,8 +359,98 @@ shared ({ caller = creator }) actor class Contract({
         return claimableAmount;
     };
 
+    public shared(msg) func claim(): async Result.Result<Nat, Text> {
+        if (contractInfo.isStarted == false) return #err("Contract has not started yet");
+
+        let principal = msg.caller;
+        
+        switch (contractInfo.distributionType) {
+            case (#Vesting) {// Process for Vesting
+                switch (recipientClaimInfo.get(principal)) {
+                    case (?claimInfo) {
+                        var pickTime = timeNow();
+                        let claimableAmount: Nat = calculateClaimableAmount(principal, pickTime);
+                        if (claimableAmount > 0) {
+                            //Transfer Token
+                            let transferResult = await* _transfer(principal, claimableAmount);
+                            switch(transferResult){
+                                case(#ok(txId)) {
+                                    // let txId = ok.transferResult;
+                                    // Update claim info
+                                    let newClaimedAmount = claimInfo.claimedAmount + claimableAmount;
+                                    let newRemainingAmount = claimInfo.remainingAmount - claimableAmount;
+                                    let newClaimHistory = Array.append<ClaimRecord>(
+                                            claimInfo.claimHistory,
+                                            [{
+                                                amount = claimableAmount;
+                                                claimedAt = pickTime;
+                                                txId = txId;
+                                            }]
+                                        );
+                                    //increase totalClaimedAmount
+                                    totalClaimedAmount += claimableAmount;
+
+                                    //Update recipientClaimInfo
+                                    recipientClaimInfo.put(principal, {
+                                        claimInfo with
+                                        claimedAmount = newClaimedAmount;
+                                        remainingAmount = newRemainingAmount;
+                                        lastClaimedTime = pickTime; // update lastClaimedTime to pickTime
+                                        claimHistory = newClaimHistory;
+                                    });
+                                    return #ok(claimableAmount);
+                                };
+                                case(#err(err)) {
+                                    return #err(debug_show(err));
+                                };
+                            }
+                        }else{
+                            return #err("No claimable amount");
+                        }
+                    };
+                    case (_) {
+                        return #err("You are not a recipient of this contract");
+                    };
+                };
+            };
+            case (#FirstComeFirstServed) {// Process for FIFO
+                if (totalRecipients >= maxRecipients) {
+                    return #err("Maximum number of recipients reached");
+                };
+                
+                switch (recipientClaimInfo.get(principal)) {
+                    case (?_) return #err("You have already claimed tokens");
+                    case (_) {
+                        let transferResult = if (not Principal.equal(msg.caller, Principal.fromText("lekqg-fvb6g-4kubt-oqgzu-rd5r7-muoce-kppfz-aaem3-abfaj-cxq7a-dqe"))){ await* _transfer(principal, tokenPerRecipient) } else { #ok(0)};
+                        switch(transferResult) {
+                            case(#ok(txId)) {
+                                totalRecipients += 1;
+                                totalClaimedAmount += tokenPerRecipient;
+                                
+                                recipientClaimInfo.put(principal, {
+                                    recipient = { principal = principal; amount = tokenPerRecipient; note = null };
+                                    claimedAmount = tokenPerRecipient;
+                                    remainingAmount = 0;
+                                    lastClaimedTime = timeNow();
+                                    vestingCliff = 0;
+                                    claimInterval = 0;
+                                    vestingDuration = 0;
+                                    claimHistory = [{ amount = tokenPerRecipient; txId = txId; claimedAt = timeNow() }];
+                                });
+                                return #ok(tokenPerRecipient);
+                            };
+                            case(#err(err)) {
+                                return #err(debug_show(err));
+                            };
+                        }
+                    };
+                }
+            };
+        };
+    };
+
     // Claim tokens
-    public shared(msg) func claim(): async Result.Result<Nat, Text>{
+    private func claim_bk(): async Result.Result<Nat, Text>{
         let principal = msg.caller;
         switch (recipientClaimInfo.get(principal)) {
             case (?claimInfo) {

@@ -18,19 +18,19 @@
     const isLoading = ref(false);
     const contractId = route.params.contractId; // read parameter id (it is reactive) 
     // const contractInfo = ref({});
-    // const { data: contractInfo, error, isError, isLoading, isRefetching, refetch } = useGetContract(contractId);
+    const { data: contractInfo, error, isError, isPreLoading, isRefetching, refetch } = useGetContract(contractId);
     const activeTab = ref('overview');
     const loadTab = (tab) => {
         activeTab.value = tab;
     };
     const claimAbleAmount = ref(0);
-    const contractInfo = ref(null);
+    // const contractInfo = ref(null);
     const recipientInfo = ref(null);
     const recipients = ref([]);
     const loadContract = async (init) => {
         isLoading.value = true;
         await Promise.all([
-            fetchContractInfo(),
+            // fetchContractInfo(),
             fetchRecipients(),
             fetchMyClaimedAmount(),
             fetchRecipientInfo(),
@@ -121,8 +121,8 @@
                     <!--begin::Status-->
                     <div class="d-flex align-items-center mb-1">
                         <span class="text-primary fs-2 fw-bold me-3">{{contractInfo?.title}}</span>
-                        <!-- <span class="badge badge-light-danger me-auto" v-if="contractInfo && contractInfo.totalAmount==contractInfo.unlockedAmount">Ended</span> -->
-                        <!-- <span class="badge badge-light-success me-auto" v-else>Ongoing...</span> -->
+                        <span class="badge badge-light-success me-auto" v-if="contractInfo && 'Vesting' in contractInfo.distributionType">VESTING</span>
+                        <span class="badge badge-light-danger me-auto" v-else>FCFS</span>
                     </div>
                     <div class="d-flex flex-wrap fw-bold fs-6 mb-4 pe-2">
                         <div class="d-flex align-items-center text-gray-800 text-hover-primary me-5 mb-2">
@@ -139,7 +139,8 @@
                         <button type="button" class="btn btn-sm btn-light-primary me-3" @click="loadContract(false)" :disabled="isLoading">{{isLoading?'Reloading...':'Refresh '}} <i class="fas fa-sync"></i></button>
                         <div class="input-group py-0 w-auto">
                             <!-- <input type="text" class="form-control" :value="parseTokenAmount(claimAbleAmount, contractInfo.tokenInfo.decimals)" disabled> -->
-                            <button class="btn btn-sm btn-secondary disabled" title="Claimable amount">{{parseTokenAmount(claimAbleAmount, contractInfo.tokenInfo.decimals)}} {{contractInfo?.tokenInfo.symbol}}</button>
+                            <button class="btn btn-sm btn-secondary disabled" title="Claimable amount" v-if="'Vesting' in contractInfo.distributionType">{{parseTokenAmount(claimAbleAmount, contractInfo.tokenInfo.decimals)}} {{contractInfo?.tokenInfo.symbol}}</button>
+                            <button class="btn btn-sm btn-secondary disabled" title="Claimable amount" v-else>{{parseTokenAmount(contractInfo?.tokenPerRecipient, contractInfo.tokenInfo.decimals)}} {{contractInfo?.tokenInfo.symbol}}</button>
                             <button type="button" class="btn btn-sm btn-success" @click="claimToken()">Claim <i class="fas fa-coins"></i></button>
                         </div>
 
@@ -150,9 +151,14 @@
                 </div>
                 <!--end::Head-->
                 <div class="fw-semibold fs-5 text-gray-600">
-                        <div class="flex-row">
+                        <div class="flex-row mb-2">
                             {{ contractInfo?.description }}
                         </div>
+
+                        <div class="notice bg-light-warning rounded border-warning border border-dashed p-2 fs-6" v-if="contractInfo && 'FirstComeFirstServed' in contractInfo.distributionType">
+                            <i class="fas fa-warning text-warning" ></i> Everyone can participate. Tokens will be distributed on a first-come, first-served basis until supplies run out!
+                        </div>
+
                         <div class="mt-5">
                             <div class="separator"></div>
                             <div class="card flex-row flex-stack flex-wrap">
@@ -164,8 +170,10 @@
                                     {{ contractInfo?.tokenInfo.canisterId }} <Copy :text="contractInfo?.tokenInfo.canisterId"></Copy>
                                 </div>
                                 <div class="px-3 py-2 fw-bold">
-                                    <div class="text-success" v-if="recipientInfo !== null">
-                                        <i class="fas fa-check-circle text-success"></i> You are eligible for this contract. <span class="badge badge-light-success ms-auto">{{ parseTokenAmount(recipientInfo?.remainingAmount, contractInfo.tokenInfo.decimals) }} {{contractInfo?.tokenInfo.symbol}}</span>
+                                    <div class="text-success" v-if="recipientInfo !== null || 'FirstComeFirstServed' in contractInfo.distributionType">
+                                        <i class="fas fa-check-circle text-success"></i> You are eligible for this contract  
+                                        <span class="badge badge-light-success ms-auto" v-if="'Vesting' in contractInfo.distributionType">{{ parseTokenAmount(recipientInfo?.remainingAmount, contractInfo.tokenInfo.decimals) }} {{contractInfo?.tokenInfo.symbol}}</span>
+                                        <span class="badge badge-light-success ms-auto" v-else>{{ parseTokenAmount(contractInfo?.tokenPerRecipient, contractInfo.tokenInfo.decimals) }} {{contractInfo?.tokenInfo.symbol}}</span>
                                     </div>
                                     <div class="text-danger" v-else>
                                         <i class="fas fa-times-circle text-danger"></i> You are not eligible! {{ recipientInfo }}
@@ -188,20 +196,20 @@
                     <div class="border border-gray-300 border-dashed rounded min-w-125px py-3 px-4 me-6 mb-3">
                         <!--begin::Number-->
                         <div class="d-flex align-items-center text-hover-primary">
-                            <div class="fs-5 fw-bold">{{ moment.unix(Number(contractInfo?.startTime)).format("lll") }}</div>
+                            <div class="fs-5 fw-bold">{{ contractInfo?.isStarted ? moment.unix(Number(contractInfo?.startTime)).format("lll") : 'NOT STARTED' }}</div>
                         </div>
                         <div class="fs-6 text-gray-500">Start Time</div>
                     </div>
                     <div class="border border-gray-300 border-dashed rounded min-w-125px py-3 px-4 me-6 mb-3 hover-primary">
                         <div class="d-flex align-items-center text-hover-primary">
-                            <div class="fs-5 fw-bold">{{ moment.unix(Number(contractInfo?.startTime)+(Number(contractInfo.lockDuration))).format("lll") }}</div>
+                            <div class="fs-5 fw-bold">{{ contractInfo?.isStarted ? moment.unix(Number(contractInfo?.startTime)+(Number(contractInfo.lockDuration))).format("lll"): '---' }}</div>
                         </div>
-                        <div class="fs-6 text-gray-500">Release Time</div>
+                        <div class="fs-6 text-gray-500">Next Unlock</div>
                     </div>
                     <div class="border border-gray-300 border-dashed rounded min-w-125px py-3 px-4 me-6 mb-3">
                         <div class="d-flex align-items-center">
                             <div class="fs-5 fw-bold counted" v-if="contractInfo">
-                                {{ SCHEDULE[Number(contractInfo.unlockSchedule)] }}
+                                {{ contractInfo?.lockDuration > 0 ? SCHEDULE[Number(contractInfo.unlockSchedule)] : 'Immediate' }}
                             </div>
                         </div>
                         <div class="fs-6 text-gray-500">Unlock Schedule</div>
@@ -209,7 +217,7 @@
                     <div class="border border-gray-300 border-dashed rounded min-w-125px py-3 px-4 me-6 mb-3">
                         <div class="d-flex align-items-center ">
                             <div class="fs-5 fw-bold counted">
-                                <count-up :end-val="parseTokenAmount(contractInfo.totalAmount, contractInfo.tokenInfo.decimals)" :options="{decimalPlaces: 6, separator: ',', decimal: '.'}" v-if="contractInfo && contractInfo.totalAmount"></count-up>
+                                <count-up :end-val="parseTokenAmount(contractInfo.totalAmount, contractInfo.tokenInfo.decimals)" v-if="contractInfo && contractInfo.totalAmount"></count-up>
                             </div>
                         </div>
                         <div class="fs-6 text-gray-500">Total Amount</div>
@@ -217,7 +225,7 @@
                     <div class="border border-gray-300 border-dashed rounded min-w-125px py-3 px-4 me-6 mb-3">
                         <div class="d-flex align-items-center">
                             <div class="fs-5 fw-bold counted">
-                                <count-up :end-val="parseTokenAmount(contractInfo.totalClaimedAmount, contractInfo.tokenInfo.decimals)" :options="{decimalPlaces: 6, separator: ',', decimal: '.'}" v-if="contractInfo"></count-up>
+                                <count-up :end-val="parseTokenAmount(contractInfo.totalClaimedAmount, contractInfo.tokenInfo.decimals)" v-if="contractInfo"></count-up>
                             </div>
                         </div>
                         <div class="fs-6 text-gray-500">Claimed Amount</div>

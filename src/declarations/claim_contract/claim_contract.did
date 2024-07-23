@@ -51,20 +51,28 @@ type Recipient =
    amount: nat;
    note: opt text;
  };
+type DistributionType = 
+ variant {
+   FirstComeFirstServed;
+   Vesting;
+ };
 type ContractData = 
  record {
    allowTransfer: bool;
    created: Time;
    cyclesBalance: nat;
    description: text;
+   distributionType: DistributionType;
    isCanceled: bool;
    isPaused: bool;
    isStarted: bool;
    lockDuration: nat;
+   maxRecipients: nat;
    owner: principal;
    startTime: nat;
    title: text;
    tokenInfo: TokenInfo;
+   tokenPerRecipient: nat;
    totalAmount: nat;
    totalClaimedAmount: nat;
    totalRecipients: nat;
@@ -75,6 +83,7 @@ type Contract =
    addRecipient: (principal, nat, nat, nat, nat) -> (Result);
    checkClaimable: (principal) -> (nat) query;
    claim: () -> (Result_1);
+   claim1: () -> (Result_1);
    getClaimHistory: (principal) -> (opt vec ClaimRecord) query;
    getContractInfo: () -> (ContractData) query;
    getRecipientClaimInfo: (principal) -> (opt RecipientClaimInfo) query;
@@ -97,15 +106,16 @@ service : (record {
              cliffUnit: nat;
              created: Time;
              description: text;
+             distributionType: text;
              durationTime: nat;
              durationUnit: nat;
+             maxRecipients: nat;
              owner: principal;
-             recipients: vec Recipient;
+             recipients: opt vec Recipient;
              startNow: bool;
              startTime: Time;
              title: text;
              tokenInfo: TokenInfo;
              totalAmount: nat;
              unlockSchedule: nat;
-             unlockedAmount: nat;
            }) -> Contract

@@ -167,15 +167,8 @@
                                 <div class="d-flex flex-column">
                                     <!--begin::Name-->
                                     <div class="d-flex align-items-center mb-1">
-                                        <a href="#" class="text-gray-900 text-hover-primary fs-2 fw-bolder me-1">{{launchpadInfo.projectInfo.name}}</a>
-                                            <!--begin::Svg Icon | path: icons/duotune/general/gen026.svg-->
-                                        <span class="svg-icon svg-icon-1 svg-icon-primary"  v-if="launchpadInfo.projectInfo.isVerified" title="Verified by ICTO">
-                                            <svg xmlns="http://www.w3.org/2000/svg" width="24px" height="24px" viewBox="0 0 24 24">
-                                                <path d="M10.0813 3.7242C10.8849 2.16438 13.1151 2.16438 13.9187 3.7242V3.7242C14.4016 4.66147 15.4909 5.1127 16.4951 4.79139V4.79139C18.1663 4.25668 19.7433 5.83365 19.2086 7.50485V7.50485C18.8873 8.50905 19.3385 9.59842 20.2758 10.0813V10.0813C21.8356 10.8849 21.8356 13.1151 20.2758 13.9187V13.9187C19.3385 14.4016 18.8873 15.491 19.2086 16.4951V16.4951C19.7433 18.1663 18.1663 19.7433 16.4951 19.2086V19.2086C15.491 18.8873 14.4016 19.3385 13.9187 20.2758V20.2758C13.1151 21.8356 10.8849 21.8356 10.0813 20.2758V20.2758C9.59842 19.3385 8.50905 18.8873 7.50485 19.2086V19.2086C5.83365 19.7433 4.25668 18.1663 4.79139 16.4951V16.4951C5.1127 15.491 4.66147 14.4016 3.7242 13.9187V13.9187C2.16438 13.1151 2.16438 10.8849 3.7242 10.0813V10.0813C4.66147 9.59842 5.1127 8.50905 4.79139 7.50485V7.50485C4.25668 5.83365 5.83365 4.25668 7.50485 4.79139V4.79139C8.50905 5.1127 9.59842 4.66147 10.0813 3.7242V3.7242Z" fill="#00A3FF"></path>
-                                                <path class="permanent" d="M14.8563 9.1903C15.0606 8.94984 15.3771 8.9385 15.6175 9.14289C15.858 9.34728 15.8229 9.66433 15.6185 9.9048L11.863 14.6558C11.6554 14.9001 11.2876 14.9258 11.048 14.7128L8.47656 12.4271C8.24068 12.2174 8.21944 11.8563 8.42911 11.6204C8.63877 11.3845 8.99996 11.3633 9.23583 11.5729L11.3706 13.4705L14.8563 9.1903Z" fill="white"></path>
-                                            </svg>
-                                        </span>
-                                        
+                                        <span class="text-gray-900 text-hover-primary fs-2 fw-bolder me-1">{{launchpadInfo.projectInfo.name}}</span>
+                                        <Verified v-if="!launchpadInfo.projectInfo.isVerified" title="Verified by ICTO"></Verified>
                                     </div>
                                     <!--end::Name-->
                                     <!--begin::Info-->
@@ -183,6 +176,7 @@
                                         <Links :links="launchpadInfo.projectInfo.links[0]" />
                                     </div>
                                     <div>
+                                        <span class="badge badge-warning fw-bold px-4 py-2 ps-4 me-4"><i class="fas fa-percent text-white"></i> AFFILIATE</span> 
                                         <span class="badge badge-light-danger fw-bolder me-auto px-4 py-2 ps-4"><i class="fas fa-fire text-danger"></i> HOT #1</span>
                                         <span class="badge badge-light-primary fw-bolder me-auto px-4 py-2 ps-4 ms-4" v-if="launchpadInfo.projectInfo.isAudited"><i class="fas fa-shield-alt text-primary"></i> AUDITED</span>
                                     </div>
@@ -300,14 +294,14 @@
                                 <label class="d-flex align-items-center fs-7 fw-bold mb-2"><span class="">Create custom short link {{myShortLink}}</span></label>
                                 <div class="input-group mb-3">
                                     <input type="text" class="form-control form-control-sm" placeholder="Enter your short link" v-model="shortLink" @input="handleShortLinkInput" />
-                                    <span class="btn btn-sm btn-secondary" @click="handleShortLink">Create</span>
+                                    <span class="input-group-text fs-7"  @click="handleShortLink">Create</span>
                                 </div>
                             </div>
                             <div class="col-md-6 fv-row">
                                 <label class="d-flex align-items-center fs-7 fw-bold mb-2"><span class="">Preview</span></label>
                                 <div class="input-group mb-3">
-                                    <input class="form-control form-control-sm" :value="`https://icto.link/${validUrlId || 'NOT_REGISTERED'}`" readonly/>
-                                    <span class="input-group-text fs-7"> <Copy /></span>
+                                    <input class="form-control form-control-sm" :value="`https://icto.link/${validUrlId || 'NOT_REGISTERED'}`" disabled />
+                                    <span class="input-group-text fs-7"><Copy /></span>
                                 </div>
                             </div>
                         </div>
@@ -328,9 +322,9 @@
                                 <tr v-for="(affiliate, idx) in topAffiliates">
                                     <td class="text-center pe-3">{{idx+1}}.</td>
                                     <td>{{shortPrincipal(affiliate[0])}} <Copy :text="affiliate[0]"></Copy></td>
-                                    <td class="text-end pe-3">{{ currencyFormat(parseTokenAmount(affiliate[1].projectedReward, purchaseToken.decimals)) }} {{ purchaseToken.symbol }}</td>
-                                    <td class="text-end pe-3">{{ currencyFormat(parseTokenAmount(affiliate[1].volume, purchaseToken.decimals)) }} {{ purchaseToken.symbol }}</td>
-                                    <td class="text-end pe-3">{{ affiliate[1].refCount }}</td>
+                                    <td class="text-end pe-3 fw-bold text-success">{{ currencyFormat(parseTokenAmount(affiliate[1].projectedReward, purchaseToken.decimals)) }} {{ purchaseToken.symbol }}</td>
+                                    <td class="text-end pe-3 fw-bold text-primary">{{ currencyFormat(parseTokenAmount(affiliate[1].volume, purchaseToken.decimals)) }} {{ purchaseToken.symbol }}</td>
+                                    <td class="text-end pe-3 fw-bold">{{ affiliate[1].refCount }}</td>
                                 </tr>
                             </tbody>
                         </table>
@@ -473,7 +467,7 @@
             <div class="card mb-5 mb-xl-5" v-if="status.affiliate > 0">
                 <div class="card-header align-items-center border-0 mt-4 ps-5">
                     <h3 class="card-title align-items-start flex-column">
-                        <span class="fw-bolder mb-2 text-dark">Referer Program</span>
+                        <span class="fw-bolder mb-2 text-dark">Affiliate Program</span>
                         <span class="text-muted fw-bold fs-7"></span>
                     </h3>
                 </div>
