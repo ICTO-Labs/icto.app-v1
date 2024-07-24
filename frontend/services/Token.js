@@ -81,7 +81,7 @@ export const useTokenApprove = async(tokenId, payload, decimals=8, standard="icr
                 owner: _spender,
                 subaccount: [],
             },
-            amount: _amount,
+            amount: Number(_amount),
             expires_at: [],
             expected_allowance: [],
             memo: [],
