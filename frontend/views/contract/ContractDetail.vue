@@ -91,7 +91,7 @@
     }
 
     const fetchRecipients = async()=>{
-        recipients.value = await useGetContractRecipients(contractId);
+        recipients.value = await useGetContractRecipients(contractId, 0);
     }
 
     onMounted(() => {
@@ -155,8 +155,8 @@
                             {{ contractInfo?.description }}
                         </div>
 
-                        <div class="notice bg-light-warning rounded border-warning border border-dashed p-2 fs-6" v-if="contractInfo && 'FirstComeFirstServed' in contractInfo.distributionType">
-                            <i class="fas fa-warning text-warning" ></i> Everyone can participate. Tokens will be distributed on a first-come, first-served basis until supplies run out!
+                        <div class="notice bg-light-primary rounded border-primary  p-2 fs-6" v-if="contractInfo && 'FirstComeFirstServed' in contractInfo.distributionType">
+                            <i class="fas fa-rocket text-primary" ></i> Everyone can participate. Tokens will be distributed on a first-come, first-served basis until supplies run out!
                         </div>
 
                         <div class="mt-5">

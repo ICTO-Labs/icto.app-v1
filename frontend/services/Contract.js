@@ -58,9 +58,9 @@ export const useGetContract = (contractId) => {
         throw new Error(e);
     }
 }
-export const useGetContractRecipients = async (contractId) => {
+export const useGetContractRecipients = async (contractId, page) => {
     try{
-        return await Connect.canister(contractId, 'token_claim', true).getRecipients();
+        return await Connect.canister(contractId, 'token_claim', true).getRecipients(page);
     }catch(e){
         throw new Error(e);
     }

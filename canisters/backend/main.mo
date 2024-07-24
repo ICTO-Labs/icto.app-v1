@@ -3,6 +3,7 @@ import Principal "mo:base/Principal";
 import Array "mo:base/Array";
 import HashMap "mo:base/HashMap";
 import Buffer "mo:base/Buffer";
+import Option "mo:base/Option";
 import Cycles "mo:base/ExperimentalCycles";
 import Time "mo:base/Time";
 import Int "mo:base/Int";
@@ -84,6 +85,9 @@ actor {
     };
     public shared (msg) func createContract(contract: ContractTypes.ContractData): async Result.Result<Principal, Text>{
         assert not Principal.isAnonymous(msg.caller);
+        if (not _isAdmin(Principal.toText(msg.caller))){//Only admin can create contract
+            return #err("Sorry, only admin can create contract in testing phase!");
+        };
         let _controllers = [msg.caller];
         let _cycleBalance = Cycles.balance();
         if (_cycleBalance < CYCLES_FOR_INSTALL + MIN_CYCLES_IN_DEPLOYER) return #err("Not enough cycles in deployer, balance: "# debug_show(_cycleBalance) #"T");
@@ -106,8 +110,11 @@ actor {
         let _contractId = Principal.toText(newContractPrincipal);
         addContract(_contractId);//Add to contract list
         //Map created contract
-        for(recipient in contract.recipients.vals()) {
-            await mapCanister(recipient.address, _contractId);
+        let _recipients = Option.get(contract.recipients, []);
+        if(_recipients.size() > 0){
+            for(recipient in _recipients.vals()) {
+                await mapCanister(recipient.address, _contractId);
+            };
         };
 
         //Transfer token to new contract, skipp admin for testing purpose

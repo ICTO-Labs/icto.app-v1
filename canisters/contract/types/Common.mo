@@ -24,11 +24,33 @@ module {
         startTime: Time.Time;
         created: Time.Time;
         tokenInfo: TokenInfo;
-        totalAmount: Nat;
-        unlockedAmount: Nat;
-        recipients: [Recipient];
+        recipients: ?[Recipient];
         owner: Principal;
+        distributionType: Text;
+        totalAmount: Nat;
+        maxRecipients: Nat;
     };
+    
+    // public type ContractData = {
+    //     title: Text;
+    //     description: Text;
+    //     durationTime: Nat;
+    //     durationUnit: Nat;
+    //     cliffTime: Nat;
+    //     cliffUnit: Nat;
+    //     unlockSchedule: Nat;
+    //     canCancel: Text;
+    //     canChange: Text;
+    //     canView: Text;
+    //     startNow: Bool;
+    //     startTime: Time.Time;
+    //     created: Time.Time;
+    //     tokenInfo: TokenInfo;
+    //     totalAmount: Nat;
+    //     unlockedAmount: Nat;
+    //     recipients: [Recipient];
+    //     owner: Principal;
+    // };
     public type Recipient = {
         amount: Nat;
         address: Text;

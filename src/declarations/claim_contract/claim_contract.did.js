@@ -77,7 +77,6 @@ export const idlFactory = ({ IDL }) => {
       ),
     'checkClaimable' : IDL.Func([IDL.Principal], [IDL.Nat], ['query']),
     'claim' : IDL.Func([], [Result_1], []),
-    'claim1' : IDL.Func([], [Result_1], []),
     'getClaimHistory' : IDL.Func(
         [IDL.Principal],
         [IDL.Opt(IDL.Vec(ClaimRecord))],
@@ -89,7 +88,7 @@ export const idlFactory = ({ IDL }) => {
         [IDL.Opt(RecipientClaimInfo)],
         ['query'],
       ),
-    'getRecipients' : IDL.Func([], [IDL.Vec(RecipientClaim)], ['query']),
+    'getRecipients' : IDL.Func([IDL.Nat], [IDL.Vec(RecipientClaim)], ['query']),
     'getTimePeriod' : IDL.Func([], [IDL.Nat], ['query']),
     'startContract' : IDL.Func([], [Result], []),
     'transferOwnership' : IDL.Func([IDL.Principal], [Result], []),

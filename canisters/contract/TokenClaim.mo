@@ -299,10 +299,11 @@ shared ({ caller = creator }) actor class Contract({
     };
 
     // Get all recipients
-    public query func getRecipients(): async [RecipientClaim] {
-        let _arr = Buffer.Buffer<RecipientClaim>(0);
+    public query func getRecipients(page: Nat): async [RecipientClaim] {
+        var lower : Nat = page * 29;
+        var upper : Nat = lower + 29;
+        var b = Buffer.Buffer<RecipientClaim>(0);
         for ((history) in recipientClaimInfo.entries()) {
-
             let _recipient = {
                 recipient = history.1.recipient;
                 claimedAmount = history.1.claimedAmount;
@@ -312,9 +313,20 @@ shared ({ caller = creator }) actor class Contract({
                 claimInterval = history.1.claimInterval;
                 vestingDuration = history.1.vestingDuration;
             };
-            _arr.add(_recipient);
+            b.add(_recipient);
         };
-        _arr.toArray();
+        // _arr.toArray();
+        let arr = Buffer.toArray(b);
+        b := Buffer.Buffer<RecipientClaim>(0);
+        let size = arr.size();
+        if (upper > size) {
+            upper := size;
+        };
+        while (lower < upper) {
+            b.add(arr[lower]);
+            lower := lower + 1;
+        };
+        return Buffer.toArray(b);
     };
     public query func getTimePeriod(): async Nat {
         timeNow()-contractInfo.startTime;
@@ -449,81 +461,6 @@ shared ({ caller = creator }) actor class Contract({
         };
     };
 
-    // Claim tokens
-    private func claim_bk(): async Result.Result<Nat, Text>{
-        let principal = msg.caller;
-        switch (recipientClaimInfo.get(principal)) {
-            case (?claimInfo) {
-                var pickTime = timeNow();
-                let claimableAmount: Nat = calculateClaimableAmount(principal, pickTime);
-                if (claimableAmount > 0) {
-                    //Transfer Token
-                    let transferResult = await* _transfer(principal, claimableAmount);
-                    switch(transferResult){
-                        case(#ok(txId)) {
-                            // let txId = ok.transferResult;
-                            // Update claim info
-                            let newClaimedAmount = claimInfo.claimedAmount + claimableAmount;
-                            let newRemainingAmount = claimInfo.remainingAmount - claimableAmount;
-                            let newClaimHistory = Array.append<ClaimRecord>(
-                                                claimInfo.claimHistory,
-                                                [{
-                                                    amount = claimableAmount;
-                                                    claimedAt = pickTime;
-                                                    txId = txId;
-                                                }]
-                                            );
-                            //increase totalClaimedAmount
-                            totalClaimedAmount += claimableAmount;
-
-                            //Update recipientClaimInfo
-                            recipientClaimInfo.put(principal, {
-                                claimInfo with
-                                claimedAmount = newClaimedAmount;
-                                remainingAmount = newRemainingAmount;
-                                lastClaimedTime = pickTime; // update lastClaimedTime to pickTime
-                                claimHistory = newClaimHistory;
-                            });
-                            return #ok(claimableAmount);
-                        };
-                        case(#err(err)) {
-                            return #err(debug_show(err));
-                        };
-                    }
-                    // let txId = transferResult;//TODO: Implement token transfer
-
-                    // // Update claim info
-                    // let newClaimedAmount = claimInfo.claimedAmount + claimableAmount;
-                    // let newRemainingAmount = claimInfo.remainingAmount - claimableAmount;
-                    // let newClaimHistory = Array.append<ClaimRecord>(
-                    //                     claimInfo.claimHistory,
-                    //                     [{
-                    //                         amount = claimableAmount;
-                    //                         claimedAt = pickTime;
-                    //                         txId = txId;
-                    //                     }]
-                    //                 );
-                    // //increase totalClaimedAmount
-                    // totalClaimedAmount += claimableAmount;
-
-                    // //Update recipientClaimInfo
-                    // recipientClaimInfo.put(principal, {
-                    //     claimInfo with
-                    //     claimedAmount = newClaimedAmount;
-                    //     remainingAmount = newRemainingAmount;
-                    //     lastClaimedTime = pickTime; // update lastClaimedTime to pickTime
-                    //     claimHistory = newClaimHistory;
-                    // });
-                    // return #ok(claimableAmount);
-                }else{
-                    return #err("No claimable amount");
-                }
-            };
-            case (_) {
-                return #err("You are not a recipient of this contract");
-            };
-        };
-    };
     public query func checkClaimable(principal: Principal): async Nat {
         calculateClaimableAmount(principal, timeNow());
     };
