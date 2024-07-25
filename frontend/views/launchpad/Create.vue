@@ -245,7 +245,7 @@ const installLaunchpad = async () => {
 		}).then(async (result) => {
             if (result.isConfirmed) {
                 showLoading('Creating new launch, please wait...');
-                let _rs = await install(_formattedData, whitelist.value, "d6g4o-amaaa-aaaaa-qaaoq-cai");
+                let _rs = await install(_formattedData, whitelist.value, "2phil-viaaa-aaaap-qhoka-cai");
                 if(_rs && "ok" in _rs) {
                     showSuccess('Launchpad created. Your launchpad canister Id: 2phil-viaaa-aaaap-qhoka-cai', true);
                 }else{

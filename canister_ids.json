@@ -2,6 +2,9 @@
   "backend": {
     "ic": "ys3lq-iiaaa-aaaap-qb7ba-cai"
   },
+  "claim_contract": {
+    "ic": "u7mxj-jyaaa-aaaap-qhpja-cai"
+  },
   "deployer": {
     "ic": "setw5-xaaaa-aaaap-qcc7a-cai"
   },

@@ -25,7 +25,7 @@ export const getInfo = (canisterId) =>{
     try{
         return useQuery({
             queryKey: ['getInfo', canisterId],
-            queryFn: async () => await Connect.canister(canisterId, 'launchpad_detail').launchpadInfo(),
+            queryFn: async () => await Connect.canister(canisterId, 'launchpad_detail', true).launchpadInfo(),
             keepPreviousData: false,
             retry: 3,
             refetchInterval: 0
@@ -42,7 +42,7 @@ export const getStatus = (canisterId) =>{
     try{
         return useQuery({
             queryKey: ['getStatus', canisterId],
-            queryFn: async () => await Connect.canister(canisterId, 'launchpad_detail').status(),
+            queryFn: async () => await Connect.canister(canisterId, 'launchpad_detail', true).status(),
             keepPreviousData: false,
             retry: 3,
             refetchInterval: 10
@@ -59,7 +59,7 @@ export const getTopAffiliates = (canisterId, num=5) =>{
     try{
         return useQuery({
             queryKey: ['getTopAffiliates', canisterId],
-            queryFn: async () => await Connect.canister(canisterId, 'launchpad_detail').getTopAffiliates(Number(num)),
+            queryFn: async () => await Connect.canister(canisterId, 'launchpad_detail', true).getTopAffiliates(Number(num)),
             keepPreviousData: false,
             retry: 3,
             refetchInterval: 1000
@@ -72,7 +72,7 @@ export const getTopAffiliates = (canisterId, num=5) =>{
 }
 
 //Create short link
-export const useCreateShortlink = async (shortName, path="launchpad", canisterId) =>{
+export const useCreateShortlink = async (shortName, path, canisterId) =>{
     try{
         return await Connect.canister(config.SHORTLINK_CANISTER_ID, 'shortLink').createLink(shortName, path, canisterId, [], [], []);
     }catch(e){
@@ -81,10 +81,10 @@ export const useCreateShortlink = async (shortName, path="launchpad", canisterId
     }
 }
 //Get short link by path and canisterId
-export const getShortlink = async (path, canisterId) =>{
+export const getShortlink = (path, canisterId) =>{
     try{
         return useQuery({
-            queryKey: ['getShortlink', canisterId],
+            queryKey: ['getShortlink', path+"_"+canisterId],
             queryFn: async () => await Connect.canister(config.SHORTLINK_CANISTER_ID, 'shortLink').getLinkByCanisterId(path, canisterId),
             keepPreviousData: false,
             retry: 3,
@@ -92,6 +92,16 @@ export const getShortlink = async (path, canisterId) =>{
         })
     }catch(e){
         console.log('getShortlink', e);
+        return {err: 'An unexpected error occurred, please check the console log!'}
+    }
+}
+
+//Delete short link
+export const deleteShortLink = async (shortName) =>{
+    try{
+        return await Connect.canister(config.SHORTLINK_CANISTER_ID, 'shortLink').deleteLink(shortName);
+    }catch(e){
+        console.log('deleteShortlink', e);
         return {err: 'An unexpected error occurred, please check the console log!'}
     }
 }

@@ -263,6 +263,7 @@ shared ({ caller = deployer }) actor class LaunchpadCanister() = this {
         return LAUNCH_STATUS;
     };
     public shared (msg) func reinstall() : async () {
+        assert(_isAdmin(Principal.toText(msg.caller)));
         installed := false;
         launchpadDetail := null;
         whitelist := [];
