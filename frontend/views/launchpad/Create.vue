@@ -78,7 +78,7 @@ const launchpad = ref({
     creator: "lekqg-fvb6g-4kubt-oqgzu-rd5r7-muoce-kppfz-aaem3-abfaj-cxq7a-dqe",
     affiliate: 3,
     affiliateEnabled: 0,
-    currency: config.LEDGER_CANISTER_ID,
+    currency: "uwp4v-7qaaa-aaaap-qhpiq-cai",
     listingLiquidity: 51,
     listingTokenAmount: 0,
     listing: 'ICPSwap',
@@ -141,13 +141,13 @@ const launchpad = ref({
         canisterId: ""
     },
     purchaseToken: {
-        name: "Internet Computer",
-        symbol: "ICP",
+        name: "Test ICP",
+        symbol: "tICP",
         decimals: 8,
         transferFee: 10_000,
         metadata: [],
-        logo: "https://app.icpswap.com/static/media/icp.971d3265d25976274074de359ddc638b.svg",
-        canisterId: config.LEDGER_CANISTER_ID
+        logo: "https://psh4l-7qaaa-aaaap-qasia-cai.raw.icp0.io/uwp4v-7qaaa-aaaap-qhpiq-cai.png",
+        canisterId: "uwp4v-7qaaa-aaaap-qhpiq-cai"
     },
     launchParams: {
         sellAmount: 250_000,
@@ -230,96 +230,7 @@ const updateUrls = (newUrls) => {
 };
 
 const installLaunchpad = async () => {
-    // let _res = await deposit(300);
-    //     console.log(_res);
-    // return;
-    let _projectInfo = {
-        name: "Test Launchpad",
-        description: '',
-        isAudited: true,
-        isVerified: true,
-        links: [["https://icto.app"]],
-        logo: "",
-        banner: [],
-        metadata: []
-    };
-    let _timeline = {
-        createdTime: moment().valueOf() * 1e6,
-        startTime: moment().add(3, "minutes").valueOf() * 1e6,
-        endTime: moment().add(3, "minutes").valueOf() * 1e6,
-        claimTime: moment().add(5, "minutes").valueOf() * 1e6,
-        listingTime: moment().add(10, "minutes").valueOf() * 1e6,
-    };
-    let _purchaseToken = {
-        name: "ICTO Token Test",
-        symbol: "xICTO",
-        decimals: 8,
-        transferFee: 0,
-        metadata: [],
-        logo: "",
-        canisterId: "b77ix-eeaaa-aaaaa-qaada-cai"
-    };
-    let _params = {
-        projectInfo: _projectInfo,
-        timeline: _timeline,
-        purchaseToken: [_purchaseToken],
-        saleToken: [_purchaseToken],
-        launchParams: {
-            sellAmount: Number(formatTokenAmount(250_000_000, _purchaseToken.decimals)),
-            softCap: Number(formatTokenAmount(1_000, _purchaseToken.decimals)),
-            hardCap: Number(formatTokenAmount(10_000, _purchaseToken.decimals)),
-            minimumAmount: Number(formatTokenAmount(100, _purchaseToken.decimals)),
-            maximumAmount: Number(formatTokenAmount(9000, _purchaseToken.decimals))
-        },
-        vesting: {
-            cliff: 0,//Seconds
-            duration: 30 * 24 * 60 * 60,//Seconds
-            unlockFrequency: 0,//0: unlock immediately, 1: fully unlock after, others: unlock after each period
-        },
-        tokenomics: [{
-            title: "Public Sale",
-            value: 25
-        }, {
-            title: "Liquidity",
-            value: 65
-        }, {
-            title: "Team",
-            value: 10
-        }],
-        distribution: {
-            fairlaunch: 250_000_000,
-            liquidity: 650_000_000,
-            team: {
-                title: "Team",
-                description: "Team allocation",
-                total: 100_000_000,
-                vesting: {
-                    cliff: 0,//Seconds
-                    duration: 30 * 24 * 60 * 60,//Seconds
-                    unlockFrequency: 0,//0: unlock immediately, 1: fully unlock after, others: unlock after each period
-                },
-                recipients: [
-                    {
-                        amount: 60_000_000,
-                        address: "lekqg-fvb6g-4kubt-oqgzu-rd5r7-muoce-kppfz-aaem3-abfaj-cxq7a-dqe",
-                        note: ["Founder"]
-                    },
-                    {
-                        amount: 40_000_000,
-                        address: "v57dj-hev4p-lsvdl-dckvv-zdcvg-ln2sb-tfqba-nzb4g-iddrv-4rsq3-mae",
-                        note: ["Developer"]
-                    }
-                ]
-            },
-            others: []
-        },
-        creator: "lekqg-fvb6g-4kubt-oqgzu-rd5r7-muoce-kppfz-aaem3-abfaj-cxq7a-dqe",
-        affiliate: 0,//Percent
-        fee: 3,
-        restrictedArea: []
-    };
     let _formattedData = processDataForBackend(launchpad.value);
-    console.log('installll', _params);
     console.log('launchpad', launchpad.value);
     console.log('_formattedData', _formattedData);
 
@@ -654,10 +565,9 @@ const installLaunchpad = async () => {
                                         <div class="col-12">
                                             <select name="listing" class="form-select" v-model="launchpad.currency"
                                                 readonly>
-                                                <option :value="config.LEDGER_CANISTER_ID">ICP</option>
-                                                <option value="icto" disabled>ICTO</option>
+                                                <option value="uwp4v-7qaaa-aaaap-qhpiq-cai">tICP (Test ICP)</option>
                                             </select>
-                                            <div class="form-text">Participants will commit with <strong>ICP</strong> for
+                                            <div class="form-text">Participants will commit with <strong>tICP</strong> for
                                                 your token</div>
                                         </div>
                                     </div>
@@ -922,7 +832,7 @@ const installLaunchpad = async () => {
                                 <div class="col-md-6 fv-row">
                                     <label class="d-flex align-items-center fs-6 fw-bold mb-2"><span
                                             class="required">End Time (UTC)</span></label>
-                                    <VueDatePicker v-model="launchpad.timeline.endTime" :min-date="new Date()"
+                                    <VueDatePicker v-model="launchpad.timeline.endTime" :min-date="launchpad.timeline.startTime"
                                         :enable-time-picker="true" time-picker-inline auto-apply placeholder="End time">
                                     </VueDatePicker>
                                 </div>
@@ -931,14 +841,14 @@ const installLaunchpad = async () => {
                                 <div class="col-md-6 fv-row">
                                     <label class="d-flex align-items-center fs-6 fw-bold mb-2"><span class="">Claim
                                             Time (UTC)</span></label>
-                                    <VueDatePicker v-model="launchpad.timeline.claimTime" :min-date="new Date()"
+                                    <VueDatePicker v-model="launchpad.timeline.claimTime" :min-date="launchpad.timeline.endTime"
                                         :enable-time-picker="true" placeholder="Select claim time" time-picker-inline
                                         auto-apply></VueDatePicker>
                                 </div>
                                 <div class="col-md-6 fv-row">
                                     <label class="d-flex align-items-center fs-6 fw-bold mb-2"><span class="">Listing
                                             Time (UTC)</span></label>
-                                    <VueDatePicker v-model="launchpad.timeline.listingTime" :min-date="new Date()"
+                                    <VueDatePicker v-model="launchpad.timeline.listingTime" :min-date="launchpad.timeline.claimTime"
                                         :enable-time-picker="true" placeholder="Select listing time" time-picker-inline
                                         auto-apply :disabled="launchpad.listing == 'manually'"></VueDatePicker>
                                 </div>
