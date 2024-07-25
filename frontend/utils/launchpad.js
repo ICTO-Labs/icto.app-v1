@@ -1,5 +1,8 @@
 import config from "@/config";
+import moment from "moment";
+
 export const processDataForBackend = (originalData, tokenInfo) => {
+    console.log('originalData', originalData);
     const processedData = JSON.parse(JSON.stringify(originalData));
 
     processedData.totalToken *= config.E8S;
@@ -11,7 +14,13 @@ export const processDataForBackend = (originalData, tokenInfo) => {
     processedData.minBuy *= config.E8S;
 
     for (const key in processedData.timeline) {
-        processedData.timeline[key] = Math.round(processedData.timeline[key] * 1e6);
+            //Process timeline
+    // processedData.timeline.startTime = processedData.timeline.startTime.valueOf();
+    // processedData.timeline.endTime = processedData.timeline.endTime.valueOf();
+    // processedData.timeline.claimTime = processedData.timeline.claimTime.valueOf();
+    // processedData.timeline.listingTime = processedData.timeline.listingTime.valueOf();
+
+        processedData.timeline[key] = Math.round(moment(processedData.timeline[key]).valueOf() * 1e6);
     }
 
     const processRecipients = (recipients) => {
@@ -47,6 +56,7 @@ export const processDataForBackend = (originalData, tokenInfo) => {
 
     //Process links
     processedData.projectInfo.links = [processedData.projectInfo.links];
+
     return processedData;
 };
 

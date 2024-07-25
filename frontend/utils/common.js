@@ -232,7 +232,11 @@ export const saveRef = (ref) => {
 }
 export const getRef = () => {
     let _ref = localStorage.getItem('refCode');
-    return [_ref];//Optional to return array
+    if(_ref){
+        return [_ref];
+    }else{
+        return [];
+    }
 }
 export default {
     validateAddress,

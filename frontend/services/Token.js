@@ -72,7 +72,8 @@ export const useTokenApprove = async(tokenId, payload, decimals=8, standard="icr
     let _token = getTokenInfo(tokenId);
     const _amount = formatTokenAmount(payload.amount, decimals);
     // const _amount = BigInt(parseFloat(payload.amount) * (_token ? Math.pow(10, _token.decimals) : config.E8S));
-    const _fee = BigInt(_token?_token.fee:0);
+    const _fee = Number(_token?_token.fee:10000);
+    const _finalAmount = Number(_amount)+Number(_fee);//Create a new amount with fee
     const _spender = txtToPrincipal(payload.spender);
     try{
         const response =  await Connect.canister(tokenId, standard).icrc2_approve({
@@ -81,7 +82,7 @@ export const useTokenApprove = async(tokenId, payload, decimals=8, standard="icr
                 owner: _spender,
                 subaccount: [],
             },
-            amount: Number(_amount),
+            amount: _finalAmount,
             expires_at: [],
             expected_allowance: [],
             memo: [],

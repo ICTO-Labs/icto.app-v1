@@ -1,16 +1,17 @@
 <script setup>
-    import { ref, onMounted, watchEffect, computed } from 'vue';
+    import { ref, onMounted, watchEffect, watch } from 'vue';
     import Tokenomic from '@/components/launchpad/Tokenomic.vue';
     import VueCountdown from '@chenfengyuan/vue-countdown';
     import Timeline from '@/components/launchpad/Timeline.vue';
     import Links from '@/components/Links.vue';
+    import RefererLink from '@/components/launchpad/RefererLink.vue';
     import moment from 'moment';
-    import { timeFromNano, showError, showSuccess, showLoading, getPoolStatus, getRef, saveRef, shortPrincipal } from '@/utils/common';
-    import { getInfo, useCommit, getStatus, getTopAffiliates, useCreateShortlink, getShortlink } from '@/services/Launchpad';
+    import { timeFromNano, showError, showSuccess, showLoading, closeMessage, getPoolStatus, getRef, saveRef, shortPrincipal } from '@/utils/common';
+    import { getInfo, useCommit, getStatus, getTopAffiliates, useCreateShortlink, getShortlink, deleteShortLink } from '@/services/Launchpad';
     import { formatTokenomic } from '@/utils/launchpad';
     import { useRoute } from 'vue-router';
     import { parseTokenAmount, formatTokenAmount, currencyFormat } from '@/utils/token';
-    import { useGetMyBalance } from '@/services/Token';
+    import { useGetMyBalance, useTokenApprove } from '@/services/Token';
     import walletStore from "@/store";
     const router = useRoute();
     const launchpadId = router.params.launchpadId;
@@ -24,7 +25,6 @@
     // const { data: tokenTransactions, isError, error, isLoading: isTransLoading, isRefetching: isTransRefetching, refetch: refreshTransactions } = useGetTransactions(tokenId, 'icrc2', 0, 100);
     const { data: launchpadInfo, isError, error, isLoading, isRefetching, refetch, isFetched } = getInfo(launchpadId);
     const { data: topAffiliates } = getTopAffiliates(launchpadId);
-    const { data: myShortLink } = getShortlink('launchpad', launchpadId);
     const { data: status, isError: isStatusError, error: statusError, isLoading: isStatusLoading, isRefetching: isStatusRefetching, refetch: refetchStatus } = getStatus(launchpadId);
     console.log('launchpadInfo', launchpadInfo);
     watchEffect(() => {
@@ -37,7 +37,7 @@
             //Check balance
             // checkPurchaseBalance();
             // countdown.value = moment(timeFromNano(launchpadInfo.value.timeline.startTime).valueOf()).diff(moment());
-        }
+        };
         if(status.value){
             if(status.value.status == "LIVE"){
                 console.log('live');
@@ -93,17 +93,41 @@
 		confirmButtonText: "Yes, I confirmed!"
 		}).then(async (result) => {
             if (result.isConfirmed) {
-                showLoading('Processing your deposit, please wait...');
                 let _amount = Number(formatTokenAmount(depositAmount.value, purchaseToken.value.decimals));
-                let _refCode = getRef();
-                let _deposit = await useCommit(launchpadId, _amount, _refCode);
-                if(_deposit && "ok" in _deposit) {
-                    showSuccess('Your commit has been successfully processed!', true);
-                }else{
-                    showError(_deposit.err, true);
+
+                //Step 1: Approve token
+                showLoading("Approving tICP...");
+                let _approved = await useTokenApprove(purchaseToken.value.canisterId, {spender: launchpadId, amount: depositAmount.value}, 8);
+                if(_approved == null){
+                    closeMessage();
+                    return;
                 }
+                console.log('_approved', _approved);
+                if(_approved && _approved.hasOwnProperty('Err')){
+                    if (_approved.Err?.InsufficientFunds) {
+                        showError('Insufficient Funds', true);
+                    }else{
+                        showError("Approve not succeed: "+JSON.stringify(_approved.Err), true);
+                    }
+                    return;
+                }
+                //Step 2: Deposit
+                showLoading('Processing your deposit, please wait...');
+                let _refCode = getRef();
+                try{
+                    let _deposit = await useCommit(launchpadId, _amount, _refCode);
+                    console.log('Deposit', launchpadId, _deposit, _amount);
+
+                    if(_deposit && "ok" in _deposit) {
+                        showSuccess('Your commit has been successfully processed!', true);
+                    }else{
+                        showError('Can not process, please try again later!', true);
+                    }
+                }catch(e){
+                    showError(e, true);
+                }
+                
                 refetchStatus();//Refresh status
-                console.log('Deposit', launchpadId, _deposit, _amount);
             }
         });
         
@@ -119,26 +143,6 @@
             // localStorage.setItem('refBy', ref);
         }
     });
-
-    const shortLink = ref('');
-    const validUrlId = ref('');
-    const handleShortLinkInput = ()=>{
-        validUrlId.value = toValidUrlId(shortLink.value);
-    }
-    const toValidUrlId = (input) => {
-        return input
-        .toLowerCase()
-        .replace(/[^a-z0-9\s-]/g, '')
-        .trim()
-        .replace(/\s+/g, '-')
-        .replace(/-+/g, '-');
-    };
-
-    const handleShortLink = async()=>{
-        let _target = `https://icto.app/launchpad/${launchpadId}?r=${walletStore.principal}`
-        let _rs = await useCreateShortlink(validUrlId.value, _target);
-        console.log('_s', _rs, validUrlId.value, _target);
-    }
 </script>
 
 <template>
@@ -183,7 +187,7 @@
                                     <!--end::Info-->
                                 </div>
                                 <div class="d-flex my-4">
-                                    <div class="d-flex fs-7 align-items-center " v-html="getPoolStatus(status.status)" v-if="status.status"></div>
+                                    <div class="d-flex fs-7 align-items-center" v-html="getPoolStatus(status?.status)" v-if="status?.status"></div>
                                 </div>
                             </div>
                         </div>
@@ -281,32 +285,7 @@
                     <h3 class="card-title">Top Affiliates</h3>
                 </div>
                 <div class="card-body p-5">
-                    <div class="" v-if="walletStore.isLogged">
-                        <div class="col-md-12 fv-row">
-                            <label class="d-flex align-items-center fs-7 fw-bold mb-2"><span class="">Your referer link</span></label>
-                            <div class="input-group mb-3">
-                                <input type="text" :value="`https://icto.app/launchpad/${launchpadId}?r=${walletStore.principal}`" class="form-control form-control-sm"  readonly/>
-                                <span class="input-group-text fs-7"><Copy :text="`https://icto.app/launchpad/${launchpadId}?r=${walletStore.principal}`"/></span>
-                            </div>
-                        </div>
-                        <div class="row mb-5">
-                            <div class="col-md-6 fv-row">
-                                <label class="d-flex align-items-center fs-7 fw-bold mb-2"><span class="">Create custom short link {{myShortLink}}</span></label>
-                                <div class="input-group mb-3">
-                                    <input type="text" class="form-control form-control-sm" placeholder="Enter your short link" v-model="shortLink" @input="handleShortLinkInput" />
-                                    <span class="input-group-text fs-7"  @click="handleShortLink">Create</span>
-                                </div>
-                            </div>
-                            <div class="col-md-6 fv-row">
-                                <label class="d-flex align-items-center fs-7 fw-bold mb-2"><span class="">Preview</span></label>
-                                <div class="input-group mb-3">
-                                    <input class="form-control form-control-sm" :value="`https://icto.link/${validUrlId || 'NOT_REGISTERED'}`" disabled />
-                                    <span class="input-group-text fs-7"><Copy /></span>
-                                </div>
-                            </div>
-                        </div>
-
-                    </div>
+                    <RefererLink :launchpadId="launchpadId" />
                     <div class="table-responsive">
                         <table class="table table-flush align-middle table-row-bordered table-hover gy-3 gs-5">
                             <thead>
@@ -426,7 +405,7 @@
                                     </tr>
                                     <tr>
                                         <td>Affiliate Program</td>
-                                        <td class="text-end text-primary">{{status.affiliate > 0 ?"ENABLED":"NOT ENABLED"}} ({{ status.affiliate }}%)</td>
+                                        <td class="text-end text-primary">{{status?.affiliate > 0 ?"ENABLED":"NOT ENABLED"}} ({{ status?.affiliate }}%)</td>
                                     </tr>
                                     <tr>
                                         <td>Pool Size</td>
@@ -464,7 +443,7 @@
                 <!--end: Card Body-->
             </div>
 
-            <div class="card mb-5 mb-xl-5" v-if="status.affiliate > 0">
+            <div class="card mb-5 mb-xl-5" v-if="status && status.affiliate > 0">
                 <div class="card-header align-items-center border-0 mt-4 ps-5">
                     <h3 class="card-title align-items-start flex-column">
                         <span class="fw-bolder mb-2 text-dark">Affiliate Program</span>
@@ -486,7 +465,7 @@
                                     </tr>
                                     <tr>
                                         <td>Reward Percentage</td>
-                                        <td class="text-end text-success">{{(Number(status.totalAffiliateVolume)*100/Number(status.totalAmountCommitted))}}%</td>
+                                        <td class="text-end text-success">{{(Number(status.totalAffiliateVolume)*100/Number(status.totalAmountCommitted) || 0)}}%</td>
                                     </tr>
                                     <tr>
                                         <td>Referer Transaction Count</td>
