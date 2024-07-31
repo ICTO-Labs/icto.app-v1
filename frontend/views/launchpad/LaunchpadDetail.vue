@@ -5,6 +5,7 @@
     import Timeline from '@/components/launchpad/Timeline.vue';
     import Links from '@/components/Links.vue';
     import RefererLink from '@/components/launchpad/RefererLink.vue';
+    import MyStats from '@/components/launchpad/MyStats.vue';
     import moment from 'moment';
     import { timeFromNano, showError, showSuccess, showLoading, closeMessage, getPoolStatus, getRef, saveRef, shortPrincipal } from '@/utils/common';
     import { getInfo, useCommit, getStatus, getTopAffiliates, useCreateShortlink, getShortlink, deleteShortLink } from '@/services/Launchpad';
@@ -29,7 +30,6 @@
     console.log('launchpadInfo', launchpadInfo);
     watchEffect(() => {
         if (isFetched.value && launchpadInfo.value) {
-            console.log('changed', isFetched, launchpadInfo.value);
             purchaseToken.value = launchpadInfo.value.purchaseToken;
             saleToken.value = launchpadInfo.value.saleToken;
             // depositAmount.value = parseTokenAmount(launchpadInfo.value.launchParams.minimumAmount, purchaseToken.value.decimals);
@@ -40,7 +40,6 @@
         };
         if(status.value){
             if(status.value.status == "LIVE"){
-                console.log('live');
                 countdown.value = moment(timeFromNano(launchpadInfo.value.timeline.endTime).valueOf()).diff(moment());
             }else{
                 countdown.value = moment(timeFromNano(launchpadInfo.value.timeline.startTime).valueOf()).diff(moment());
@@ -61,7 +60,6 @@
     }
     const getLaunchpadInfo = async () => {
         const _info = await getInfo();
-        console.log(_info);
         if (_info) {
             // launchpadInfo.value = _info;
             purchaseToken.value = launchpadInfo.purchaseToken[0];
@@ -194,7 +192,7 @@
                     </div>
 
                     <div class="separator"></div>
-                    <div class="px-5 py-2">
+                    <div class="px-5 py-5">
                         <div v-html="launchpadInfo.projectInfo.description"></div>
                     </div>
                 </div>
@@ -301,7 +299,7 @@
                                 <tr v-for="(affiliate, idx) in topAffiliates">
                                     <td class="text-center pe-3">{{idx+1}}.</td>
                                     <td>{{shortPrincipal(affiliate[0])}} <Copy :text="affiliate[0]"></Copy></td>
-                                    <td class="text-end pe-3 fw-bold text-success">{{ currencyFormat(parseTokenAmount(affiliate[1].projectedReward, purchaseToken.decimals)) }} {{ purchaseToken.symbol }}</td>
+                                    <td class="text-end pe-3 fw-bold text-success">{{ currencyFormat(parseTokenAmount(Number(affiliate[1].volume)/Number(status.totalAffiliateVolume)*Number(status.affiliateRewardPool), purchaseToken.decimals)) }} {{ purchaseToken.symbol }}</td>
                                     <td class="text-end pe-3 fw-bold text-primary">{{ currencyFormat(parseTokenAmount(affiliate[1].volume, purchaseToken.decimals)) }} {{ purchaseToken.symbol }}</td>
                                     <td class="text-end pe-3 fw-bold">{{ affiliate[1].refCount }}</td>
                                 </tr>
@@ -376,20 +374,24 @@
                                 <div class="text-primary">Soft cap: {{currencyFormat(parseTokenAmount(launchpadInfo.launchParams.softCap, purchaseToken.decimals))}} {{ purchaseToken.symbol }}</div>
                                 <div class="text-danger">Hard cap: {{currencyFormat(parseTokenAmount(launchpadInfo.launchParams.hardCap, purchaseToken.decimals))}} {{ purchaseToken.symbol }}</div>
                             </div>
-                            <div class="separator"></div>
-                            <div class="form-group fs-7 mt-5">
-                                <label class="form-label required fs-7">Amount</label>
-                                <div class="float-right">Balance: 
-                                    <span class="fw-bold text-primary">{{myBalance}} {{ purchaseToken.symbol }}</span> 
-                                    <a href="javascript:void(0)" @click="selectMax" title="Select Max" class="badge badge-light-primary ms-5">MAX</a>
+                            <MyStats :launchpadId="launchpadId" :stats="status" :launchpadInfo="launchpadInfo" />
+                            
+                            <div v-if="status.status == 'LIVE'">
+                                <div class="separator"></div>
+                                <div class="form-group fs-7 mt-5">
+                                    <label class="form-label required fs-7">Amount</label>
+                                    <div class="float-right">Balance: 
+                                        <span class="fw-bold text-primary">{{myBalance}} {{ purchaseToken.symbol }}</span> 
+                                        <a href="javascript:void(0)" @click="selectMax" title="Select Max" class="badge badge-light-primary ms-5">MAX</a>
+                                    </div>
+                                    <div class="form-control-wrap">
+                                        <input type="text" class="form-control form-control-solid form-control-sm" placeholder="Enter amount" v-model="depositAmount" :disabled="status.status !='LIVE'" />
+                                    </div>
                                 </div>
-                                <div class="form-control-wrap">
-                                    <input type="text" class="form-control form-control-solid form-control-sm" placeholder="Enter amount" v-model="depositAmount" :disabled="status.status !='LIVE'" />
-                                </div>
+                                <div class="pt-5 d-flex flex-column">
+                                    <button class="btn btn-primary btn-sm btn-block" @click="depositBtn" :disabled="status.status !='LIVE'">Commit</button>
+                                </div>  
                             </div>
-                            <div class="pt-5 d-flex flex-column">
-                                <button class="btn btn-primary btn-sm btn-block" @click="depositBtn" :disabled="status.status !='LIVE'">Commit</button>
-                            </div>  
                             
                         </div>
                         <div class="table-responsive">
@@ -465,7 +467,7 @@
                                     </tr>
                                     <tr>
                                         <td>Reward Percentage</td>
-                                        <td class="text-end text-success">{{(Number(status.totalAffiliateVolume)*100/Number(status.totalAmountCommitted) || 0)}}%</td>
+                                        <td class="text-end text-success">{{((Number(status.totalAffiliateVolume)*100/Number(status.totalAmountCommitted)).toFixed(2) || 0)}}%</td>
                                     </tr>
                                     <tr>
                                         <td>Referer Transaction Count</td>

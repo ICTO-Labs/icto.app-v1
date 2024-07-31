@@ -55,7 +55,7 @@ export const getStatus = (canisterId) =>{
 }
 
 //Get top affiliates
-export const getTopAffiliates = (canisterId, num=5) =>{
+export const getTopAffiliates = (canisterId, num=20) =>{
     try{
         return useQuery({
             queryKey: ['getTopAffiliates', canisterId],
@@ -67,6 +67,21 @@ export const getTopAffiliates = (canisterId, num=5) =>{
         // return await Connect.canister(canisterId, 'launchpad_detail').topAffiliates();
     }catch(e){
         console.log('topAffiliatesLaunchpad', e);
+        return {err: 'An unexpected error occurred, please check the console log!'}
+    }
+}
+
+export const getParticipantInfo = (canisterId, address) =>{
+    try{
+        return useQuery({
+            queryKey: ['getParticipantInfo', canisterId, address],
+            queryFn: async () => await Connect.canister(canisterId, 'launchpad_detail', true).getParticipantInfo(address),
+            keepPreviousData: false,
+            retry: 3,
+            refetchInterval: 0
+        })
+    }catch(e){
+        console.log('getParticipantInfo', e);
         return {err: 'An unexpected error occurred, please check the console log!'}
     }
 }
