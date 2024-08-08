@@ -1,5 +1,6 @@
 import config from "@/config";
 import moment from "moment";
+import { ref } from 'vue';
 
 export const processDataForBackend = (originalData, tokenInfo) => {
     console.log('originalData', originalData);
@@ -85,3 +86,58 @@ export const formatTokenomic = (distribution) => {
     }
     return tokenomics;
 };
+
+export const useProjectScore = ()=>{
+    const metrics = ref([
+        { name: 'isDAO', type: 'boolean', weight: 10 },
+        { name: 'isKYC', type: 'boolean', weight: 10 },
+        { name: 'isAudited', type: 'boolean', weight: 15 },
+        { name: 'isVerified', type: 'boolean', weight: 10 },
+        { name: 'autoLockLP', type: 'boolean', weight: 10 },
+        { name: 'percentLPLock', type: 'number', weight: 25, minValue: 10, maxValue: 100, isLowerBetter: false },
+        { name: 'teamAllocationPercent', type: 'number', weight: 20, minValue: 0, maxValue: 100, isLowerBetter: true },
+    ]);
+
+    const addMetric = (metric) => {
+        metrics.value.push(metric);
+    };
+
+    const removeMetric = (name) => {
+        const index = metrics.value.findIndex(m => m.name === name);
+        if (index !== -1) {
+        metrics.value.splice(index, 1);
+        }
+    };
+
+    const calculateScore = (assessment) => {
+        let totalScore = 0;
+        let totalWeight = 0;
+
+        metrics.value.forEach(metric => {
+        const value = assessment[metric.name];
+        if (value !== undefined) {
+            let score = 0;
+            if (metric.type === 'boolean') {
+            score = value ? metric.weight : 0;
+            } else if (metric.type === 'number') {
+            const range = (metric.maxValue || 100) - (metric.minValue || 0);
+            const normalizedValue = (value - (metric.minValue || 0)) / range;
+            score = metric.isLowerBetter ? 
+                (1 - normalizedValue) * metric.weight :
+                normalizedValue * metric.weight;
+            }
+            totalScore += score;
+            totalWeight += metric.weight;
+        }
+        });
+
+        return (totalScore / totalWeight) * 100;
+    };
+
+    return {
+        metrics,
+        addMetric,
+        removeMetric,
+        calculateScore
+    };
+}

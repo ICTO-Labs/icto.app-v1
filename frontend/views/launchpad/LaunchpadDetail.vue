@@ -6,6 +6,7 @@
     import Links from '@/components/Links.vue';
     import RefererLink from '@/components/launchpad/RefererLink.vue';
     import MyStats from '@/components/launchpad/MyStats.vue';
+    import ProjectScore from '@/components/launchpad/ProjectScore.vue';
     import moment from 'moment';
     import { timeFromNano, showError, showSuccess, showLoading, closeMessage, getPoolStatus, getRef, saveRef, shortPrincipal } from '@/utils/common';
     import { getInfo, useCommit, getStatus, getTopAffiliates, useCreateShortlink, getShortlink, deleteShortLink } from '@/services/Launchpad';
@@ -22,7 +23,15 @@
     const countdown = ref(10 * 24 * 60 * 60 * 1000);
     const myBalance = ref(0);
     const tokennomics = ref([]);
-
+    const projectAssessment = ref({
+        isDAO: true,
+        isKYC: false,
+        isAudited: true,
+        isVerified: false,
+        autoLockLP: true,
+        percentLPLock: 50,
+        teamAllocationPercent: 12,
+    });
     // const { data: tokenTransactions, isError, error, isLoading: isTransLoading, isRefetching: isTransRefetching, refetch: refreshTransactions } = useGetTransactions(tokenId, 'icrc2', 0, 100);
     const { data: launchpadInfo, isError, error, isLoading, isRefetching, refetch, isFetched } = getInfo(launchpadId);
     const { data: topAffiliates } = getTopAffiliates(launchpadId);
@@ -278,7 +287,7 @@
                     <Tokenomic :data="tokennomics" :legend="1"/>
                 </div>
             </div>
-            <div class="card" v-if="status.affiliate > 0">
+            <div class="card mb-5 mb-xl-5" v-if="status.affiliate > 0">
                 <div class="card-header ps-6">
                     <h3 class="card-title">Top Affiliates</h3>
                 </div>
@@ -315,7 +324,20 @@
         <div class="col-xxl-4">
             <div class="card mb-5  mb-xl-5">
                 <!--begin::Body-->
+                <div class="card-header align-items-center border-0 ps-5 pb-0">
+                    <h3 class="card-title align-items-start flex-column">
+                        <span class="fw-bolder mb-2 text-dark">Project Score</span>
+                    </h3>
+                    <div class="card-toolbar">
+                        <a href="https://docs.icto.app/" target="_blank" class="badge badge-light fw-bolder me-auto px-4 py-3">More ></a>
+                    </div>
+                </div>
                 <div class="card-body pt-0 p-0">
+                    <div>
+                        <ProjectScore :assessment="projectAssessment" />
+                    </div>
+                    <div class="pt-5 mb-5 text-center"></div>
+                    <div class="separator"></div>
                     <div class="text-center countdown p-5" v-if="countdown">
                         <vue-countdown :time="countdown" v-slot="{ days, hours, minutes, seconds }"  @end="onCountdownEnd">
                             <div class="fw-bolder fs-6 text-primary p-5">
