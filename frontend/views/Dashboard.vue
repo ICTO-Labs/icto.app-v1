@@ -337,8 +337,8 @@
 										<div class="fw-bolder text-primary">Q2/2024</div>
 										<div class="d-flex justify-content-between p-1">Token locks: LP Lock contract <span class="badge badge-light-success fs-8 fw-bold">Done</span></div>
 										<div class="d-flex justify-content-between p-1">Airdrop distribution <span class="badge badge-light-success fs-8 fw-bold">Done</span></div>
-										<div class="fw-normal d-flex justify-content-between p-1">Vesting/Payment contract <span class="badge badge-light-warning fs-8 fw-bold">Inprogress</span></div>
-										<div class="d-flex justify-content-between p-1">Launchpad with DAOs model <span class="badge badge-light-warning fs-8 fw-bold">Inprogress</span></div>
+										<div class="fw-normal d-flex justify-content-between p-1">Vesting/Payment contract <span class="badge badge-light-success fs-8 fw-bold">Done</span></div>
+										<div class="d-flex justify-content-between p-1">Launchpad with DAOs model <span class="badge badge-light-warning fs-8 fw-bold">SNS</span></div>
 									</div>
 								</div>
 								<div class="timeline-item mb-2">
