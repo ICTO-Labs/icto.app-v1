@@ -16,6 +16,7 @@ import Result "mo:base/Result";
 import Ledger "Ledger";
 import Types "./types/Common";//Common
 import ICRCLedger "../token_deployer/ICRCLedger";
+import BlockID "../utils/BlockID";
 
 shared ({ caller = creator }) actor class Contract({
     title: Text;
@@ -61,6 +62,7 @@ shared ({ caller = creator }) actor class Contract({
     };
 
     type ContractData = ContractInfo and {
+        requiredScore: Nat;
         totalAmount: Nat;
         maxRecipients: Nat;
         totalRecipients: Nat;
@@ -111,7 +113,7 @@ shared ({ caller = creator }) actor class Contract({
         unlockSchedule = unlockSchedule;
         startTime = 0;
         created = Time.now();
-        isStarted = false; // Thay đổi thành false để phù hợp với logic startContract
+        isStarted = false; // Change to false to match startContract logic
         isPaused = false;
         isCanceled = false;
         owner = owner;
@@ -123,8 +125,23 @@ shared ({ caller = creator }) actor class Contract({
     var _totalAmount: Nat = 0;
     var totalClaimedAmount: Nat = 0;
     var totalRecipients: Nat = 0;
-    var tokenPerRecipient: Nat = 0; // Cho chế độ FIFO
-    // var maxRecipients: Nat = 0; // Cho chế độ FIFO
+    var tokenPerRecipient: Nat = 0; // For FCFS mode
+    // var maxRecipients: Nat = 0; // For FCFS mode
+
+    //BlockID
+    stable var REQUIRED_SCORE: Nat = 13;//BlockID required score
+    let BLOCK_ID_CANISTER_ID = "3c7yh-4aaaa-aaaap-qhria-cai";
+    let BLOCK_ID_APPLICATION = "block-id";
+    let _blockID : BlockID.Self = actor(BLOCK_ID_CANISTER_ID);
+
+    private func checkBlockIDScore(principal: Principal) : async Bool {
+        try {
+            let score = await _blockID.getWalletScore(principal, BLOCK_ID_APPLICATION);
+            score.totalScore >= REQUIRED_SCORE;
+        } catch (e) {
+            false;
+        };
+    };
 
     //Convert Time.Now to seconds
     func timeNow(): Nat{
@@ -295,7 +312,36 @@ shared ({ caller = creator }) actor class Contract({
             totalClaimedAmount = totalClaimedAmount;
             totalRecipients = totalRecipients;
             cyclesBalance = Cycles.balance();
+            requiredScore = REQUIRED_SCORE;
         };
+    };
+
+    public shared({caller}) func setRequiredScore(score: Nat): async Result.Result<Bool, Text> {
+        checkOwner(caller);
+        REQUIRED_SCORE := score;
+        #ok(true);
+    };
+    //Check eligibility
+    public shared({caller}) func checkEligibility(): async Result.Result<Bool, Text> {
+        //Check if contract type is FirstComeFirstServed
+        var isEligible = false;
+        if (contractInfo.distributionType == #FirstComeFirstServed) {
+            isEligible := totalRecipients < maxRecipients;
+
+        }else{
+            //Check in recipient list
+            isEligible := switch (recipientClaimInfo.get(caller)) {
+                case (?_) true;
+                case (_) false;
+            };
+        };
+        if (not isEligible) return #err("You are not a recipient of this contract or max recipients reached");
+        let isBlockIDScoreEnough = await checkBlockIDScore(caller);
+        if (isEligible and isBlockIDScoreEnough) {
+            #ok(true);
+        }else{
+            #err("Your BlockID score is not enough, required score is: " # debug_show(REQUIRED_SCORE));
+        }
     };
 
     // Get all recipients
@@ -375,7 +421,9 @@ shared ({ caller = creator }) actor class Contract({
         if (contractInfo.isStarted == false) return #err("Contract has not started yet");
 
         let principal = msg.caller;
-        
+        let isBlockIDScoreEnough = await checkBlockIDScore(principal);
+        if (not isBlockIDScoreEnough) return #err("Your BlockID score is not enough, required score is: " # debug_show(REQUIRED_SCORE));
+
         switch (contractInfo.distributionType) {
             case (#Vesting) {// Process for Vesting
                 switch (recipientClaimInfo.get(principal)) {

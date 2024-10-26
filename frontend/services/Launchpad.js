@@ -1,7 +1,7 @@
 import Connect from "@/ic/actor/Connect";
 import config from "@/config";
 import { useQuery } from "@tanstack/vue-query";
-export const install = async (params, whitelist, canisterId="2phil-viaaa-aaaap-qhoka-cai") =>{
+export const install = async (params, whitelist, canisterId="avqkn-guaaa-aaaaa-qaaea-cai") =>{
     try{
         return await Connect.canister(canisterId, 'launchpad_detail').install(params, whitelist);
     }catch(e){
@@ -59,7 +59,12 @@ export const getTopAffiliates = (canisterId, num=20) =>{
     try{
         return useQuery({
             queryKey: ['getTopAffiliates', canisterId],
-            queryFn: async () => await Connect.canister(canisterId, 'launchpad_detail', true).getTopAffiliates(Number(num)),
+            queryFn: async () => {
+                let _res = await Connect.canister(canisterId, 'launchpad_detail', true).getTopAffiliates(Number(num));
+                //Sort by volume
+                _res.sort((a, b) => Number(b[1].volume) - Number(a[1].volume));
+                return _res;
+            },
             keepPreviousData: false,
             retry: 3,
             refetchInterval: 1000
@@ -82,6 +87,14 @@ export const getParticipantInfo = (canisterId, address) =>{
         })
     }catch(e){
         console.log('getParticipantInfo', e);
+        return {err: 'An unexpected error occurred, please check the console log!'}
+    }
+}
+export const checkEligibleToCommit = async (canisterId) =>{
+    try{
+        return await Connect.canister(canisterId, 'launchpad_detail').checkEligibleToCommit();
+    }catch(e){
+        console.log('checkEligibleToCommit', e);
         return {err: 'An unexpected error occurred, please check the console log!'}
     }
 }

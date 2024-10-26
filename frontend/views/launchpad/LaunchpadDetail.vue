@@ -9,7 +9,7 @@
     import ProjectScore from '@/components/launchpad/ProjectScore.vue';
     import moment from 'moment';
     import { timeFromNano, showError, showSuccess, showLoading, closeMessage, getPoolStatus, getRef, saveRef, shortPrincipal } from '@/utils/common';
-    import { getInfo, useCommit, getStatus, getTopAffiliates, useCreateShortlink, getShortlink, deleteShortLink } from '@/services/Launchpad';
+    import { getInfo, useCommit, getStatus, getTopAffiliates, checkEligibleToCommit, useCreateShortlink, getShortlink, deleteShortLink } from '@/services/Launchpad';
     import { formatTokenomic } from '@/utils/launchpad';
     import { useRoute } from 'vue-router';
     import { parseTokenAmount, formatTokenAmount, currencyFormat } from '@/utils/token';
@@ -18,6 +18,7 @@
     const router = useRoute();
     const launchpadId = router.params.launchpadId;
     const purchaseToken = ref(null);
+    const eligibleToCommit = ref(null);
     const saleToken = ref(null);
     const depositAmount = ref(0);
     const countdown = ref(10 * 24 * 60 * 60 * 1000);
@@ -86,6 +87,9 @@
             depositAmount.value = launchpadInfo.value.launchParams.maximumAmount;
             showError('Maximum amount is ' + launchpadInfo.value.launchParams.maximumAmount);
         }
+    }
+    const checkEligible = async () => {
+        eligibleToCommit.value = await checkEligibleToCommit(launchpadId);
     }
 
     const depositBtn = async () => {
@@ -189,7 +193,7 @@
                                     <div>
                                         <span class="badge badge-warning fw-bold px-4 py-2 ps-4 me-4"><i class="fas fa-percent text-white"></i> AFFILIATE</span> 
                                         <span class="badge badge-light-danger fw-bolder me-auto px-4 py-2 ps-4"><i class="fas fa-fire text-danger"></i> HOT #1</span>
-                                        <span class="badge badge-light-primary fw-bolder me-auto px-4 py-2 ps-4 ms-4" v-if="launchpadInfo.projectInfo.isAudited"><i class="fas fa-shield-alt text-primary"></i> AUDITED</span>
+                                        <span class="badge badge-light-success fw-bolder me-auto px-4 py-2 ps-4 ms-4" ><i class="fas fa-shield-alt text-success"></i> BLOCKID</span>
                                     </div>
                                     <!--end::Info-->
                                 </div>
@@ -228,7 +232,7 @@
                                 </tr>
                                 <tr>
                                     <td>Token Canister</td>
-                                    <td class="text-end fw-bolder text-primary">--- <Copy :text="bkyz2-fmaaa-aaaaa-qaaaq-cai"></Copy></td>
+                                    <td class="text-end fw-bolder text-primary">--- <Copy text="---"></Copy></td>
                                 </tr>
                                 <tr>
                                     <td>Total Supply</td>
@@ -373,6 +377,21 @@
                             </div>
                         </vue-countdown>
                     </div>
+                    <!-- <div class="text-center">
+                        <span class="badge badge-light text-success">This contract is verified by <a href="https://blockid.cc" target="_blank"><span class=" badge badge-light text-success"><i class="fas fa-shield-alt text-success"></i> BlockID</span></a></span> 
+                    </div> -->
+
+                    <div class="px-3 py-2 fw-bold text-center border-rounded mb-5 border border-dashed">
+                        <div class="text-success" v-if="eligibleToCommit && 'ok' in eligibleToCommit">
+                            <i class="fas fa-check-circle text-success"></i> You are eligible!
+                        </div>
+                        <div class="text-danger" v-else>
+                            <i class="fas fa-times-circle text-danger"></i> Not eligible: {{ eligibleToCommit?.err || 'Unknown error' }}
+                        </div>
+                        <div>
+                            <button type="button" class="btn btn-sm btn-light-primary" @click="checkEligible"><i class="fas fa-history"></i> Check again</button>
+                        </div>
+                    </div>
                     <div class="px-5">
                         <div class="bg-light-success p-3 mb-3 border-rounded text-success" v-if="status.totalAmountCommitted>launchpadInfo.launchParams.softCap">
                             <i class="fas fa-check-circle text-success" ></i> Congratulations, Softcap has been reached!
@@ -403,10 +422,10 @@
                                 <div class="form-group fs-7 mt-5">
                                     <label class="form-label required fs-7">Amount</label>
                                     <div class="float-right">Balance: 
-                                        <span class="fw-bold text-primary">{{myBalance}} {{ purchaseToken.symbol }}</span> 
-                                        <a href="javascript:void(0)" @click="selectMax" title="Select Max" class="badge badge-light-primary ms-5">MAX</a>
+                                        <span class="fw-bold text-primary"><a href="javascript:void(0)" @click="selectMax()" class="text-primary" title="Select Max">{{myBalance}}</a> {{ purchaseToken.symbol }}</span> 
+                                        <a href="javascript:void(0)" @click="checkPurchaseBalance()" title="Refresh my Balance" class="badge badge-light-primary ms-5"><i class="fas fa-refresh text-primary"></i> Refresh</a>
                                     </div>
-                                    <div class="form-control-wrap">
+                                    <div class="form-control-wrap mt-2">
                                         <input type="text" class="form-control form-control-solid form-control-sm" placeholder="Enter amount" v-model="depositAmount" :disabled="status.status !='LIVE'" />
                                     </div>
                                 </div>
@@ -489,7 +508,7 @@
                                     </tr>
                                     <tr>
                                         <td>Reward Percentage</td>
-                                        <td class="text-end text-success">{{((Number(status.totalAffiliateVolume)*100/Number(status.totalAmountCommitted)).toFixed(2) || 0)}}%</td>
+                                        <td class="text-end text-success">{{((Number(status.totalAffiliateVolume)*100/Number(status.totalAmountCommitted)).toFixed(2)) || 0}}%</td>
                                     </tr>
                                     <tr>
                                         <td>Referer Transaction Count</td>

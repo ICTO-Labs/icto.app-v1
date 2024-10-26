@@ -12,7 +12,7 @@ import Principal "mo:base/Principal";
 import Error "mo:base/Error";
 import ICRCLedger "../token_deployer/ICRCLedger";
 import Cycles "mo:base/ExperimentalCycles";
-
+import BlockID "../utils/BlockID";
 import Types "./Types";
 shared ({ caller = deployer }) actor class LaunchpadCanister() = this {
 
@@ -25,6 +25,22 @@ shared ({ caller = deployer }) actor class LaunchpadCanister() = this {
         transferFee = 10_000;
         canisterId = "ryjl3-tyaaa-aaaaa-aaaba-cai";
     };
+
+    //BlockID
+    stable var REQUIRED_SCORE: Nat = 13;//BlockID required score
+    let BLOCK_ID_CANISTER_ID = "3c7yh-4aaaa-aaaap-qhria-cai";
+    let BLOCK_ID_APPLICATION = "block-id";
+    let _blockID : BlockID.Self = actor(BLOCK_ID_CANISTER_ID);
+
+    private func checkBlockIDScore(principal: Principal) : async Bool {
+        try {
+            let score = await _blockID.getWalletScore(principal, BLOCK_ID_APPLICATION);
+            score.totalScore >= REQUIRED_SCORE;
+        } catch (e) {
+            false;
+        };
+    };
+
     var SECOND_TO_NANO = 1_000_000_000;//Conver second (s) to nano second rate
     var TIME_DIFF = 1_000_000;//Convert from momen().unix() => Minisecond (JS) to Nanosecond (Motoko)
     var E8S = 100_000_000;
@@ -74,6 +90,14 @@ shared ({ caller = deployer }) actor class LaunchpadCanister() = this {
             PurchaseLedger := actor(_info.purchaseToken.canisterId);
         return #ok(installed);
     };
+    public shared (msg) func checkEligibleToCommit() : async Result.Result<Bool, Text> {
+        let _eligible = await checkBlockIDScore(msg.caller);
+        if (_eligible) {
+            return #ok(true);
+        } else {
+            return #err("Your BlockID score is not enough, required score is " # debug_show(REQUIRED_SCORE) # ", please increase your score on https://blockid.cc");
+        };
+    };
 
     public shared (msg) func commit(amount : Nat, refCode: ?Text) : async Result.Result<Bool, Text> {
         if(not installed){
@@ -81,6 +105,9 @@ shared ({ caller = deployer }) actor class LaunchpadCanister() = this {
         };
         let participantId : Principal = msg.caller;
         let participantTxt : Text = Principal.toText(participantId);
+        if (not (await checkBlockIDScore(participantId))) {
+            return #err("Your BlockID score is not enough, required score is " # debug_show(REQUIRED_SCORE) # ", please increase your score on https://blockid.cc");
+        };
         if (isInWhitelist(participantTxt)) {
             // investors can participate the launchpad in the range of specified date
             let now : Time.Time = Time.now();

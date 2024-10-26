@@ -91,6 +91,7 @@ type LaunchpadDetail =
  };
 type LaunchpadCanister = 
  service {
+   checkEligibleToCommit: () -> (Result);
    commit: (nat, opt text) -> (Result);
    getAffiliateStats: (text) -> (opt AffiliateStats) query;
    getParticipantInfo: (text) -> (Participant);

@@ -106,6 +106,7 @@ export const idlFactory = ({ IDL }) => {
     'totalTransactions' : IDL.Nat,
   });
   const LaunchpadCanister = IDL.Service({
+    'checkEligibleToCommit' : IDL.Func([], [Result], []),
     'commit' : IDL.Func([IDL.Nat, IDL.Opt(IDL.Text)], [Result], []),
     'getAffiliateStats' : IDL.Func(
         [IDL.Text],

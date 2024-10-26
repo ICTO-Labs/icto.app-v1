@@ -4,6 +4,7 @@ import { principalToAccountId } from "@/utils/common";
 import walletStore from "@/store";
 import config from "@/config";
 import { showSuccess } from "@/utils/common";
+import {StoicIdentity} from "ic-stoic-identity";
 
 const loginSuccessAction = () =>{
     showSuccess("Login successful!")
@@ -123,6 +124,25 @@ class walletManager {
                         }
                     })();
                     break;
+                case "stoic":
+                    (async () => {
+                        StoicIdentity.load().then(async identity => {
+                            if (identity !== false) {
+                                //ID is a already connected wallet!
+                                console.log('already connected');
+                                const _current_account = {
+                                    name: "Stoic Wallet",
+                                    address: principalToAccountId(identity.getPrincipal().toText(), 0),
+                                };
+                                walletStore.setIdentity(identity);
+                                walletStore.setAccount([_current_account]);
+                                walletStore.setCurrentAccount(_current_account);
+                                walletStore.setLoginState('stoic');
+                                window.Swal.close();
+                            }
+                        });
+                    })();
+                    break;
                 default:
                     break;
             }
@@ -240,6 +260,27 @@ class walletManager {
             console.log(e);
         }
     };
+
+    async stoicWallet(){
+        alert('Stoic Wallet is not supported yet');return;
+        this.connectLoading();
+        try{
+            const identity = await StoicIdentity.connect();
+            const _current_account = {
+                name: "Stoic Wallet",
+                address: principalToAccountId(identity.getPrincipal().toText(), 0),
+            };
+            walletStore.setIdentity(identity);
+            walletStore.setAccount([_current_account]);
+            walletStore.setCurrentAccount(_current_account);
+            walletStore.setLoginState('stoic');
+            loginSuccessAction();
+            window.Swal.close();
+        }catch(e){
+            window.Swal.close();
+            console.log(e);
+        }
+    }
     async iiWallet(){
         this.connectLoading();
         const auth  = await AuthClient.create();

@@ -69,6 +69,7 @@ type ContractData =
    lockDuration: nat;
    maxRecipients: nat;
    owner: principal;
+   requiredScore: nat;
    startTime: nat;
    title: text;
    tokenInfo: TokenInfo;
@@ -82,6 +83,7 @@ type Contract =
  service {
    addRecipient: (principal, nat, nat, nat, nat) -> (Result);
    checkClaimable: (principal) -> (nat) query;
+   checkEligibility: () -> (Result);
    claim: () -> (Result_1);
    getClaimHistory: (principal) -> (opt vec ClaimRecord) query;
    getContractInfo: () -> (ContractData) query;

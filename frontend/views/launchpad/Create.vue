@@ -78,7 +78,7 @@ const launchpad = ref({
     creator: "lekqg-fvb6g-4kubt-oqgzu-rd5r7-muoce-kppfz-aaem3-abfaj-cxq7a-dqe",
     affiliate: 3,
     affiliateEnabled: 0,
-    currency: "uwp4v-7qaaa-aaaap-qhpiq-cai",
+    currency: "3mj2l-5aaaa-aaaap-qkmfq-cai",
     listingLiquidity: 51,
     listingTokenAmount: 0,
     listing: 'ICPSwap',
@@ -146,8 +146,8 @@ const launchpad = ref({
         decimals: 8,
         transferFee: 10_000,
         metadata: [],
-        logo: "https://psh4l-7qaaa-aaaap-qasia-cai.raw.icp0.io/uwp4v-7qaaa-aaaap-qhpiq-cai.png",
-        canisterId: "uwp4v-7qaaa-aaaap-qhpiq-cai"
+        logo: "https://psh4l-7qaaa-aaaap-qasia-cai.raw.icp0.io/3mj2l-5aaaa-aaaap-qkmfq-cai.png",
+        canisterId: "3mj2l-5aaaa-aaaap-qkmfq-cai"
     },
     launchParams: {
         sellAmount: 250_000,
@@ -157,7 +157,7 @@ const launchpad = ref({
         maximumAmount: 5000
     },
     projectInfo: {
-        name: "ICTO Test Launchpad",
+        name: "ICTO Launchpad Test (Phase 2)",
         description: `Project Title: Aim for a short, unambiguous, and memorable title. 
 Overview: This is a high-level summary (no more than one or two paragraphs).
 Project Justification: Explain the problem or opportunity and why the project is necessary.
@@ -565,7 +565,7 @@ const installLaunchpad = async () => {
                                         <div class="col-12">
                                             <select name="listing" class="form-select" v-model="launchpad.currency"
                                                 readonly>
-                                                <option value="uwp4v-7qaaa-aaaap-qhpiq-cai">tICP (Test ICP)</option>
+                                                <option value="3mj2l-5aaaa-aaaap-qkmfq-cai">tICP (Test ICP)</option>
                                             </select>
                                             <div class="form-text">Participants will commit with <strong>tICP</strong> for
                                                 your token</div>

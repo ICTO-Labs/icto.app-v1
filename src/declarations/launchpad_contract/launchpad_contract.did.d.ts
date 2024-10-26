@@ -1,5 +1,6 @@
 import type { Principal } from '@dfinity/principal';
 import type { ActorMethod } from '@dfinity/agent';
+import type { IDL } from '@dfinity/candid';
 
 export interface AffiliateStats {
   'projectedReward' : bigint,
@@ -33,6 +34,7 @@ export interface LaunchParams {
   'minimumAmount' : bigint,
 }
 export interface LaunchpadCanister {
+  'checkEligibleToCommit' : ActorMethod<[], Result>,
   'commit' : ActorMethod<[bigint, [] | [string]], Result>,
   'getAffiliateStats' : ActorMethod<[string], [] | [AffiliateStats]>,
   'getParticipantInfo' : ActorMethod<[string], Participant>,
@@ -121,3 +123,5 @@ export interface VestingInfo {
   'cliff' : bigint,
 }
 export interface _SERVICE extends LaunchpadCanister {}
+export declare const idlFactory: IDL.InterfaceFactory;
+export declare const init: (args: { IDL: typeof IDL }) => IDL.Type[];

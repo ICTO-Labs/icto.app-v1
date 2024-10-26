@@ -30,6 +30,7 @@ export const idlFactory = ({ IDL }) => {
     'title' : IDL.Text,
     'created' : Time,
     'lockDuration' : IDL.Nat,
+    'requiredScore' : IDL.Nat,
     'owner' : IDL.Principal,
     'isStarted' : IDL.Bool,
     'isPaused' : IDL.Bool,
@@ -76,6 +77,7 @@ export const idlFactory = ({ IDL }) => {
         [],
       ),
     'checkClaimable' : IDL.Func([IDL.Principal], [IDL.Nat], ['query']),
+    'checkEligibility' : IDL.Func([], [Result], []),
     'claim' : IDL.Func([], [Result_1], []),
     'getClaimHistory' : IDL.Func(
         [IDL.Principal],

@@ -1,5 +1,6 @@
 import type { Principal } from '@dfinity/principal';
 import type { ActorMethod } from '@dfinity/agent';
+import type { IDL } from '@dfinity/candid';
 
 export interface ClaimRecord {
   'txId' : bigint,
@@ -12,6 +13,7 @@ export interface Contract {
     Result
   >,
   'checkClaimable' : ActorMethod<[Principal], bigint>,
+  'checkEligibility' : ActorMethod<[], Result>,
   'claim' : ActorMethod<[], Result_1>,
   'getClaimHistory' : ActorMethod<[Principal], [] | [Array<ClaimRecord>]>,
   'getContractInfo' : ActorMethod<[], ContractData>,
@@ -27,6 +29,7 @@ export interface ContractData {
   'title' : string,
   'created' : Time,
   'lockDuration' : bigint,
+  'requiredScore' : bigint,
   'owner' : Principal,
   'isStarted' : boolean,
   'isPaused' : boolean,
@@ -87,3 +90,5 @@ export interface TokenInfo {
   'canisterId' : string,
 }
 export interface _SERVICE extends Contract {}
+export declare const idlFactory: IDL.InterfaceFactory;
+export declare const init: (args: { IDL: typeof IDL }) => IDL.Type[];

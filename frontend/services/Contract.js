@@ -74,6 +74,13 @@ export const useGetClaimRecord = async (contractId) => {
         throw new Error(e);
     }
 }
+export const useCheckEligibility = async (contractId) => {
+    try{
+        return await Connect.canister(contractId, 'token_claim').checkEligibility();
+    }catch(e){
+        throw new Error(e);
+    }
+}
 // export const useGetClaimRecord = (contractId) => {
 //     let _principal = walletStore.isLogged?walletStore._principal:Principal.fromText("2vxsx-fae");
 //     return useQuery({

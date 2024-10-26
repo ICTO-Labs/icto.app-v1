@@ -2,7 +2,7 @@
     import {ref, watch, onMounted, watchEffect} from 'vue'
     import {useRoute} from 'vue-router';
     import moment from 'moment';
-    import { useGetContract, useCancelContract, useGetContractRecipients, useGetMyClaimedAmount, useGetRecipientInfo, useClaim } from "@/services/Contract";
+    import { useGetContract, useCancelContract, useCheckEligibility, useGetContractRecipients, useGetMyClaimedAmount, useGetRecipientInfo, useClaim } from "@/services/Contract";
     import CountUp from 'vue-countup-v3'
     import "vue3-circle-progress/dist/circle-progress.css";
     import CircleProgress from "vue3-circle-progress";
@@ -27,6 +27,7 @@
     // const contractInfo = ref(null);
     const recipientInfo = ref(null);
     const recipients = ref([]);
+    const eligibility = ref(null);
     const loadContract = async (init) => {
         isLoading.value = true;
         await Promise.all([
@@ -54,10 +55,15 @@
         showSuccess('Link copied to clipboard!');
     }
 
+    const _checkEligibility = async()=>{
+        eligibility.value = await useCheckEligibility(contractId);
+    }
+
     watchEffect(() => {
         if(walletStore.isLogged){
             fetchMyClaimedAmount();
             fetchRecipientInfo();
+            _checkEligibility();
         }
     });
 
@@ -108,9 +114,12 @@
         <div class="card mb-6 mb-xl-9">
             <div class="card-body pt-9 pb-0">
             <!--begin::Details-->
-            <div class="d-flex flex-wrap flex-sm-nowrap mb-6">
-                <div class="d-flex flex-center flex-shrink-0 bg-light rounded w-100px h-100px w-lg-150px h-lg-150px me-7 mb-4">
-                    <img class="mw-50px mw-lg-125px" :src="`https://${config.CANISTER_STORAGE_ID}.raw.icp0.io/${contractInfo?.tokenInfo?.canisterId}.png`" :alt="contractInfo?.tokenInfo.name">
+            <div class="d-flex flex-column flex-sm-row flex-sm-nowrap mb-6">
+                <div class="w-100 w-sm-auto text-center mb-4 mb-sm-0 me-7">
+                    <img class="mw-100 mw-sm-150px" :src="`https://${config.CANISTER_STORAGE_ID}.raw.icp0.io/${contractInfo?.tokenInfo?.canisterId}.png`" :alt="contractInfo?.tokenInfo.name">
+
+                    <div class="text-center mt-2"><a href="https://blockid.cc" target="_blank"><span class=" badge badge-light badge-lg text-success"><i class="fas fa-shield-alt text-success"></i> BlockID</span></a  ></div>
+                    <div class="text-center mt-2 color-primary label"><span class="fw-bold badge badge-success">Required Score: {{ contractInfo.requiredScore }}</span></div>
                 </div>
                 <!--begin::Wrapper-->
                 <div class="flex-grow-1">
@@ -165,21 +174,24 @@
                                 <div class="text-primary px-3 py-2 me-5 fw-bold">
                                     <img class="mw-20px mw-lg-25px" :src="`https://${config.CANISTER_STORAGE_ID}.raw.icp0.io/${contractInfo?.tokenInfo?.canisterId}.png`">
                                     {{ contractInfo?.tokenInfo.name }} <span class="badge badge-light ms-auto">{{contractInfo?.tokenInfo.standard.toUpperCase()}}</span>
+
                                 </div>
                                 <div class=" text-primary px-3 py-2 fw-bold">
                                     {{ contractInfo?.tokenInfo.canisterId }} <Copy :text="contractInfo?.tokenInfo.canisterId"></Copy>
                                 </div>
                                 <div class="px-3 py-2 fw-bold">
-                                    <div class="text-success" v-if="recipientInfo !== null || 'FirstComeFirstServed' in contractInfo.distributionType">
-                                        <i class="fas fa-check-circle text-success"></i> You are eligible for this contract  
+                                    <div class="text-success" v-if="eligibility && 'ok' in eligibility">
+                                        <i class="fas fa-check-circle text-success"></i> You are eligible  
                                         <span class="badge badge-light-success ms-auto" v-if="'Vesting' in contractInfo.distributionType">{{ parseTokenAmount(recipientInfo?.remainingAmount, contractInfo.tokenInfo.decimals) }} {{contractInfo?.tokenInfo.symbol}}</span>
                                         <span class="badge badge-light-success ms-auto" v-else>{{ parseTokenAmount(contractInfo?.tokenPerRecipient, contractInfo.tokenInfo.decimals) }} {{contractInfo?.tokenInfo.symbol}}</span>
                                     </div>
                                     <div class="text-danger" v-else>
-                                        <i class="fas fa-times-circle text-danger"></i> You are not eligible! {{ recipientInfo }}
+                                        <i class="fas fa-times-circle text-danger"></i> Not eligible: {{ eligibility?.err || 'Unknown error' }}
                                     </div>
                                 </div>
-                                <div></div>
+                                <div>
+                                    <button type="button" class="btn btn-sm btn-light-primary" @click="_checkEligibility()"><i class="fas fa-history"></i> Check again</button>
+                                </div>
                             </div>  
                         </div>
                         

@@ -10,8 +10,7 @@ export { idlFactory } from "./launchpad_contract.did.js";
  * beginning in dfx 0.15.0
  */
 export const canisterId =
-  process.env.CANISTER_ID_LAUNCHPAD_CONTRACT ||
-  process.env.LAUNCHPAD_CONTRACT_CANISTER_ID;
+  process.env.CANISTER_ID_LAUNCHPAD_CONTRACT;
 
 export const createActor = (canisterId, options = {}) => {
   const agent = options.agent || new HttpAgent({ ...options.agentOptions });
@@ -40,4 +39,4 @@ export const createActor = (canisterId, options = {}) => {
   });
 };
 
-export const launchpad_contract = createActor(canisterId);
+export const launchpad_contract = canisterId ? createActor(canisterId) : undefined;
