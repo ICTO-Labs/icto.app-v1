@@ -8,6 +8,14 @@ const Tokens = [
     "symbol": "ICP"
     },
     {
+    "fee": 10000,
+    "decimals": 8,
+    "canisterId": "3mj2l-5aaaa-aaaap-qkmfq-cai",
+    "name": "Test ICP",
+    "standard": "ICRC2",
+    "symbol": "tICP"
+    },
+    {
     "fee": 0,
     "decimals": 18,
     "canisterId": "eayyd-iiaaa-aaaah-adtea-cai",

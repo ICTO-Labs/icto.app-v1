@@ -28,7 +28,7 @@ export const getInfo = (canisterId) =>{
             queryFn: async () => await Connect.canister(canisterId, 'launchpad_detail', true).launchpadInfo(),
             keepPreviousData: false,
             retry: 3,
-            refetchInterval: 0
+            refetchInterval: 30000
         })
         // return await Connect.canister(canisterId, 'launchpad_detail').launchpadInfo();
     }catch(e){
@@ -45,7 +45,7 @@ export const getStatus = (canisterId) =>{
             queryFn: async () => await Connect.canister(canisterId, 'launchpad_detail', true).status(),
             keepPreviousData: false,
             retry: 3,
-            refetchInterval: 10
+            refetchInterval: 30000
         })
         // return await Connect.canister(canisterId, 'launchpad_detail').status();
     }catch(e){
@@ -67,7 +67,7 @@ export const getTopAffiliates = (canisterId, num=20) =>{
             },
             keepPreviousData: false,
             retry: 3,
-            refetchInterval: 1000
+            refetchInterval: 30000
         })
         // return await Connect.canister(canisterId, 'launchpad_detail').topAffiliates();
     }catch(e){
