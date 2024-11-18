@@ -26,7 +26,7 @@ import Time "mo:base/Time";
 import Trie "mo:base/Trie";
 import Debug "mo:base/Debug";
 import Trie2D "mo:base/Trie";
-import IC "../backend/IC";
+import IC "../utils/IC";
 import TokenLock "contracts/TokenLock";
 import Types "./Types";
 

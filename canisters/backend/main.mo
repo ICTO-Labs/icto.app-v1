@@ -9,15 +9,15 @@ import Time "mo:base/Time";
 import Int "mo:base/Int";
 import Timer "mo:base/Timer";
 import Text "mo:base/Text";
-import IC "./IC";
+import IC "../utils/IC";
 import Types "./Types";
-import Actor "./Actor";
-import ContractTypes "../contract/types/Common";//Common
+import Actor "../utils/Actor";
+import ContractTypes "../claim_contract/types/Common";
 import Trie "mo:base/Trie";
-import TokenClaim "../contract/TokenClaim";
+import TokenClaim "../claim_contract/TokenClaim";
 import Debug "mo:base/Debug";
 import Result "mo:base/Result";
-import ICRCLedger "../token_deployer/ICRCLedger";
+import ICRCLedger "../utils/ICRCLedger";
 
 actor {
     stable var currentValue: Nat = 0;

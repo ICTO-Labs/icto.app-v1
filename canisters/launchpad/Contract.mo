@@ -1,3 +1,4 @@
+// Launchpad contract template - using this as a base for new launchpad canisters
 import Buffer "mo:base/Buffer";
 import Result "mo:base/Result";
 import Text "mo:base/Text";
@@ -13,7 +14,7 @@ import Error "mo:base/Error";
 import ICRCLedger "../token_deployer/ICRCLedger";
 import Cycles "mo:base/ExperimentalCycles";
 import BlockID "../utils/BlockID";
-import Types "./Types";
+import Types "./types/Common";
 shared ({ caller = deployer }) actor class LaunchpadCanister() = this {
 
     private let defaultTokenInfo : Types.TokenInfo = {

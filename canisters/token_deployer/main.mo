@@ -125,7 +125,7 @@ actor class Self() = this {
             Cycles.add(CYCLES_FOR_INSTALL);
             let { canister_id } = await ic.create_canister({
                 settings = ?{
-                    controllers = ?[deployer()];//
+                    controllers = ?[];//Blackhole
                     freezing_threshold = ?9_331_200; // 108 days
                     memory_allocation = null;
                     compute_allocation = null;

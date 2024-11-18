@@ -13,9 +13,9 @@ import Time "mo:base/Time";
 import Cycles "mo:base/ExperimentalCycles";
 import Bool "mo:base/Bool";
 import Result "mo:base/Result";
-import Ledger "Ledger";
-import Types "./types/Common";//Common
-import ICRCLedger "../token_deployer/ICRCLedger";
+import Ledger "../utils/Ledger";
+import Types "./types/Common";
+import ICRCLedger "../utils/ICRCLedger";
 import BlockID "../utils/BlockID";
 
 shared ({ caller = creator }) actor class Contract({

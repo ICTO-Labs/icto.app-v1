@@ -19,12 +19,12 @@
 		"main": "canisters/token_deployer/main.mo",
 		"type": "motoko"
 	},
-	"deployer": {
-		"main": "canisters/deployer/main.mo",
+	"lock_deployer": {
+		"main": "canisters/lock_deployer/main.mo",
 		"type": "motoko"
 	},
 	"lock_contract": {
-		"main": "canisters/deployer/contracts/TokenLock.mo",
+		"main": "canisters/lock_deployer/contracts/TokenLock.mo",
 		"type": "motoko"
 	},
 	"indexing_canister": {
@@ -32,7 +32,7 @@
 		"type": "motoko"
 	},
 	"claim_contract": {
-		"main": "canisters/contract/TokenClaim.mo",
+		"main": "canisters/claim_contract/TokenClaim.mo",
 		"type": "motoko"
 	},
 	"launchpad_contract": {
