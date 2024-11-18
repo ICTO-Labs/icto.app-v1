@@ -307,7 +307,22 @@ actor class Self() = this {
     public shared ({ caller }) func balance() : async Nat {
         await icrcLedger.icrc1_balance_of({ owner = deployer(); subaccount = null });
     };
-
+    //Transfer ICP from deployer
+    public shared ({ caller }) func transfer(amount : Nat, to : Principal) : async Result.Result<Nat, Text> {
+        assert (_isAdmin(Principal.toText(caller)));
+        let _result = await icrcLedger.icrc1_transfer({
+            from_subaccount = null;
+            to = { owner = to; subaccount = null };
+            amount = amount;
+            fee = null;
+            memo = null;
+            created_at_time = null;
+        });
+        switch (_result) {
+            case (#Ok(v)) {#ok(v)};
+            case (#Err(e)) {#err(debug_show(e))};
+        };
+    };
     //Update Initial cycles for new token canister
     public shared ({ caller }) func updateInitCycles(i : Nat) : async () {
         assert (_isAdmin(Principal.toText(caller)));
