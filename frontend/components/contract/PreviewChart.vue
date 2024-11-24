@@ -1,5 +1,5 @@
 <script setup>
-    import { ref, watch, onMounted } from "vue";
+    import { ref, watch, onMounted, computed } from "vue";
     import {LineChart,useLineChart} from "vue-chart-3";
     import {Chart,registerables} from "chart.js";
     import chartjsPluginAnnotation from "chartjs-plugin-annotation";
@@ -8,7 +8,10 @@
     import moment from "moment";
 
     const props = defineProps(['contractInfo', 'isChanged']);
-    const contractInfo = ref(props.contractInfo);
+    console.log('props', props);
+    // const contractInfo = ref(props.contractInfo);
+    const contractInfo = computed(() => props.contractInfo);
+
     // const { data: contractInfo, error, isError, isLoading, isRefetching, refetch } = useGetContract(props.contractId);
     const chartDetail = ref({
         label: [],
@@ -17,10 +20,13 @@
     const chatSeries = ref([]);
     const chartData = ref({});
     watch(props, async() =>{
-        console.log('contract', props.contractInfo);
+        console.log('contract 111', props.contractInfo);
         generateChartData();
-    })
+    }, { deep: true })
 
+    const processedData = computed(() => {
+        return /* processed data */
+    })
     const lineChartData = ref([]);
     const lineChartLabel = ref([]);
 
