@@ -8,7 +8,6 @@
     import moment from "moment";
 
     const props = defineProps(['contractInfo', 'isChanged']);
-    console.log('props', props);
     // const contractInfo = ref(props.contractInfo);
     const contractInfo = computed(() => props.contractInfo);
 
@@ -20,13 +19,9 @@
     const chatSeries = ref([]);
     const chartData = ref({});
     watch(props, async() =>{
-        console.log('contract 111', props.contractInfo);
         generateChartData();
     }, { deep: true })
 
-    const processedData = computed(() => {
-        return /* processed data */
-    })
     const lineChartData = ref([]);
     const lineChartLabel = ref([]);
 
