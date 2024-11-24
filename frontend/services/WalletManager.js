@@ -5,6 +5,7 @@ import walletStore from "@/store";
 import config from "@/config";
 import { showSuccess } from "@/utils/common";
 import {StoicIdentity} from "ic-stoic-identity";
+import { Artemis } from 'artemis-web3-adapter'
 
 const loginSuccessAction = () =>{
     showSuccess("Login successful!")
@@ -168,6 +169,16 @@ class walletManager {
                 window.Swal.showLoading()
             }
         });
+    };
+    async artemisWallet(){
+        console.log('config.HOST', config.HOST);
+        const connectObj = { whitelist: config.CANISTER_WHITE_LIST, host: config.HOST };
+
+        const artemisWalletAdapter = new Artemis();
+
+        let _rs = await artemisWalletAdapter.connect('plug', connectObj)
+        console.log('Artemis wallet connected:', _rs, artemisWalletAdapter)
+
     };
     async plugWallet(){
         //Test if the user has Plug extension installed (other way?)

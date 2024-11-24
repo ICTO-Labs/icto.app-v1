@@ -17,18 +17,18 @@ module {
         cliffTime: Nat;
         cliffUnit: Nat;
         unlockSchedule: Nat;
-        canCancel: Text;
-        canChange: Text;
-        canView: Text;
+        allowCancel: Bool;
         startNow: Bool;
         startTime: Time.Time;
         created: Time.Time;
         tokenInfo: TokenInfo;
         recipients: ?[Recipient];
         owner: Principal;
-        distributionType: Text;
+        distributionType: DistributionType;
         totalAmount: Nat;
         maxRecipients: Nat;
+        blockId: Nat;//BlockID Score required to claim, 0 for no requirement
+        autoTransfer: Bool;
     };
     
     // public type ContractData = {
@@ -95,5 +95,10 @@ module {
         symbol: Text;
         decimals: Nat;
         fee: Nat;
-    }
+    };
+    public type DistributionType = {
+        #Whitelist;
+        #Public;
+    };
+
 }

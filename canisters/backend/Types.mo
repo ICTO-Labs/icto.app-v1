@@ -48,6 +48,16 @@ module {
         decimals: Nat;
         symbol: Text;
         fee: Nat;
-    }
+    };
+    public type DistributionType = {
+        #Whitelist;
+        #Public;
+    };
+    public type ContractMetadata = {
+        id: Text;
+        owner: Text;
+        distributionType: DistributionType;
+        createdAt: Int;
+    };
 
 }

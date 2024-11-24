@@ -35,12 +35,7 @@ class CreateActor {
                         }
                         
                     }
-                    try{
-                        return await target._actor[name](...arguments);
-                    }catch(e){
-                        console.log('Create Proxy failed:', e, name);
-                        return null;
-                    }
+                    return await target._actor[name](...arguments);
                     
                 }
             }
@@ -57,7 +52,6 @@ class Connect {
     _provider = null;
 
     constructor(cid, idl, isAnonymous=false) {
-        console.log('Canister: ',cid, idl, isAnonymous);
         if(!cid) throw new Error("No Canister Id");
         if (!idl){
             if (Object.prototype.hasOwnProperty.call(this._mapIdls, cid)) {

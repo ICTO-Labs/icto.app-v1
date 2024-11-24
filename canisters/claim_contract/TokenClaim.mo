@@ -13,6 +13,7 @@ import Time "mo:base/Time";
 import Cycles "mo:base/ExperimentalCycles";
 import Bool "mo:base/Bool";
 import Result "mo:base/Result";
+import Option "mo:base/Option";
 import Ledger "../utils/Ledger";
 import Types "./types/Common";
 import ICRCLedger "../utils/ICRCLedger";
@@ -26,25 +27,19 @@ shared ({ caller = creator }) actor class Contract({
     cliffTime: Nat;
     cliffUnit: Nat;
     unlockSchedule: Nat;
-    canCancel: Text;
-    canChange: Text;
-    canView: Text;
+    allowCancel: Bool;
     startNow: Bool;
     startTime: Time.Time;
     created: Time.Time;
     tokenInfo: Types.TokenInfo;
     recipients: ?[Types.Recipient];
     owner: Principal;
-    distributionType: Text;
+    distributionType: Types.DistributionType;
+    blockId: Nat;
     totalAmount: Nat;
+    autoTransfer: Bool;
     maxRecipients: Nat;
 }) = this {
-    //Define Types
-    type DistributionType = {
-        #Vesting;
-        #FirstComeFirstServed;
-    };
-
     type ContractInfo = {
         title: Text;
         description: Text;
@@ -57,8 +52,12 @@ shared ({ caller = creator }) actor class Contract({
         isCanceled: Bool;
         owner: Principal;
         allowTransfer: Bool;
+        allowCancel: Bool;
         created: Time.Time;
-        distributionType: DistributionType;
+        distributionType: Types.DistributionType;
+        blockId: Nat;
+        maxRecipients: Nat;
+        autoTransfer: Bool;
     };
 
     type ContractData = ContractInfo and {
@@ -118,7 +117,11 @@ shared ({ caller = creator }) actor class Contract({
         isCanceled = false;
         owner = owner;
         allowTransfer = false;
-        distributionType = if (distributionType == "FirstComeFirstServed") #FirstComeFirstServed else #Vesting;    
+        allowCancel = allowCancel;
+        blockId = blockId;
+        distributionType = distributionType; 
+        maxRecipients = if(distributionType == #Public) maxRecipients else Option.get(recipients, []).size();
+        autoTransfer = autoTransfer;
     };
 
     var recipientClaimInfo = HashMap.HashMap<Principal, RecipientClaimInfo>(0, Principal.equal, Principal.hash);
@@ -136,9 +139,10 @@ shared ({ caller = creator }) actor class Contract({
 
     private func checkBlockIDScore(principal: Principal) : async Bool {
         try {
+            if(contractInfo.blockId == 0) return true;
             let score = await _blockID.getWalletScore(principal, BLOCK_ID_APPLICATION);
-            score.totalScore >= REQUIRED_SCORE;
-        } catch (e) {
+            score.totalScore >= contractInfo.blockId;
+        } catch (_) {
             false;
         };
     };
@@ -208,9 +212,9 @@ shared ({ caller = creator }) actor class Contract({
     //INIT PROCESSING #####################
 
     // Process recipients
-    if (contractInfo.distributionType == #Vesting) {
+    if (contractInfo.distributionType == #Whitelist) {
         processRecipients();
-    } else if (contractInfo.distributionType == #FirstComeFirstServed) {
+    } else if (contractInfo.distributionType == #Public) {
         if (maxRecipients > 0) {
             tokenPerRecipient := totalAmount / maxRecipients;
         } else {
@@ -306,7 +310,7 @@ shared ({ caller = creator }) actor class Contract({
     public query func getContractInfo(): async ContractData {
         { 
             contractInfo with
-            totalAmount = if(contractInfo.distributionType == #Vesting) _totalAmount else totalAmount;
+            totalAmount = if(contractInfo.distributionType == #Whitelist) _totalAmount else totalAmount;
             maxRecipients = maxRecipients;
             tokenPerRecipient = tokenPerRecipient;
             totalClaimedAmount = totalClaimedAmount;
@@ -325,7 +329,7 @@ shared ({ caller = creator }) actor class Contract({
     public shared({caller}) func checkEligibility(): async Result.Result<Bool, Text> {
         //Check if contract type is FirstComeFirstServed
         var isEligible = false;
-        if (contractInfo.distributionType == #FirstComeFirstServed) {
+        if (contractInfo.distributionType == #Public) {
             isEligible := totalRecipients < maxRecipients;
 
         }else{
@@ -340,7 +344,7 @@ shared ({ caller = creator }) actor class Contract({
         if (isEligible and isBlockIDScoreEnough) {
             #ok(true);
         }else{
-            #err("Your BlockID score is not enough, required score is: " # debug_show(REQUIRED_SCORE));
+            #err("Your BlockID score is not enough, required score is: " # debug_show(contractInfo.blockId));
         }
     };
 
@@ -425,7 +429,7 @@ shared ({ caller = creator }) actor class Contract({
         if (not isBlockIDScoreEnough) return #err("Your BlockID score is not enough, required score is: " # debug_show(REQUIRED_SCORE));
 
         switch (contractInfo.distributionType) {
-            case (#Vesting) {// Process for Vesting
+            case (#Whitelist) {// Process for Private
                 switch (recipientClaimInfo.get(principal)) {
                     case (?claimInfo) {
                         var pickTime = timeNow();
@@ -473,7 +477,7 @@ shared ({ caller = creator }) actor class Contract({
                     };
                 };
             };
-            case (#FirstComeFirstServed) {// Process for FIFO
+            case (#Public) {// Process for Public contract
                 if (totalRecipients >= maxRecipients) {
                     return #err("Maximum number of recipients reached");
                 };

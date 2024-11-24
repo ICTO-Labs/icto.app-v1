@@ -116,10 +116,8 @@
             <!--begin::Details-->
             <div class="d-flex flex-column flex-sm-row flex-sm-nowrap mb-6">
                 <div class="w-100 w-sm-auto text-center mb-4 mb-sm-0 me-7">
-                    <img class="mw-100 mw-sm-150px" :src="`https://${config.CANISTER_STORAGE_ID}.raw.icp0.io/${contractInfo?.tokenInfo?.canisterId}.png`" :alt="contractInfo?.tokenInfo.name">
-
-                    <div class="text-center mt-2"><a href="https://blockid.cc" target="_blank"><span class=" badge badge-light badge-lg text-success"><i class="fas fa-shield-alt text-success"></i> BlockID</span></a  ></div>
-                    <div class="text-center mt-2 color-primary label"><span class="fw-bold badge badge-success">Required Score: {{ contractInfo.requiredScore }}</span></div>
+                    <img class="mw-100 mw-sm-150px" :src="`https://${config.CANISTER_STORAGE_ID}.raw.icp0.io/${contractInfo?.tokenInfo?.canisterId}.png`">
+                    <div class="text-center mt-2" v-if="contractInfo.blockId > 0" title="Required score for this contract"><a href="https://blockid.cc" target="_blank"><span class="badge badge-light badge-lg text-success"><i class="fas fa-shield-alt text-success"></i> BlockID: {{ contractInfo.blockId }} points</span></a></div>
                 </div>
                 <!--begin::Wrapper-->
                 <div class="flex-grow-1">
@@ -130,8 +128,8 @@
                     <!--begin::Status-->
                     <div class="d-flex align-items-center mb-1">
                         <span class="text-primary fs-2 fw-bold me-3">{{contractInfo?.title}}</span>
-                        <span class="badge badge-light-success me-auto" v-if="contractInfo && 'Vesting' in contractInfo.distributionType">VESTING</span>
-                        <span class="badge badge-light-danger me-auto" v-else>FCFS</span>
+                        <span class="badge badge-light-success me-auto" v-if="contractInfo && 'Public' in contractInfo.distributionType">PUBLIC</span>
+                        <span class="badge badge-light-danger me-auto" v-else>WHITELIST</span>
                     </div>
                     <div class="d-flex flex-wrap fw-bold fs-6 mb-4 pe-2">
                         <div class="d-flex align-items-center text-gray-800 text-hover-primary me-5 mb-2">
@@ -186,7 +184,7 @@
                                         <span class="badge badge-light-success ms-auto" v-else>{{ parseTokenAmount(contractInfo?.tokenPerRecipient, contractInfo.tokenInfo.decimals) }} {{contractInfo?.tokenInfo.symbol}}</span>
                                     </div>
                                     <div class="text-danger" v-else>
-                                        <i class="fas fa-times-circle text-danger"></i> Not eligible: {{ eligibility?.err || 'Unknown error' }}
+                                        <i class="fas fa-times-circle text-danger"></i> Not eligible: {{ eligibility?.err || 'Unable to fetch score' }}
                                     </div>
                                 </div>
                                 <div>

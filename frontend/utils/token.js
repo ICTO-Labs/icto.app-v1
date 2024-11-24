@@ -150,9 +150,7 @@ export const currencyFormat = (value, e8s)=>{
 }
 
 export const getTokenInfo = (canisterId)=>{
-  console.log(canisterId);
   const token = tokenList.find((token) => token.canisterId === canisterId);
-  console.log('token', token);
   return token;
 }
 

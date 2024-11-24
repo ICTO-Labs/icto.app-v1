@@ -22,16 +22,21 @@
 	const totalAmount = ref(0);
 	const newRecipient = ref({amount:"", address: "", title: "", note: ""});
 	const recipients = ref([]);
+	const whitelistDistribution = ref(true);
 	const props = defineProps({
 		options: {
 			type: Array,
 			required: true
 		}
 		});
+
+	const contractDataComputed = computed(() => ({
+	...contractData.value
+	}))
 	const contractData = ref({
-		name: "",
-		description: "",
-		editMode: false,
+		name: "Test",
+		description: "Test",
+		editorMode: false,
 		unlockImmediately: false,
 		startNow: true,
 		startDate: new Date(),
@@ -41,14 +46,17 @@
 		unlockSchedule: 86400,
 		cliffUnit: 0,
 		cliffTime: 2628002,
-		totalAmount: 1000,
+		totalAmount: 0,
 		recipients: [],
-		canView: 'both',
-		canCancel: 'neither',
-		canChange: 'neither',
+		maxRecipients: 0,
+		blockId: 0,
+		allowCancel: false,
+		autoTransfer: false,
+		distributionType: whitelistDistribution.value
 	});
 	const unlockFrequency = ref(86400);
-
+	const tokenPerRecipient = ref(0);
+	const totalRecipient = ref(0);
     const codemirror = ref(null);
 	const recipientsEdit = ref("");
 	const cmOptions = ref({
@@ -67,9 +75,12 @@
 			contractData.value.durationUnit = 1;
 		}
 	}
+	const calculateTokenPerRecipient = ()=>{
+		tokenPerRecipient.value = contractData.value.totalAmount/totalRecipient.value;
+	}
 	const switchMode = ()=>{
-		contractData.value.editMode = !contractData.value.editMode;
-		switchData(!contractData.value.editMode);
+		contractData.value.editorMode = !contractData.value.editorMode;
+		switchData(!contractData.value.editorMode);
 	}
 	const loadSampleData = ()=>{
         recipientsEdit.value = `vkdhi-vlxfv-56jyt-tcyxp-qlhlk-4lnpb-k2r4q-uctef-ppvdr-iphm5-zqe,10,developer
@@ -94,9 +105,14 @@ zxcjx-7yvay-ow7hh-nbocq-5aaru-n7nwq-xyhau-jnr6m-f36ho-xzufk-rae,50`;
             if(_item.length >= 2){
                 //Check recipient principal
                 if(validatePrincipal(_item[0])){
-                    _totalAmount += parseInt(_item[1])|0;
-                    _totalRecipients++;
-                    codemirror.value.cminstance.removeLineClass(idx, "background", "codemirror-error-line");
+					//Check amount is number
+					if(isNaN(_item[1].trim())){
+						codemirror.value.cminstance.addLineClass(idx, "background", "codemirror-error-line");
+					}else{
+						_totalAmount += parseInt(_item[1].trim())||0;
+						_totalRecipients++;
+						codemirror.value.cminstance.removeLineClass(idx, "background", "codemirror-error-line");
+					}
                 }else{
                     codemirror.value.cminstance.addLineClass(idx, "background", "codemirror-error-line");
                     _totalError++;
@@ -169,21 +185,25 @@ zxcjx-7yvay-ow7hh-nbocq-5aaru-n7nwq-xyhau-jnr6m-f36ho-xzufk-rae,50`;
 		}
 	}
 	const calTotalToken = ()=>{
-		if(contractData.value.editMode){
-			totalAmount.value = recipientsEdit.value.split('\n').reduce((acc,cur) => {
+		console.log('calTotalToken');
+		if(!whitelistDistribution.value) return;//Skip calculate if public distribution
+		if(contractData.value.editorMode){
+			contractData.value.totalAmount = recipientsEdit.value.split('\n').reduce((acc,cur) => {
 				let _cur = cur.split(',');
 				if(_cur.length >= 2 && validatePrincipal(_cur[0])){
-					return acc + Number(_cur[1]);
+					if(!isNaN(_cur[1].trim())){
+						return acc + parseInt(_cur[1]);
+					}
 				}
 				return acc;
 			}, 0);
 		}else{
-			totalAmount.value = recipients.value.reduce((acc,cur) => acc + Number(cur.amount), 0);
+			contractData.value.totalAmount = recipients.value.reduce((acc,cur) => acc + parseInt(cur.amount), 0);
 		}
 	}
 	const getTokenBalance = async ()=>{
 		isLoading.value = true;
-		totalAmount.value = 0;
+		contractData.value.totalAmount = 0;
 		tokenBalance.value = await useGetMyBalance(token.value.canisterId);
 		isLoading.value = false;
 		calTotalToken();
@@ -233,13 +253,29 @@ zxcjx-7yvay-ow7hh-nbocq-5aaru-n7nwq-xyhau-jnr6m-f36ho-xzufk-rae,50`;
 
 	const reviewContract = ()=>{
 		switchData(true);//Trigger switch data from edit mode to GUI mode
-		if(recipients.value.length == 0){
+		if(whitelistDistribution.value && recipients.value.length == 0){
 			showError("No recipient!")
 			return;
 		}
+		//total recipients and total token spent is require for public distribution
+		if(!whitelistDistribution.value){
+			if(contractData.value.totalAmount == 0){
+				showError("Total amount is required!")
+				return;
+			}
+			if(totalRecipient.value == 0){
+				showError("Total recipients is required!")
+				return;
+			}
+		}
+
 		contractData.value.recipients = recipients.value;
 		contractData.value.token = token.value;
-		contractData.value.totalAmount = totalAmount.value;
+		contractData.value.maxRecipients = totalRecipient.value;
+		contractData.value.totalAmount = contractData.value.totalAmount;
+		contractData.value.distributionType = whitelistDistribution.value ? {Whitelist: null} : {Public: null};
+		console.log('preview', contractData.value.totalAmount, contractData.value);
+
 		EventBus.emit("showContractDetailsModal", {...contractData.value, status: true})
 	}
 </script>
@@ -419,8 +455,7 @@ zxcjx-7yvay-ow7hh-nbocq-5aaru-n7nwq-xyhau-jnr6m-f36ho-xzufk-rae,50`;
 						<label class="fs-4 fw-bold form-label mb-2 text-primary">Vesting Schedule</label>
 					</div>
 					<div class="card-body pt-5 pb-2">
-						<PreviewChart :contractInfo="contractData"></PreviewChart>
-						
+						<PreviewChart :contractInfo="contractDataComputed"></PreviewChart>
 						<!-- <div class="d-flex align-items-center mb-3">
 							<div class="flex-grow-1">
 								<span class="text-gray-800 text-hover-primary fw-bold fs-6">Vesting duration</span>
@@ -454,15 +489,18 @@ zxcjx-7yvay-ow7hh-nbocq-5aaru-n7nwq-xyhau-jnr6m-f36ho-xzufk-rae,50`;
 		<div class="card-header align-items-center">
 			<h3 class="card-title align-items-start flex-column">
 				<div class="card-label fw-bolder fs-3 mb-1">
-					Recipients <span class="badge badge-light-primary">{{recipients.length}}</span>
-				</div>
-				<div class="text-muted mt-1 fw-bold fs-7">
 					<div class="form-check form-switch form-check-custom form-check-solid">
-						<input class="form-check-input  h-20px w-30px" type="checkbox" value="true" id="flexSwitchChecked" @click="switchMode" />
-						<label class="form-check-label" for="flexSwitchChecked" title="Switch to code edit">
-							Edit mode
+						<input class="form-check-input" type="checkbox" value="true" id="whitelistDistribution" v-model="whitelistDistribution"/>
+						<label class="form-check-label" for="whitelistDistribution" title="Switch distribution type">
+							<span v-if="whitelistDistribution">Whitelist</span>
+							<span v-else>Public</span>
+							distribution
 						</label>
 					</div>
+				</div>
+				<div class="text-gray mt-1 fw-bold fs-7">
+					<span v-if="whitelistDistribution">Only recipients in the list will receive/claim tokens</span>
+					<span v-else>Any user can claim tokens if contract is public</span>
 				</div>
 			</h3>
 			<div class="card-toolbar">
@@ -480,12 +518,12 @@ zxcjx-7yvay-ow7hh-nbocq-5aaru-n7nwq-xyhau-jnr6m-f36ho-xzufk-rae,50`;
 						</div>
 					</div>
 					<div class="fw-bolder fs-2 text-success px-10">
-						{{currencyFormat((tokenBalance - totalAmount > 0?(tokenBalance - totalAmount):0))}}
+						{{currencyFormat((tokenBalance - contractData.totalAmount > 0?(tokenBalance - contractData.totalAmount):0))}}
 						<span class="text-muted fs-4 fw-bold">{{tokenInfo.symbol}}</span>
 						<div class="fs-7 fw-normal text-muted">Remaining amount</div>
 					</div>
 					<div class="fw-bolder fs-2 text-danger px-10">
-						{{currencyFormat(totalAmount)}}
+						{{currencyFormat(contractData.totalAmount)}}
 						<span class="text-muted fs-4 fw-bold">{{tokenInfo.symbol}}</span>
 						<div class="fs-7 fw-normal text-muted">Will be sent</div>
 					</div>
@@ -493,8 +531,69 @@ zxcjx-7yvay-ow7hh-nbocq-5aaru-n7nwq-xyhau-jnr6m-f36ho-xzufk-rae,50`;
 			</div>
 
 		</div>
-		<div class="card-body pt-5 pb-2">
-			<div v-if="contractData.editMode">
+		<div class="card-body pt-5 pb-2" v-if="!whitelistDistribution">
+			<div class="row mb-3">
+				<div class="col-md-3 fv-row">
+					<label class="required fs-6 fw-bold form-label mb-2">Total recipients</label>
+					<div class="row">
+						<div class="col-12">
+							<input type="number" class="form-control form-control-sm" v-model="totalRecipient" min="0" placeholder="0" @change="calculateTokenPerRecipient">
+						</div>
+					</div>
+				</div>
+				<div class="col-md-3">
+					<label class="required fs-6 fw-bold form-label mb-2">Total {{tokenInfo.symbol}} spent</label>
+					<div class="row fv-row">
+						<div class="col-12">
+							<input type="number" class="form-control form-control-sm" v-model="contractData.totalAmount" min="0" placeholder="0" @change="calculateTokenPerRecipient">
+						</div>
+					</div>
+				</div>
+				<div class="col-md-3">
+					<label class="required fs-6 fw-bold form-label mb-2">{{tokenInfo.symbol}} per recipient</label>
+					<div class="row fv-row">
+						<div class="col-12">
+							<input type="number" class="form-control form-control-sm" v-model="tokenPerRecipient" min="0" placeholder="0" disabled>
+						</div>
+					</div>
+				</div>
+				
+				<div class="col-md-3">
+					<label class="required fs-6 fw-bold form-label mb-2">Distribution method</label>
+					<div class="row fv-row">
+						<div class="col-12">
+							<select name="distributionMethod" class="form-control-sm form-select form-select-sm" readonly>
+								<option value="0" selected>First come first serve</option>
+							</select>
+						</div>
+					</div>
+				</div>
+			</div>
+			<div class="row">
+				<div class="col-md-12">
+					<div class="alert alert-info">
+						<i class="fas fa-info-circle text-info"></i> 
+						<span> We recommend enabling BlockID and set a minimum score to prevent malicious users/bots from claiming tokens at settings section
+						</span>
+					</div>
+				</div>
+			</div>
+		</div>
+		<div class="card-body pt-5 pb-2" v-else>
+			<h3 class="card-title align-items-start flex-column flex">
+				<div class="card-label fw-bolder fs-3 mb-1">
+					Recipients <span class="badge badge-light-primary">{{recipients.length}}</span>
+				</div>
+				<div class="text-muted mt-1 fw-bold fs-7 card-toolbar">
+					<div class="form-check form-switch form-check-custom form-check-solid">
+						<input class="form-check-input  h-20px w-30px" type="checkbox" value="true" id="flexSwitchChecked" v-model="contractData.editorMode" @click="switchMode" />
+						<label class="form-check-label" for="flexSwitchChecked" title="Switch to code edit">
+							Editor mode
+						</label>
+					</div>
+				</div>
+			</h3>
+			<div v-if="contractData.editorMode">
 				<Codemirror
 					v-model:value="recipientsEdit"
 					:options="cmOptions"
@@ -511,7 +610,7 @@ zxcjx-7yvay-ow7hh-nbocq-5aaru-n7nwq-xyhau-jnr6m-f36ho-xzufk-rae,50`;
 					</div>
 				</div>
 			</div>
-			<div class="table-responsive border-bottom mb-5 border table-rounded" v-if="!contractData.editMode">
+			<div class="table-responsive border-bottom mb-5 border table-rounded" v-if="!contractData.editorMode">
 				<table class="table align-middle gs-0 table-row-dashed fs-6 gy-2 mb-0 table-hover">
 					<thead>
 						<tr class="fw-bolder fs-7 text-gray-800 border-bottom border-gray-200 bg-light">
@@ -545,8 +644,8 @@ zxcjx-7yvay-ow7hh-nbocq-5aaru-n7nwq-xyhau-jnr6m-f36ho-xzufk-rae,50`;
 					</thead>
 					<tbody>
 						<tr v-if="recipients.length == 0">
-							<td colspan="6" class="bg-white">
-								<div class="fw-bold text-danger p-2">No recipient!</div>
+							<td colspan="6" class="bg-white p-5">
+								<div class="fw-bold text-muted p-2">No recipient, or do you want to create <a href="javascript:void(0);" @click="whitelistDistribution=false">public distribution contract?</a></div>
 							</td>
 						</tr>
 						<tr v-else v-for="(recipient, idx) in recipients">
@@ -586,6 +685,14 @@ zxcjx-7yvay-ow7hh-nbocq-5aaru-n7nwq-xyhau-jnr6m-f36ho-xzufk-rae,50`;
 					</tfoot>
 				</table>
 			</div>
+			<div class="row mt-3">
+				<div class="col-md-12">
+					<div class="alert alert-info">
+						<i class="fas fa-info-circle text-info"></i> 
+						<span> If you want to distribute tokens to a large number of recipients, please use the <a href="javascript:void(0);" @click="switchMode">editor mode</a> to enter the recipients' information</span>
+					</div>
+				</div>
+			</div>
 		</div>
 	</div>
 	<div class="card mb-xl-8">
@@ -593,22 +700,43 @@ zxcjx-7yvay-ow7hh-nbocq-5aaru-n7nwq-xyhau-jnr6m-f36ho-xzufk-rae,50`;
 			<label class="fs-4 fw-bold form-label mb-2 text-primary">Settings</label>
 		</div>
 		<div class="card-body pt-5">
-			<div class="row mb-10">
-				<div class="col-md-4 fv-row">
-					<label class="fs-6 fw-bold form-label mb-2">Contract can be canceled?</label>
+			<div class="row mb-5">
+				<div class="col-md-12 fv-row mb-4">
 					<label class="form-check form-switch form-check-custom form-check-solid">
-						<input class="form-check-input" type="checkbox" v-model="contractData.canCancel"/>
-						<span class="form-check-label fw-bold text-muted">Allow the owner to cancel</span>
+						<input class="form-check-input h-20px w-30px" type="checkbox" v-model="contractData.allowCancel"/>
+						<span :class="`form-check-label fw-bold ${contractData.allowCancel?'':'text-muted'}`">Allow the owner to cancel, remaining tokens will be transfered to the owner</span>
 					</label>
 				</div>
-				<div class="col-md-4 fv-row">
+				<div class="col-md-12 fv-row mb-4" v-if="whitelistDistribution">
+					<label class="form-check form-switch form-check-custom form-check-solid">
+						<input class="form-check-input h-20px w-30px" type="checkbox" v-model="contractData.autoTransfer"/>
+						<span class="form-check-label fw-bold " v-if="contractData.autoTransfer">Auto transfer token to recipients when unlocked</span>
+						<span class="form-check-label fw-bold text-muted" v-else>Recipient request claim manually</span>
+					</label>
+					<span class="fs-7 text-danger">The smart contract will automatically send tokens to the recipients' wallets once the vesting period is reached. This feature will consume more Cycles than usual.</span>
+				</div>
+				<div class="col-md-12 fv-row mb-4" v-if="!whitelistDistribution">
+					<label class="form-check form-switch form-check-custom form-check-solid">
+						<input class="form-check-input h-20px w-30px" type="checkbox" v-model="contractData.useBlockId" :disabled="whitelistDistribution"/>
+						<span :class="`form-check-label fw-bold ${contractData.useBlockId?'':'text-muted'}`">Require BlockID score to claim</span>
+					</label>
+					<div class="d-flex mt-2">
+						<div class="">
+							<input type="number" class="form-control form-control-sm text-end w-20" placeholder="0" v-model="contractData.blockId" min="1"/>
+						</div>
+						<div class="pt-2 ps-2">
+							<span class="form-check-label fs-7 ">Define the BlockID score, 0 for disable. <a href="https://docs.icto.app/block-id/about" target="_blank">What is BlockID?</a></span>
+						</div>
+					</div>
+				</div>
+				<div class="col-md-4 fv-row mb-4">
 					<label class="fs-6 fw-bold form-label mb-2">Start now</label>
 					<label class="form-check form-switch form-check-custom form-check-solid">
-						<input class="form-check-input" type="checkbox" v-model="contractData.startNow"/>
-						<span class="form-check-label fw-bold text-muted">Start upon contract creation</span>
+						<input class="form-check-input h-20px w-30px" type="checkbox" v-model="contractData.startNow"/>
+						<span :class="`form-check-label fw-bold ${contractData.startNow?'':'text-muted'}`">Start upon contract creation</span>
 					</label>
 				</div>
-				<div class="col-md-4 fv-row" v-if="!contractData.startNow">
+				<div class="col-md-4 fv-row mb-4" v-if="!contractData.startNow">
 					<label class="required  fs-6 fw-bold form-label mb-2">Specify start time</label>
 					<VueDatePicker v-model="contractData.startTime" :min-date="new Date()" :enable-time-picker="true" time-picker-inline auto-apply></VueDatePicker>
 				</div>

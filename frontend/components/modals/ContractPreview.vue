@@ -63,13 +63,6 @@
                 _totalAmount += Number(formatTokenAmount(recipient.amount, tokenInfo.decimals));
                 return {address: recipient.address, amount: Number(formatTokenAmount(recipient.amount, tokenInfo.decimals)), note: [""+recipient.note+""]}
             });
-            // let recipients = [
-            //      {address: "udh45-qy6i6-si637-5wxbo-huuba-estc4-esa7g-yo6wj-lo4pb-37fsh-aqe", amount: 600, note: ["Senior Developer"], title: ["Kenny"]},
-            //      {address: "gqowl-5o7x3-4c22f-aaytt-37ma3-gkxe4-jox3l-fzjwe-rirfz-fw2kn-tae", amount: 230, note: ["Senior Developer"], title: ["John"]},
-            //      {address: "v57dj-hev4p-lsvdl-dckvv-zdcvg-ln2sb-tfqba-nzb4g-iddrv-4rsq3-mae", amount: 150, note: ["J.Developer"], title: ["Jasson"]},
-            //      {address: "kouzf-7czpb-er7e4-iwral-6assg-b3qqw-hargn-uhonr-iyegx-gxs4w-oqe", amount: 420, note: ["Designer"], title: ["Matthew"]},
-            //      {address: "nivbr-btueu-rgdah-w4pcd-wqtmb-fr4ny-hp3ie-a7e6p-4ndto-ajwhj-fqe", amount: 135, note: ["3D Designer"], title: ["Peter"]},
-            // ];
             let _data = {
                 title: contractData.value.name,
                 description: contractData.value.description,
@@ -78,13 +71,11 @@
                 cliffTime: Number(contractData.value.cliffTime),
                 cliffUnit: Number(contractData.value.cliffUnit),
                 unlockSchedule: Number(contractData.value.unlockSchedule),
-                canCancel: contractData.value.canCancel,
-                canChange: contractData.value.canChange,
-                canView: contractData.value.canView,
+                allowCancel: contractData.value.allowCancel,
                 startNow: contractData.value.startNow,
                 startTime: moment(contractData.value.startTime).unix(),
                 created: moment().unix(),
-                totalAmount: _totalAmount,
+                totalAmount: contractData.value.totalAmount*config.E8S,
                 tokenInfo: {
                     canisterId: tokenInfo.canisterId,
                     name: tokenInfo.name,
@@ -93,16 +84,19 @@
                     decimals: tokenInfo.decimals,
                     fee: tokenInfo.fee,
                 },
-                unlockedAmount: 0,
-                recipients: recipients,
+                recipients: [recipients],
+                distributionType: contractData.value.distributionType,
+                autoTransfer: contractData.value.autoTransfer,
+                blockId: contractData.value.blockId,
+                maxRecipients: contractData.value.maxRecipients,
                 owner: Principal.fromText(walletStore.principal)
             };
             console.log('creating contract...', _data);
-            //Step 1. Approved
-            let _extendAmount = _totalAmount+(tokenInfo.fee*2);//Extend the amount for the transfer fee
-            showLoading("Approving token...");
-            let _approve = await useTokenApprove(tokenInfo.canisterId, {spender: config.BACKEND_CANISTER_ID, amount: parseTokenAmount(_extendAmount,tokenInfo.decimals)}, tokenInfo.decimals);
-            console.log('_approve', _approve, _extendAmount);
+            // //Step 1. Approved
+            // let _extendAmount = _totalAmount+(tokenInfo.fee*2);//Extend the amount for the transfer fee
+            // showLoading("Approving token...");
+            // let _approve = await useTokenApprove(tokenInfo.canisterId, {spender: config.BACKEND_CANISTER_ID, amount: parseTokenAmount(_extendAmount,tokenInfo.decimals)}, tokenInfo.decimals);
+            // console.log('_approve', _approve, _extendAmount);
             // let _transfer = await useTransferFrom(tokenInfo.canisterId, {from: walletStore.principal, to: config.BACKEND_CANISTER_ID, amount: _totalAmount});
             // return;
             showLoading("Deploying your contract data...");
@@ -118,6 +112,7 @@
                     html: '<p>Your contract has been created successfully.</p><p>View contract: <a href="/token-claim/'+principalToText(_rs.ok)+'">'+principalToText(_rs.ok)+'</a></p>',
                 })
             }else{
+                console.log('_rs', _rs);
                 Swal.fire({
                     icon: 'error',
                     title: 'Oops...',
@@ -138,7 +133,7 @@
 </script>
 
 <template>
-    <VueFinalModal v-model="contractDetailsModal" :z-index-base="2000" classes="modal fade show" content-class="modal-dialog modal-lg modal-dialog-scrollable modal-dialog-centered" aria-hidden="true" content-transition="vfm-fade"
+    <VueFinalModal v-model="contractDetailsModal" :z-index-base="2000" classes="modal fade show" content-class="modal-dialog modal-lg modal-dialog-scrollable modal-dialog-centered" content-transition="vfm-fade"
       overlay-transition="vfm-fade">
             <div class="modal-content absolute inset-0 h-full overflow-auto">
                
@@ -177,7 +172,10 @@
                                         <div class="d-flex flex-column flex-sm-row gap-7">
                                             <div class="flex-root d-flex flex-column">
                                                 <span class="fw-bold">Vesting Duration</span>
-                                                <span class="fs-6 text-gray-600">{{contractData.durationUnit}} {{DURATION[contractData.durationTime]}}</span>
+                                                <span class="fs-6 text-gray-600">
+                                                    <span v-if="contractData.durationUnit == 0" class="text-danger">Unlock immediately</span>
+                                                    <span v-else>{{contractData.durationUnit}} {{DURATION[contractData.durationTime]}}</span>
+                                                </span>
                                             </div>
                                             <div class="flex-root d-flex flex-column">
                                                 <span class="fw-bold">Cliff</span>
@@ -187,27 +185,35 @@
                                     </div>
                                     <div class="flex-root d-flex flex-column">
                                         <span class="fw-bold">Unlock Schedule</span>
-                                        <span class="fs-6 text-gray-600">{{SCHEDULE[contractData.unlockSchedule]}}</span>
+                                        <span class="fs-6 text-gray-600">
+                                            <span v-if="contractData.unlockSchedule == 0">Unlock immediately</span>
+                                            <span v-else>{{SCHEDULE[contractData.unlockSchedule]}}</span>
+                                        </span>
                                     </div>
                                 </div>
-                                <div class="d-flex flex-column flex-sm-row gap-7 gap-md-10 mt-5" v-if="contractData.startNow">
+                                <div class="d-flex flex-column flex-sm-row gap-7 gap-md-10 mt-5">
                                     <div class="flex-root d-flex flex-column">
                                         <span class="fw-bold">Contract Start</span>
-                                        <span class="fs-6 text-gray-600">Start upon contract creation</span>
+                                        <span class="fs-6 text-gray-600">
+                                            <span v-if="contractData.startNow">Start upon contract creation</span>
+                                            <span v-else>{{contractData.startTime}}</span>
+                                        </span>
                                     </div>
                                     <div class="flex-root d-flex flex-column">
                                         <span class="fw-bold">Contract End (expected)</span>
                                         <span class="fs-6 text-gray-600">{{moment().add(Number(contractData.durationTime), 'seconds').format()}}</span>
                                     </div>
                                 </div>
-                                <div class="d-flex flex-column flex-sm-row gap-7 gap-md-10 mt-5" v-if="!contractData.startNow">
-                                    <!-- <div class="flex-root d-flex flex-column">
-                                        <span class="fw-bold">Start Date</span>
-                                        <span class="fs-6 text-gray-600">{{contractData.startDate}}</span>
-                                    </div> -->
+                                <div class="d-flex flex-column flex-sm-row gap-7 gap-md-10 mt-5">
                                     <div class="flex-root d-flex flex-column">
-                                        <span class="fw-bold">Start Time</span>
-                                        <span class="fs-6 text-gray-600">{{contractData.startTime}}</span>
+                                        <span class="fw-bold">Require BlockID score</span>
+                                        <span class="fs-6 text-gray-800">{{contractData.useBlockId ? contractData.blockId : 'No'}}</span>
+                                    </div>
+                                    <div class="flex-root d-flex flex-column">
+                                        <span class="fw-bold">Distribution type</span>
+                                        <span :class="contractData.distributionType ? 'text-danger' : 'text-success'">
+                                            {{contractData.distributionType ? 'Whitelist' : 'Public'}}
+                                        </span>
                                     </div>
                                 </div>
                             </div>
@@ -235,15 +241,19 @@
                                                     <td class="text-end text-gray-800 fw-bold  pe-2">{{ (recipient.amount) }} {{ contractData.token.symbol }}</td>
                                                 </tr>
                                                 <tr class="bg-light fs-7">
-                                                    <td></td>
-                                                    <td class="text-end fw-bold">Total:</td>
+                                                    <td class="text-end fw-bold w-90" colspan="2">Amount:</td>
                                                     <td class="text-end fw-bold text-danger pe-2">{{currencyFormat(contractData.totalAmount)}} {{ contractData.token.symbol }}</td>
                                                 </tr>
                                                 <tr class="bg-light fs-7">
-                                                    <td></td>
-                                                    <td class="text-end fw-bold">Creation Fee:</td>
+                                                    <td class="text-end fw-bold" colspan="2">Creation Fee:</td>
                                                     <td class="text-end fw-bold text-danger pe-2">0 ICP </td>
                                                 </tr>
+                                                
+                                                <tr class="bg-light fs-7">
+                                                    <td class="text-end fw-bold" colspan="2">Final amount:</td>
+                                                    <td class="text-end fw-bold text-danger pe-2">{{currencyFormat(contractData.totalAmount)}} {{ contractData.token.symbol }}</td>
+                                                </tr>
+
                                             </tbody>
                                         </table>
                                     </div>
@@ -254,9 +264,7 @@
                                 <div class="d-flex flex-column pe-0 pe-sm-10">
                                     <h5 class="mb-1">Important!</h5>
                                     <span>
-                                        Double-check the contract deployment timing and related settings accurately. 
-                                        The smart contract is autonomous and not controlled by ICTO or the creator to ensure transparency. 
-                                        Once it's initiated, only those set within the contract can cancel.
+                                        Verify the start time of the contract and related settings accurately. The smart contract is autonomous and is not controlled by ICTO or its creator to ensure transparency.
                                     </span>
                                 </div>
                             </div>

@@ -1,4 +1,4 @@
-import { useQuery } from "@tanstack/vue-query";
+import { useQuery, useMutation } from "@tanstack/vue-query";
 import Connect from "@/ic/actor/Connect";
 import config from "../config";
 import walletStore from "@/store/";
@@ -15,11 +15,25 @@ export const useCreateContract = async (data)=>{
 export const useGetMyContracts = async ()=>{
     try{
         if(walletStore.isLogged){
-            return await Connect.canister(config.INDEXING_CANISTER_ID, 'indexing', true).getUserContracts(walletStore.principal);
+            return await Connect.canister(config.BACKEND_CANISTER_ID, 'backend').getMyContracts();
         }else return [];
     }catch(e){
         throw new Error(e);
     }
+}
+export const useGetContractsByWallet = ()=>{
+    return useQuery({
+        queryKey: ['getContractsByWallet'],
+        queryFn: async () => await Connect.canister(config.BACKEND_CANISTER_ID, 'backend').getContractsByWallet(),
+        keepPreviousData: false,
+        retry: 3,
+        refetchInterval: 0
+    })
+    // try{
+    //     return await Connect.canister(config.BACKEND_CANISTER_ID, 'backend').getContractsByWallet();
+    // }catch(e){
+    //     throw new Error(e);
+    // }
 }
 export const useCancelContract = async (contractId)=>{
     return await Connect.canister(config.BACKEND_CANISTER_ID, 'contract').whoami();

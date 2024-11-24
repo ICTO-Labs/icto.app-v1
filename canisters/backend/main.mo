@@ -26,18 +26,91 @@ actor {
     private stable var MIN_CYCLES_IN_DEPLOYER: Nat = 2_000_000_000_000;//Minimum cycles in deployer
     let ic: IC.Self = actor "aaaaa-aa";
     private stable var _admins : [Text] = ["lekqg-fvb6g-4kubt-oqgzu-rd5r7-muoce-kppfz-aaem3-abfaj-cxq7a-dqe"];
-    private stable var _contracts : [Text] = [];
-    private stable var INDEXING_CANISTER : Text = "avqkn-guaaa-aaaaa-qaaea-cai";
+    private stable var _contracts : [Text] = [];//list of all contracts
+    private stable var ownerContracts : Trie.Trie<Text, [Text]> = Trie.empty();
+    private stable var contractsMetadata : Trie.Trie<Text, Types.ContractMetadata> = Trie.empty();
+
+    // private stable var INDEXING_CANISTER : Text = "avqkn-guaaa-aaaaa-qaaea-cai";
     private let icrcLedger : ICRCLedger.Self = actor ("ryjl3-tyaaa-aaaaa-aaaba-cai");//For ICRC transfer
+    private stable var privateContracts : Trie.Trie<Text, [Text]> = Trie.empty(); // wallet -> contracts
+    private stable var publicContracts : [Text] = []; // list of public contracts
+
+    ////////// HELPERS //////////
+    // Helper function to add contract to owner mapping
+    private func addContractToOwner(owner: Text, contractId: Text) {
+        let existing = Trie.get(ownerContracts, keyT(owner), Text.equal);
+        let contracts = switch (existing) {
+            case (null) {[contractId]};
+            case (?existing) {
+                if (Array.find<Text>(existing, func(x) { x == contractId }) == null) {
+                    Array.append(existing, [contractId])
+                } else {
+                    existing
+                };
+            };
+        };
+        ownerContracts := Trie.put(ownerContracts, keyT(owner), Text.equal, contracts).0;
+    };
+
+    // Helper function to save contract metadata
+    private func saveContractMetadata(contractId: Text, owner: Text, distributionType: ContractTypes.DistributionType) {
+        let metadata : Types.ContractMetadata = {
+            id = contractId;
+            owner = owner;
+            distributionType = distributionType;
+            createdAt = Time.now();
+        };
+        contractsMetadata := Trie.put(contractsMetadata, keyT(contractId), Text.equal, metadata).0;
+    };
+
+    // Helper add contract to wallet by distribution type
+    private func addContractByType(contractId: Text, distributionType: ContractTypes.DistributionType, recipients: ?[Types.Recipient]) {
+        switch(distributionType) {
+            case (#Public) {
+                // Public contract
+                publicContracts := Array.append(publicContracts, [contractId]);
+            };
+            case (#Whitelist) {
+                // Private contract
+                switch(recipients) {
+                    case(?recipientList) {
+                        for(recipient in recipientList.vals()) {
+                            let wallet = recipient.address;
+                            let existing = Trie.get(privateContracts, keyT(wallet), Text.equal);
+                            let contracts = switch (existing) {
+                                case (null) {[contractId]};
+                                case (?existing) {
+                                    if (Array.find<Text>(existing, func(x) { x == contractId }) == null) {
+                                        Array.append(existing, [contractId])
+                                    } else {
+                                        existing
+                                    };
+                                };
+                            };
+                            privateContracts := Trie.put(privateContracts, keyT(wallet), Text.equal, contracts).0;
+                        };
+                    };
+                    case(null) {};
+                };
+            };
+            case _ {};
+        };
+    };
+
+    // Query function get list contracts of wallet, also return public contracts
+    public shared query ({caller}) func getContractsByWallet() : async {
+        privateContracts: [Text];
+        publicContracts: [Text];
+    } {
+        let privateList = Option.get(Trie.get(privateContracts, keyT(Principal.toText(caller)), Text.equal), []);
+        return {
+            privateContracts = privateList;
+            publicContracts = publicContracts;
+        };
+    };
 
     private func createICRC1Actor(id : Text) : async ICRCLedger.Self {
         actor(id);
-    };
-    private func mapCanister(user: Text, canister_id: Text): async (){
-        let INDEXING = actor(INDEXING_CANISTER) : actor {
-            addUserContract : shared (Text, Text) -> async ();
-        };
-        await INDEXING.addUserContract(user, canister_id);
     };
 
     private func _isAdmin(p : Text) : (Bool) {
@@ -84,15 +157,15 @@ actor {
         });
     };
     public shared (msg) func createContract(contract: ContractTypes.ContractData): async Result.Result<Principal, Text>{
-        assert not Principal.isAnonymous(msg.caller);
-        if (not _isAdmin(Principal.toText(msg.caller))){//Only admin can create contract
-            return #err("Sorry, only admin can create contract in testing phase!");
-        };
+        // assert not Principal.isAnonymous(msg.caller);
+        // if (not _isAdmin(Principal.toText(msg.caller))){//Only admin can create contract
+        //     return #err("Sorry, only admin can create contract in testing phase!");
+        // };
         let _controllers = [msg.caller];
         let _cycleBalance = Cycles.balance();
         if (_cycleBalance < CYCLES_FOR_INSTALL + MIN_CYCLES_IN_DEPLOYER) return #err("Not enough cycles in deployer, balance: "# debug_show(_cycleBalance) #"T");
         Cycles.add(CYCLES_FOR_INSTALL);
-
+        Debug.print("Contract data: " # debug_show(contract));
         //must add VERSION to contract data
         let newContractId = await TokenClaim.Contract(contract);
         let newContractPrincipal = Principal.fromActor(newContractId);
@@ -108,13 +181,16 @@ actor {
         // });
 
         let _contractId = Principal.toText(newContractPrincipal);
+        Debug.print("Contract id: " # _contractId);
         addContract(_contractId);//Add to contract list
+        addContractToOwner(Principal.toText(msg.caller), _contractId);//Add to owner mapping
+        saveContractMetadata(_contractId, Principal.toText(msg.caller), contract.distributionType);//Save metadata
         //Map created contract
         let _recipients = Option.get(contract.recipients, []);
-        if(_recipients.size() > 0){
-            for(recipient in _recipients.vals()) {
-                await mapCanister(recipient.address, _contractId);
-            };
+        if(contract.distributionType == #Whitelist and _recipients.size() > 0){//Whitelist contract
+            addContractByType(_contractId, #Whitelist, contract.recipients);
+        }else{//Public contract
+            addContractByType(_contractId, #Public, null);
         };
 
         //Transfer token to new contract, skipp admin for testing purpose
@@ -167,10 +243,38 @@ actor {
         return _admins;
     };
 
-    //Update Indexing canister
-    public shared ({ caller }) func updateIndexingCanister(i : Text) : async () {
-        assert (_isAdmin(Principal.toText(caller)));
-        INDEXING_CANISTER := i;
+
+    // Get contracts created by owner
+    public shared({caller}) func getMyContracts() : async [Types.ContractMetadata] {
+        let ownedContracts = switch (Trie.get(ownerContracts, keyT(Principal.toText(caller)), Text.equal)) {
+            case (null) {[]};
+            case (?contracts) {
+                Array.mapFilter<Text, Types.ContractMetadata>(contracts, func(id) {
+                    Trie.get(contractsMetadata, keyT(id), Text.equal)
+                });
+            };
+        };
+        return ownedContracts
     };
 
+    // Query to get metadata of a contract
+    public query func getContractMetadata(contractId: Text) : async ?Types.ContractMetadata {
+        Trie.get(contractsMetadata, keyT(contractId), Text.equal)
+    };
+
+    // Query to get all contracts of the system (only admin)
+    public shared query({ caller }) func getAllContracts() : async [Types.ContractMetadata] {
+        assert(_isAdmin(Principal.toText(caller)));
+        
+        let allMetadata = Trie.toArray<Text, Types.ContractMetadata, Types.ContractMetadata>(
+            contractsMetadata,
+            func(_, v) { v }
+        );
+        return allMetadata;
+    };
+
+    //Show all mapping of private contracts
+    public query func getPrivateContracts(owner: Text) : async [Text] {
+        return Option.get(Trie.get(privateContracts, keyT(owner), Text.equal), []);
+    };
 };
