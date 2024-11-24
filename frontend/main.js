@@ -19,7 +19,7 @@ import { createPinia } from 'pinia'
 import { VueQueryPlugin } from "@tanstack/vue-query";
 import VueApexCharts from "vue3-apexcharts";
 
-import { InstallCodemirro } from "codemirror-editor-vue3";
+import { InstallCodeMirror } from "codemirror-editor-vue3";
 
 import router from './router.js'
 import App from "./App.vue"
@@ -60,6 +60,6 @@ app.component('Verified', Verified);
 app.component('Toolbar', Toolbar);
 app.component('Empty', Empty);
 app.component('VueDatePicker', VueDatePicker);
-app.use(InstallCodemirro);
+app.use(InstallCodeMirror);
 app.use(VueQueryPlugin)
 app.mount("#root")
