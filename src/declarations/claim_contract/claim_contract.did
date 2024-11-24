@@ -53,12 +53,15 @@ type Recipient =
  };
 type DistributionType = 
  variant {
-   FirstComeFirstServed;
-   Vesting;
+   Public;
+   Whitelist;
  };
 type ContractData = 
  record {
+   allowCancel: bool;
    allowTransfer: bool;
+   autoTransfer: bool;
+   blockId: nat;
    created: Time;
    cyclesBalance: nat;
    description: text;
@@ -90,6 +93,7 @@ type Contract =
    getRecipientClaimInfo: (principal) -> (opt RecipientClaimInfo) query;
    getRecipients: (nat) -> (vec RecipientClaim) query;
    getTimePeriod: () -> (nat) query;
+   setRequiredScore: (nat) -> (Result);
    startContract: () -> (Result);
    transferOwnership: (principal) -> (Result);
  };
@@ -100,14 +104,14 @@ type ClaimRecord =
    txId: nat;
  };
 service : (record {
-             canCancel: text;
-             canChange: text;
-             canView: text;
+             allowCancel: bool;
+             autoTransfer: bool;
+             blockId: nat;
              cliffTime: nat;
              cliffUnit: nat;
              created: Time;
              description: text;
-             distributionType: text;
+             distributionType: DistributionType;
              durationTime: nat;
              durationUnit: nat;
              maxRecipients: nat;

@@ -1,5 +1,6 @@
 import type { Principal } from '@dfinity/principal';
 import type { ActorMethod } from '@dfinity/agent';
+import type { IDL } from '@dfinity/candid';
 
 export interface CanisterSettings {
   'freezing_threshold' : bigint,
@@ -19,24 +20,35 @@ export interface CanisterStatus {
 }
 export interface ContractData {
   'startTime' : Time,
-  'canChange' : string,
-  'canCancel' : string,
+  'distributionType' : DistributionType__1,
   'durationTime' : bigint,
   'durationUnit' : bigint,
   'title' : string,
   'created' : Time,
+  'autoTransfer' : boolean,
   'owner' : Principal,
   'startNow' : boolean,
+  'blockId' : bigint,
   'description' : string,
-  'canView' : string,
   'cliffTime' : bigint,
   'cliffUnit' : bigint,
-  'recipients' : Array<Recipient>,
+  'maxRecipients' : bigint,
+  'recipients' : [] | [Array<Recipient>],
   'totalAmount' : bigint,
   'tokenInfo' : TokenInfo,
   'unlockSchedule' : bigint,
-  'unlockedAmount' : bigint,
+  'allowCancel' : boolean,
 }
+export interface ContractMetadata {
+  'id' : string,
+  'distributionType' : DistributionType,
+  'owner' : string,
+  'createdAt' : bigint,
+}
+export type DistributionType = { 'Public' : null } |
+  { 'Whitelist' : null };
+export type DistributionType__1 = { 'Public' : null } |
+  { 'Whitelist' : null };
 export interface Recipient {
   'note' : [] | [string],
   'address' : string,
@@ -61,7 +73,16 @@ export interface _SERVICE {
   'canister_status' : ActorMethod<[canister_id], CanisterStatus>,
   'createContract' : ActorMethod<[ContractData], Result>,
   'getAdmins' : ActorMethod<[], Array<string>>,
+  'getAllContracts' : ActorMethod<[], Array<ContractMetadata>>,
+  'getContractMetadata' : ActorMethod<[string], [] | [ContractMetadata]>,
+  'getContractsByWallet' : ActorMethod<
+    [],
+    { 'privateContracts' : Array<string>, 'publicContracts' : Array<string> }
+  >,
+  'getMyContracts' : ActorMethod<[], Array<ContractMetadata>>,
+  'getPrivateContracts' : ActorMethod<[string], Array<string>>,
   'removeAdmin' : ActorMethod<[string], undefined>,
-  'updateIndexingCanister' : ActorMethod<[string], undefined>,
   'whoami' : ActorMethod<[], Principal>,
 }
+export declare const idlFactory: IDL.InterfaceFactory;
+export declare const init: (args: { IDL: typeof IDL }) => IDL.Type[];

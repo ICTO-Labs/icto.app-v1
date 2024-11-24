@@ -20,6 +20,7 @@ export interface Contract {
   'getRecipientClaimInfo' : ActorMethod<[Principal], [] | [RecipientClaimInfo]>,
   'getRecipients' : ActorMethod<[bigint], Array<RecipientClaim>>,
   'getTimePeriod' : ActorMethod<[], bigint>,
+  'setRequiredScore' : ActorMethod<[bigint], Result>,
   'startContract' : ActorMethod<[], Result>,
   'transferOwnership' : ActorMethod<[Principal], Result>,
 }
@@ -29,9 +30,11 @@ export interface ContractData {
   'title' : string,
   'created' : Time,
   'lockDuration' : bigint,
+  'autoTransfer' : boolean,
   'requiredScore' : bigint,
   'owner' : Principal,
   'isStarted' : boolean,
+  'blockId' : bigint,
   'isPaused' : boolean,
   'totalRecipients' : bigint,
   'totalClaimedAmount' : bigint,
@@ -44,9 +47,10 @@ export interface ContractData {
   'unlockSchedule' : bigint,
   'tokenPerRecipient' : bigint,
   'cyclesBalance' : bigint,
+  'allowCancel' : boolean,
 }
-export type DistributionType = { 'FirstComeFirstServed' : null } |
-  { 'Vesting' : null };
+export type DistributionType = { 'Public' : null } |
+  { 'Whitelist' : null };
 export interface Recipient {
   'note' : [] | [string],
   'address' : string,

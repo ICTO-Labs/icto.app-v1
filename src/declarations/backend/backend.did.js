@@ -19,6 +19,10 @@ export const idlFactory = ({ IDL }) => {
     'module_hash' : IDL.Opt(IDL.Vec(IDL.Nat8)),
   });
   const Time = IDL.Int;
+  const DistributionType__1 = IDL.Variant({
+    'Public' : IDL.Null,
+    'Whitelist' : IDL.Null,
+  });
   const Recipient = IDL.Record({
     'note' : IDL.Opt(IDL.Text),
     'address' : IDL.Text,
@@ -34,25 +38,36 @@ export const idlFactory = ({ IDL }) => {
   });
   const ContractData = IDL.Record({
     'startTime' : Time,
-    'canChange' : IDL.Text,
-    'canCancel' : IDL.Text,
+    'distributionType' : DistributionType__1,
     'durationTime' : IDL.Nat,
     'durationUnit' : IDL.Nat,
     'title' : IDL.Text,
     'created' : Time,
+    'autoTransfer' : IDL.Bool,
     'owner' : IDL.Principal,
     'startNow' : IDL.Bool,
+    'blockId' : IDL.Nat,
     'description' : IDL.Text,
-    'canView' : IDL.Text,
     'cliffTime' : IDL.Nat,
     'cliffUnit' : IDL.Nat,
-    'recipients' : IDL.Vec(Recipient),
+    'maxRecipients' : IDL.Nat,
+    'recipients' : IDL.Opt(IDL.Vec(Recipient)),
     'totalAmount' : IDL.Nat,
     'tokenInfo' : TokenInfo,
     'unlockSchedule' : IDL.Nat,
-    'unlockedAmount' : IDL.Nat,
+    'allowCancel' : IDL.Bool,
   });
   const Result = IDL.Variant({ 'ok' : IDL.Principal, 'err' : IDL.Text });
+  const DistributionType = IDL.Variant({
+    'Public' : IDL.Null,
+    'Whitelist' : IDL.Null,
+  });
+  const ContractMetadata = IDL.Record({
+    'id' : IDL.Text,
+    'distributionType' : DistributionType,
+    'owner' : IDL.Text,
+    'createdAt' : IDL.Int,
+  });
   return IDL.Service({
     'addAdmin' : IDL.Func([IDL.Text], [], []),
     'addController' : IDL.Func([canister_id, IDL.Vec(IDL.Principal)], [], []),
@@ -60,8 +75,29 @@ export const idlFactory = ({ IDL }) => {
     'canister_status' : IDL.Func([canister_id], [CanisterStatus], []),
     'createContract' : IDL.Func([ContractData], [Result], []),
     'getAdmins' : IDL.Func([], [IDL.Vec(IDL.Text)], ['query']),
+    'getAllContracts' : IDL.Func([], [IDL.Vec(ContractMetadata)], ['query']),
+    'getContractMetadata' : IDL.Func(
+        [IDL.Text],
+        [IDL.Opt(ContractMetadata)],
+        ['query'],
+      ),
+    'getContractsByWallet' : IDL.Func(
+        [],
+        [
+          IDL.Record({
+            'privateContracts' : IDL.Vec(IDL.Text),
+            'publicContracts' : IDL.Vec(IDL.Text),
+          }),
+        ],
+        ['query'],
+      ),
+    'getMyContracts' : IDL.Func([], [IDL.Vec(ContractMetadata)], []),
+    'getPrivateContracts' : IDL.Func(
+        [IDL.Text],
+        [IDL.Vec(IDL.Text)],
+        ['query'],
+      ),
     'removeAdmin' : IDL.Func([IDL.Text], [], []),
-    'updateIndexingCanister' : IDL.Func([IDL.Text], [], []),
     'whoami' : IDL.Func([], [IDL.Principal], []),
   });
 };

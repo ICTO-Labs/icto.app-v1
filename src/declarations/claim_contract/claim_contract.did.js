@@ -1,5 +1,9 @@
 export const idlFactory = ({ IDL }) => {
   const Time = IDL.Int;
+  const DistributionType = IDL.Variant({
+    'Public' : IDL.Null,
+    'Whitelist' : IDL.Null,
+  });
   const Recipient = IDL.Record({
     'note' : IDL.Opt(IDL.Text),
     'address' : IDL.Text,
@@ -20,19 +24,17 @@ export const idlFactory = ({ IDL }) => {
     'claimedAt' : IDL.Nat,
     'amount' : IDL.Nat,
   });
-  const DistributionType = IDL.Variant({
-    'FirstComeFirstServed' : IDL.Null,
-    'Vesting' : IDL.Null,
-  });
   const ContractData = IDL.Record({
     'startTime' : IDL.Nat,
     'distributionType' : DistributionType,
     'title' : IDL.Text,
     'created' : Time,
     'lockDuration' : IDL.Nat,
+    'autoTransfer' : IDL.Bool,
     'requiredScore' : IDL.Nat,
     'owner' : IDL.Principal,
     'isStarted' : IDL.Bool,
+    'blockId' : IDL.Nat,
     'isPaused' : IDL.Bool,
     'totalRecipients' : IDL.Nat,
     'totalClaimedAmount' : IDL.Nat,
@@ -45,6 +47,7 @@ export const idlFactory = ({ IDL }) => {
     'unlockSchedule' : IDL.Nat,
     'tokenPerRecipient' : IDL.Nat,
     'cyclesBalance' : IDL.Nat,
+    'allowCancel' : IDL.Bool,
   });
   const Recipient__1 = IDL.Record({
     'principal' : IDL.Principal,
@@ -92,6 +95,7 @@ export const idlFactory = ({ IDL }) => {
       ),
     'getRecipients' : IDL.Func([IDL.Nat], [IDL.Vec(RecipientClaim)], ['query']),
     'getTimePeriod' : IDL.Func([], [IDL.Nat], ['query']),
+    'setRequiredScore' : IDL.Func([IDL.Nat], [Result], []),
     'startContract' : IDL.Func([], [Result], []),
     'transferOwnership' : IDL.Func([IDL.Principal], [Result], []),
   });
@@ -99,6 +103,10 @@ export const idlFactory = ({ IDL }) => {
 };
 export const init = ({ IDL }) => {
   const Time = IDL.Int;
+  const DistributionType = IDL.Variant({
+    'Public' : IDL.Null,
+    'Whitelist' : IDL.Null,
+  });
   const Recipient = IDL.Record({
     'note' : IDL.Opt(IDL.Text),
     'address' : IDL.Text,
@@ -115,17 +123,16 @@ export const init = ({ IDL }) => {
   return [
     IDL.Record({
       'startTime' : Time,
-      'distributionType' : IDL.Text,
-      'canChange' : IDL.Text,
-      'canCancel' : IDL.Text,
+      'distributionType' : DistributionType,
       'durationTime' : IDL.Nat,
       'durationUnit' : IDL.Nat,
       'title' : IDL.Text,
       'created' : Time,
+      'autoTransfer' : IDL.Bool,
       'owner' : IDL.Principal,
       'startNow' : IDL.Bool,
+      'blockId' : IDL.Nat,
       'description' : IDL.Text,
-      'canView' : IDL.Text,
       'cliffTime' : IDL.Nat,
       'cliffUnit' : IDL.Nat,
       'maxRecipients' : IDL.Nat,
@@ -133,6 +140,7 @@ export const init = ({ IDL }) => {
       'totalAmount' : IDL.Nat,
       'tokenInfo' : TokenInfo,
       'unlockSchedule' : IDL.Nat,
+      'allowCancel' : IDL.Bool,
     }),
   ];
 };

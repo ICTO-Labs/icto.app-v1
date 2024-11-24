@@ -20,26 +20,44 @@ type Recipient =
    amount: nat;
    note: opt text;
  };
+type DistributionType__1 = 
+ variant {
+   Public;
+   Whitelist;
+ };
+type DistributionType = 
+ variant {
+   Public;
+   Whitelist;
+ };
+type ContractMetadata = 
+ record {
+   createdAt: int;
+   distributionType: DistributionType;
+   id: text;
+   owner: text;
+ };
 type ContractData = 
  record {
-   canCancel: text;
-   canChange: text;
-   canView: text;
+   allowCancel: bool;
+   autoTransfer: bool;
+   blockId: nat;
    cliffTime: nat;
    cliffUnit: nat;
    created: Time;
    description: text;
+   distributionType: DistributionType__1;
    durationTime: nat;
    durationUnit: nat;
+   maxRecipients: nat;
    owner: principal;
-   recipients: vec Recipient;
+   recipients: opt vec Recipient;
    startNow: bool;
    startTime: Time;
    title: text;
    tokenInfo: TokenInfo;
    totalAmount: nat;
    unlockSchedule: nat;
-   unlockedAmount: nat;
  };
 type CanisterStatus = 
  record {
@@ -68,7 +86,15 @@ service : {
   canister_status: (canister_id) -> (CanisterStatus);
   createContract: (ContractData) -> (Result);
   getAdmins: () -> (vec text) query;
+  getAllContracts: () -> (vec ContractMetadata) query;
+  getContractMetadata: (text) -> (opt ContractMetadata) query;
+  getContractsByWallet: () ->
+   (record {
+      privateContracts: vec text;
+      publicContracts: vec text;
+    }) query;
+  getMyContracts: () -> (vec ContractMetadata);
+  getPrivateContracts: (text) -> (vec text) query;
   removeAdmin: (text) -> ();
-  updateIndexingCanister: (text) -> ();
   whoami: () -> (principal);
 }
