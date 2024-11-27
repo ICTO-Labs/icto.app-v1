@@ -4,7 +4,7 @@ import type { IDL } from '@dfinity/candid';
 
 export interface ClaimRecord {
   'txId' : bigint,
-  'claimedAt' : bigint,
+  'claimedAt' : Time,
   'amount' : bigint,
 }
 export interface Contract {
@@ -12,21 +12,27 @@ export interface Contract {
     [Principal, bigint, bigint, bigint, bigint],
     Result
   >,
+  'cancelTimer' : ActorMethod<[], undefined>,
   'checkClaimable' : ActorMethod<[Principal], bigint>,
   'checkEligibility' : ActorMethod<[], Result>,
   'claim' : ActorMethod<[], Result_1>,
   'getClaimHistory' : ActorMethod<[Principal], [] | [Array<ClaimRecord>]>,
   'getContractInfo' : ActorMethod<[], ContractData>,
+  'getCounter' : ActorMethod<[], bigint>,
   'getRecipientClaimInfo' : ActorMethod<[Principal], [] | [RecipientClaimInfo]>,
   'getRecipients' : ActorMethod<[bigint], Array<RecipientClaim>>,
   'getTimePeriod' : ActorMethod<[], bigint>,
+  'init' : ActorMethod<[], undefined>,
   'setRequiredScore' : ActorMethod<[bigint], Result>,
   'startContract' : ActorMethod<[], Result>,
   'transferOwnership' : ActorMethod<[Principal], Result>,
 }
 export interface ContractData {
-  'startTime' : bigint,
+  'startTime' : Time,
+  'status' : ContractStatus,
   'distributionType' : DistributionType,
+  'durationTime' : bigint,
+  'durationUnit' : bigint,
   'title' : string,
   'created' : Time,
   'lockDuration' : bigint,
@@ -34,21 +40,32 @@ export interface ContractData {
   'requiredScore' : bigint,
   'owner' : Principal,
   'isStarted' : boolean,
+  'startNow' : boolean,
   'blockId' : bigint,
   'isPaused' : boolean,
   'totalRecipients' : bigint,
   'totalClaimedAmount' : bigint,
   'description' : string,
+  'cliffTime' : bigint,
+  'cliffUnit' : bigint,
+  'vestingType' : VestingType,
   'maxRecipients' : bigint,
   'isCanceled' : boolean,
   'totalAmount' : bigint,
   'allowTransfer' : boolean,
   'tokenInfo' : TokenInfo,
+  'initialUnlockPercentage' : bigint,
   'unlockSchedule' : bigint,
   'tokenPerRecipient' : bigint,
   'cyclesBalance' : bigint,
   'allowCancel' : boolean,
 }
+export type ContractStatus = { 'CANCELED' : null } |
+  { 'PAUSED' : null } |
+  { 'PENDING' : null } |
+  { 'STARTED' : null } |
+  { 'NOT_STARTED' : null } |
+  { 'ENDED' : null };
 export type DistributionType = { 'Public' : null } |
   { 'Whitelist' : null };
 export interface Recipient {
@@ -62,7 +79,7 @@ export interface RecipientClaim {
   'claimInterval' : bigint,
   'recipient' : Recipient__1,
   'vestingCliff' : bigint,
-  'lastClaimedTime' : bigint,
+  'lastClaimedTime' : Time,
   'vestingDuration' : bigint,
 }
 export interface RecipientClaimInfo {
@@ -72,7 +89,7 @@ export interface RecipientClaimInfo {
   'recipient' : Recipient__1,
   'vestingCliff' : bigint,
   'claimHistory' : Array<ClaimRecord>,
-  'lastClaimedTime' : bigint,
+  'lastClaimedTime' : Time,
   'vestingDuration' : bigint,
 }
 export interface Recipient__1 {
@@ -93,6 +110,8 @@ export interface TokenInfo {
   'symbol' : string,
   'canisterId' : string,
 }
+export type VestingType = { 'Standard' : null } |
+  { 'Single' : null };
 export interface _SERVICE extends Contract {}
 export declare const idlFactory: IDL.InterfaceFactory;
 export declare const init: (args: { IDL: typeof IDL }) => IDL.Type[];

@@ -4,7 +4,7 @@
     import "vue3-circle-progress/dist/circle-progress.css";
     import CircleProgress from "vue3-circle-progress";
     import { currencyFormat, parseTokenAmount } from "@/utils/token"
-    import { shortPrincipal, shortAccount } from '@/utils/common';
+    import { shortPrincipal, shortAccount, getVariantType } from '@/utils/common';
     import config from '@/config';
     import { useGetContract, useCancelContract } from "@/services/Contract";
     const props = defineProps(['contractId', 'contractInfo', 'distributionType']);
@@ -24,7 +24,7 @@
                         </h4>
                     </div>
                     <div class="card-toolbar" data-bs-toggle="tooltip" data-bs-placement="top" data-bs-trigger="hover" title="" data-bs-original-title="Click to add a user">
-                        <span class="badge badge-light-success me-auto" v-if="contract && 'Public' in contract.distributionType">PUBLIC</span>
+                        <span class="badge badge-light-success me-auto" v-if="contract && getVariantType(contract.distributionType) == 'Public'">PUBLIC</span>
                         <span class="badge badge-light-danger me-auto" v-else>WHITELIST</span>
                     </div>
                 </div>
@@ -96,7 +96,7 @@
                     </div>
                     <div class="d-flex flex-column">
                         <span class="fs-8 text-gray-400 text-hover-primary">Status</span>
-                        <span class="badge badge-light-success me-auto">Started</span>
+                        <span :class="`badge badge-light-${getVariantType(contract?.status) == 'STARTED' ? 'success' : 'info'} me-auto`">{{ getVariantType(contract?.status) }}</span>
                     </div>
                 </div>
                 

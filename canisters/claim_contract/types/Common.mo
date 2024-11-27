@@ -19,13 +19,15 @@ module {
         unlockSchedule: Nat;
         allowCancel: Bool;
         startNow: Bool;
-        startTime: Time.Time;
+        startTime: Nat;
         created: Time.Time;
         tokenInfo: TokenInfo;
         recipients: ?[Recipient];
         owner: Principal;
         distributionType: DistributionType;
+        vestingType: VestingType;
         totalAmount: Nat;
+        initialUnlockPercentage: Nat;//Percentage of total amount to unlock immediately, the rest will be vested
         maxRecipients: Nat;
         blockId: Nat;//BlockID Score required to claim, 0 for no requirement
         autoTransfer: Bool;
@@ -99,6 +101,18 @@ module {
     public type DistributionType = {
         #Whitelist;
         #Public;
+    };
+    public type ContractStatus = {
+        #NOT_STARTED;  // Not started
+        #PENDING;      // Up to start time, but not started, may be canister has not received token yet
+        #STARTED;      // Started
+        #PAUSED;       // Paused
+        #ENDED;        // Ended (claimed all or time ended)
+        #CANCELED;     // Canceled
+    };
+    public type VestingType = {
+        #Standard; // Vesting step by step
+        #Single;  // Unlock immediately
     };
 
 }

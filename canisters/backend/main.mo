@@ -63,6 +63,14 @@ actor {
         contractsMetadata := Trie.put(contractsMetadata, keyT(contractId), Text.equal, metadata).0;
     };
 
+    //Call created contract init function
+    private func triggerContractInit(canister_id: Text) : async () {
+        let SmartContract = actor(canister_id) : actor {
+            init : shared () -> async ();
+        };
+        await SmartContract.init();
+    };
+
     // Helper add contract to wallet by distribution type
     private func addContractByType(contractId: Text, distributionType: ContractTypes.DistributionType, recipients: ?[Types.Recipient]) {
         switch(distributionType) {
@@ -164,14 +172,14 @@ actor {
         let _controllers = [msg.caller];
         let _cycleBalance = Cycles.balance();
         if (_cycleBalance < CYCLES_FOR_INSTALL + MIN_CYCLES_IN_DEPLOYER) return #err("Not enough cycles in deployer, balance: "# debug_show(_cycleBalance) #"T");
-        Cycles.add(CYCLES_FOR_INSTALL);
+        Cycles.add<system>(CYCLES_FOR_INSTALL);
         Debug.print("Contract data: " # debug_show(contract));
         //must add VERSION to contract data
-        let newContractId = await TokenClaim.Contract(contract);
-        let newContractPrincipal = Principal.fromActor(newContractId);
+        let ContractActor = await TokenClaim.Contract(contract);
+        let contractId = Principal.fromActor(ContractActor);
         //Update settings;
         // await CA.updateCanisterSettings({
-        // canisterId = newContractPrincipal;
+        // canisterId = contractId;
         // settings = {
         //     controllers = controllers;
         //     compute_allocation = ?0;
@@ -180,7 +188,9 @@ actor {
         // }
         // });
 
-        let _contractId = Principal.toText(newContractPrincipal);
+        let _contractId = Principal.toText(contractId);
+        await ContractActor.init();//Trigger init function
+
         Debug.print("Contract id: " # _contractId);
         addContract(_contractId);//Add to contract list
         addContractToOwner(Principal.toText(msg.caller), _contractId);//Add to owner mapping
@@ -196,13 +206,13 @@ actor {
         //Transfer token to new contract, skipp admin for testing purpose
         if (not _isAdmin(Principal.toText(msg.caller))){
             let _tokenActor = await createICRC1Actor(contract.tokenInfo.canisterId);
-            switch (await _tokenActor.icrc2_transfer_from({ from = { owner = msg.caller; subaccount = null }; spender_subaccount = null; to = { owner = newContractPrincipal; subaccount = null }; fee = null; memo = null; from_subaccount = null; created_at_time = null; amount = contract.totalAmount })) {
+            switch (await _tokenActor.icrc2_transfer_from({ from = { owner = msg.caller; subaccount = null }; spender_subaccount = null; to = { owner = contractId; subaccount = null }; fee = null; memo = null; from_subaccount = null; created_at_time = null; amount = contract.totalAmount })) {
             case (#Ok(_)) ();
             case (#Err(e)) return #err("Payment error: " # debug_show(e));
             };
         };
 
-        #ok(newContractPrincipal);
+        #ok(contractId);
     };
 
     public shared({ caller }) func cancelContract(canister_id: Principal) : async (){

@@ -19,7 +19,7 @@ export interface CanisterStatus {
   'module_hash' : [] | [Uint8Array | number[]],
 }
 export interface ContractData {
-  'startTime' : Time,
+  'startTime' : bigint,
   'distributionType' : DistributionType__1,
   'durationTime' : bigint,
   'durationUnit' : bigint,
@@ -32,10 +32,12 @@ export interface ContractData {
   'description' : string,
   'cliffTime' : bigint,
   'cliffUnit' : bigint,
+  'vestingType' : VestingType,
   'maxRecipients' : bigint,
   'recipients' : [] | [Array<Recipient>],
   'totalAmount' : bigint,
   'tokenInfo' : TokenInfo,
+  'initialUnlockPercentage' : bigint,
   'unlockSchedule' : bigint,
   'allowCancel' : boolean,
 }
@@ -65,6 +67,8 @@ export interface TokenInfo {
   'symbol' : string,
   'canisterId' : string,
 }
+export type VestingType = { 'Standard' : null } |
+  { 'Single' : null };
 export type canister_id = Principal;
 export interface _SERVICE {
   'addAdmin' : ActorMethod<[string], undefined>,

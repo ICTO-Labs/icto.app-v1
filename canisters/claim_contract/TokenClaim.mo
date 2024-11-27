@@ -10,10 +10,12 @@ import Trie "mo:base/Trie";
 import Int "mo:base/Int";
 import Nat "mo:base/Nat";
 import Time "mo:base/Time";
+import Timer "mo:base/Timer";
 import Cycles "mo:base/ExperimentalCycles";
 import Bool "mo:base/Bool";
 import Result "mo:base/Result";
 import Option "mo:base/Option";
+import Debug "mo:base/Debug";
 import Ledger "../utils/Ledger";
 import Types "./types/Common";
 import ICRCLedger "../utils/ICRCLedger";
@@ -29,14 +31,16 @@ shared ({ caller = creator }) actor class Contract({
     unlockSchedule: Nat;
     allowCancel: Bool;
     startNow: Bool;
-    startTime: Time.Time;
+    startTime: Nat;
     created: Time.Time;
     tokenInfo: Types.TokenInfo;
     recipients: ?[Types.Recipient];
     owner: Principal;
     distributionType: Types.DistributionType;
+    vestingType: Types.VestingType;
     blockId: Nat;
     totalAmount: Nat;
+    initialUnlockPercentage: Nat;
     autoTransfer: Bool;
     maxRecipients: Nat;
 }) = this {
@@ -45,8 +49,14 @@ shared ({ caller = creator }) actor class Contract({
         description: Text;
         tokenInfo: Types.TokenInfo;
         lockDuration: Nat;
+        durationTime: Nat;
+        durationUnit: Nat;
+        cliffTime: Nat;
+        cliffUnit: Nat;
         unlockSchedule: Nat;
-        startTime: Nat;
+        initialUnlockPercentage: Nat;
+        startNow: Bool;
+        startTime: Time.Time;
         isStarted: Bool;
         isPaused: Bool;
         isCanceled: Bool;
@@ -55,9 +65,11 @@ shared ({ caller = creator }) actor class Contract({
         allowCancel: Bool;
         created: Time.Time;
         distributionType: Types.DistributionType;
+        vestingType: Types.VestingType;
         blockId: Nat;
         maxRecipients: Nat;
         autoTransfer: Bool;
+        status: Types.ContractStatus;
     };
 
     type ContractData = ContractInfo and {
@@ -80,7 +92,7 @@ shared ({ caller = creator }) actor class Contract({
         recipient: Recipient;
         claimedAmount: Nat;
         remainingAmount: Nat;
-        lastClaimedTime: Nat;
+        lastClaimedTime: Time.Time;
         vestingCliff: Nat;
         claimInterval: Nat;
         vestingDuration: Nat;
@@ -91,7 +103,7 @@ shared ({ caller = creator }) actor class Contract({
         recipient: Recipient;
         claimedAmount: Nat;
         remainingAmount: Nat;
-        lastClaimedTime: Nat;
+        lastClaimedTime: Time.Time;
         vestingCliff: Nat;
         claimInterval: Nat;
         vestingDuration: Nat;
@@ -99,18 +111,25 @@ shared ({ caller = creator }) actor class Contract({
     type ClaimRecord = {
         amount: Nat;
         txId: Nat;
-        claimedAt: Nat;
+        claimedAt: Time.Time;
     };
     let ICRC1 : Ledger.ICRC1 = actor(tokenInfo.canisterId);
     let E8S : Nat = 100_000_000;
+    let NANO_TIME : Nat = 1_000_000_000;
 
     var contractInfo: ContractInfo = { 
         title = title;
         description = description;
         tokenInfo = tokenInfo;
-        lockDuration = durationTime * durationUnit;
+        lockDuration = Nat.mul(Nat.mul(durationTime, durationUnit), NANO_TIME);
+        cliffTime = cliffTime;
+        cliffUnit = cliffUnit;
+        cliffDuration = Nat.mul(cliffTime, cliffUnit);
+        durationTime = durationTime;
+        durationUnit = durationUnit;
         unlockSchedule = unlockSchedule;
-        startTime = 0;
+        startTime = if(startNow) Time.now() else Nat.mul(startTime, NANO_TIME);
+        startNow = startNow;
         created = Time.now();
         isStarted = false; // Change to false to match startContract logic
         isPaused = false;
@@ -119,17 +138,24 @@ shared ({ caller = creator }) actor class Contract({
         allowTransfer = false;
         allowCancel = allowCancel;
         blockId = blockId;
-        distributionType = distributionType; 
+        distributionType = distributionType;
+        vestingType = vestingType;
         maxRecipients = if(distributionType == #Public) maxRecipients else Option.get(recipients, []).size();
+        initialUnlockPercentage = initialUnlockPercentage;
         autoTransfer = autoTransfer;
+        status = #NOT_STARTED;
     };
 
     var recipientClaimInfo = HashMap.HashMap<Principal, RecipientClaimInfo>(0, Principal.equal, Principal.hash);
     var _totalAmount: Nat = 0;
     var totalClaimedAmount: Nat = 0;
     var totalRecipients: Nat = 0;
-    var tokenPerRecipient: Nat = 0; // For FCFS mode
+    var tokenPerRecipient: Nat = 0; // For Public mode
     // var maxRecipients: Nat = 0; // For FCFS mode
+    var timerId : Nat = 0; //Timer check contract status
+    var counter: Nat = 0;
+    var callTimer: Nat = 0; //Count when try to start contract
+    let LIMIT_CALL_TIMER: Nat = 100;//Limit call timer to prevent charge more cycles, need trigger startContract
 
     //BlockID
     stable var REQUIRED_SCORE: Nat = 13;//BlockID required score
@@ -148,15 +174,16 @@ shared ({ caller = creator }) actor class Contract({
     };
 
     //Convert Time.Now to seconds
-    func timeNow(): Nat{
-        Int.abs(Time.now()/1_000_000_000)
+    func timeNow(): Time.Time{
+        return Time.now();
+        // Int.abs(Time.now()/1_000_000_000)
     };
     //Process recipients func
     private func processRecipients(): (){
         switch (recipients) {
             case (?recipientList) {
                 for(recipient in recipientList.vals()) {
-                    let _duration = durationTime*durationUnit;
+                    let _duration = contractInfo.lockDuration;
                     let _recipient = {
                         recipient = {
                             principal = Principal.fromText(recipient.address);
@@ -164,7 +191,7 @@ shared ({ caller = creator }) actor class Contract({
                             note = recipient.note;
                         };
                         principal = Principal.fromText(recipient.address);
-                        vestingCliff = cliffTime*cliffUnit;
+                        vestingCliff = Nat.mul(cliffTime, cliffUnit);
                         claimInterval = if(_duration > 0){ unlockSchedule } else { 0 };
                         vestingDuration = _duration;
                     };
@@ -209,21 +236,44 @@ shared ({ caller = creator }) actor class Contract({
         };
     };
 
-    //INIT PROCESSING #####################
+    private func checkStartTime() : async () {
+        //increment counter
+        counter+= 1;
+        Debug.print("counter: " # debug_show(counter));
+        if (Time.now() >= contractInfo.startTime and not contractInfo.isStarted) {
+            Debug.print("startContract-----------");
+            callTimer += 1;
+            if (callTimer >= LIMIT_CALL_TIMER) {
+                Timer.cancelTimer(timerId);//Cancel timer if call more than LIMIT_CALL_TIMER
+            };
+            ignore startContract();
+        };
+        //Make sure timer is not running when contract is started
+        if(contractInfo.isStarted) {
+            Timer.cancelTimer(timerId);
+        };
+    };
+
+    public query func getCounter(): async Nat {
+        counter;
+    };
+    
+
+    //INIT PROCESS #####################
 
     // Process recipients
     if (contractInfo.distributionType == #Whitelist) {
         processRecipients();
     } else if (contractInfo.distributionType == #Public) {
         if (maxRecipients > 0) {
-            tokenPerRecipient := totalAmount / maxRecipients;
+            tokenPerRecipient := Nat.div(totalAmount, maxRecipients);
         } else {
             ();//debug_show("Max recipients must be greater than 0 for FIFO mode");
             //assert(false);//, "Max recipients must be greater than 0 for FIFO mode");
         };
     };
 
-    //END INIT PROCESSING #####################
+    //END INIT PROCESS #####################
 
     private func checkOwner(caller: Principal) {
         assert(Principal.equal(contractInfo.owner, caller));
@@ -247,13 +297,13 @@ shared ({ caller = creator }) actor class Contract({
                 subaccount = null;
             };
             fee = null;
-            amount = amount-contractInfo.tokenInfo.fee;
+            amount = Nat.sub(amount, contractInfo.tokenInfo.fee);
             memo = null;
             from_subaccount = null;
             created_at_time = null;
         }));
 
-        Result.iterate(transfer_result, func(tx_index: Nat){
+        Result.iterate(transfer_result, func(_tx_index: Nat){
         // ignore //Add to transaction
         //Set.put(_airdropped_users, Set.phash, principal);
         });
@@ -280,17 +330,19 @@ shared ({ caller = creator }) actor class Contract({
         if(contractInfo.isStarted) return #err("Contract is already started");
         // checkOwner(msg.caller);
         //Check if time now greater than setting
-        if(Time.now() >= startTime){
-            let contractBalance = await getContractBalance();
+        if(Time.now() >= startTime and contractInfo.status == #NOT_STARTED){
+            let contractBalance = if(msg.caller == contractInfo.owner) 100_000_000*E8S else await getContractTokenBalance();
             if (contractBalance < totalAmount) {
-                return #err("Insufficient balance in contract to start distribution");
+                return #err("Insufficient "# tokenInfo.symbol #" in the contract, please send "# debug_show(totalAmount/E8S) #" "# tokenInfo.symbol #" to the contract");
             };
 
             contractInfo := {
                 contractInfo with
                 startTime = timeNow();
                 isStarted = true;
+                status = #STARTED;
             };
+            Timer.cancelTimer(timerId);//Cancel timer if it is running
             #ok(true)
         }else{
             #err("Time is not reached yet!");
@@ -298,7 +350,7 @@ shared ({ caller = creator }) actor class Contract({
         
     };
 
-    private func getContractBalance() : async Nat {
+    private func getContractTokenBalance() : async Nat {
         let balance = await ICRC1.icrc1_balance_of({ owner = Principal.fromActor(this); subaccount = null });
         balance
     };
@@ -379,11 +431,11 @@ shared ({ caller = creator }) actor class Contract({
         return Buffer.toArray(b);
     };
     public query func getTimePeriod(): async Nat {
-        timeNow()-contractInfo.startTime;
+        Int.abs(timeNow() - contractInfo.startTime);
     };
 
     // Calculate the claimable amount
-    func calculateClaimableAmount(principal: Principal, pickTime: Nat) : Nat {
+    func calculateClaimableAmount(principal: Principal, pickTime: Time.Time) : Nat {
         if (contractInfo.isStarted == false) {
             return 0;
         };
@@ -393,25 +445,45 @@ shared ({ caller = creator }) actor class Contract({
             case (?claimInfo) {
                 let allocatedAmount = claimInfo.recipient.amount;
                 let lastClaimedTime = if(claimInfo.lastClaimedTime == 0) contractInfo.startTime else claimInfo.lastClaimedTime;
-                let vestingCliff = claimInfo.vestingCliff;
-                let claimInterval = claimInfo.claimInterval;
-                let vestingDuration = claimInfo.vestingDuration;
+                // Calculate initial unlock amount
+                let initialUnlockAmount = Nat.div(Nat.mul(allocatedAmount, contractInfo.initialUnlockPercentage), 100);
+                // Remaining amount for vesting
+                let vestingAmount = Nat.sub(allocatedAmount, initialUnlockAmount);
+                // If not claimed yet, allow to claim initial unlock amount
+                if (claimInfo.lastClaimedTime == 0) {
+                    claimableAmount := initialUnlockAmount;
+                } else {
+                    //Process the rest of the vesting
+                    switch (contractInfo.vestingType) {
+                        case (#Standard) {
+                            let vestingCliff = Nat.mul(claimInfo.vestingCliff, NANO_TIME);
+                            let claimInterval = Nat.mul(claimInfo.claimInterval, NANO_TIME);
+                            let vestingDuration = Nat.mul(claimInfo.vestingDuration, NANO_TIME);
 
-                if (currentTime >= lastClaimedTime + vestingCliff) {
-                    let elapsedTime = currentTime - lastClaimedTime - vestingCliff;
-                    let maxClaimableAmount = allocatedAmount - claimInfo.claimedAmount;
+                            if (currentTime >= lastClaimedTime + vestingCliff) {
+                                let elapsedTime = Nat.sub(Nat.sub(Int.abs(currentTime), Int.abs(lastClaimedTime)), vestingCliff);
+                                let maxClaimableAmount = Nat.sub(vestingAmount, claimInfo.claimedAmount);
 
-                    if(claimInterval == 0){
-                        claimableAmount := maxClaimableAmount;
-                    }else{
-                        let numIntervals = elapsedTime / claimInterval;
-                        if (numIntervals > 0) {
-                            let amountPerInterval = allocatedAmount / (vestingDuration / claimInterval);
-                            let claimableAmountInIntervals = numIntervals * amountPerInterval;
-                            claimableAmount := Nat.min(claimableAmountInIntervals, maxClaimableAmount);
+                                if(claimInterval == 0){
+                                    claimableAmount := maxClaimableAmount;
+                                }else{
+                                    let numIntervals: Nat = Nat.div(elapsedTime, claimInterval);
+                                    if (numIntervals > 0) {
+                                        let amountPerInterval: Nat = Nat.div(vestingAmount, Nat.div(vestingDuration, claimInterval));
+                                        let claimableAmountInIntervals: Nat = Nat.mul(numIntervals, amountPerInterval);
+                                        claimableAmount := Nat.min(claimableAmountInIntervals, maxClaimableAmount);
+                                    };
+                                };
+                            };
                         };
-                    }
-                    
+                        case (#Single) {
+                            // Unlock total after: startTime + durationTime*durationUnit
+                            let unlockTime = Int.add(contractInfo.startTime, Nat.mul(Nat.mul(contractInfo.durationTime, contractInfo.durationUnit), NANO_TIME));
+                            if (currentTime >= unlockTime) {
+                                claimableAmount := Nat.sub(allocatedAmount, claimInfo.claimedAmount);
+                            };
+                        };
+                    };
                 };
             };
             case (_) {
@@ -441,8 +513,8 @@ shared ({ caller = creator }) actor class Contract({
                                 case(#ok(txId)) {
                                     // let txId = ok.transferResult;
                                     // Update claim info
-                                    let newClaimedAmount = claimInfo.claimedAmount + claimableAmount;
-                                    let newRemainingAmount = claimInfo.remainingAmount - claimableAmount;
+                                    let newClaimedAmount = Nat.add(claimInfo.claimedAmount, claimableAmount);
+                                    let newRemainingAmount = Nat.sub(claimInfo.remainingAmount, claimableAmount);
                                     let newClaimHistory = Array.append<ClaimRecord>(
                                             claimInfo.claimHistory,
                                             [{
@@ -452,7 +524,7 @@ shared ({ caller = creator }) actor class Contract({
                                             }]
                                         );
                                     //increase totalClaimedAmount
-                                    totalClaimedAmount += claimableAmount;
+                                    totalClaimedAmount := Nat.add(totalClaimedAmount, claimableAmount);
 
                                     //Update recipientClaimInfo
                                     recipientClaimInfo.put(principal, {
@@ -473,11 +545,11 @@ shared ({ caller = creator }) actor class Contract({
                         }
                     };
                     case (_) {
-                        return #err("You are not a recipient of this contract");
+                        return #err("You are not in the whitelist");
                     };
                 };
             };
-            case (#Public) {// Process for Public contract
+            case (#Public) {// Process for Public contract, unlock immediately
                 if (totalRecipients >= maxRecipients) {
                     return #err("Maximum number of recipients reached");
                 };
@@ -542,5 +614,18 @@ shared ({ caller = creator }) actor class Contract({
             },
             vestingCliff, claimInterval, vestingDuration);
         #ok(true);    
-    }
+    };
+
+    //######## TIMER CHECK #########//
+    // private func startTimer<system>() : () {
+    //     timerId := Timer.recurringTimer<system>(#seconds(50), checkStartTime);//50 seconds
+    // };
+    public func init() : async () {
+        Debug.print("init-----------timer");
+        timerId := Timer.recurringTimer<system>(#seconds(10), checkStartTime);
+    };
+
+    public func cancelTimer() : async () {
+        Timer.cancelTimer(timerId);
+    };
 }

@@ -18,10 +18,14 @@ export const idlFactory = ({ IDL }) => {
     'settings' : CanisterSettings,
     'module_hash' : IDL.Opt(IDL.Vec(IDL.Nat8)),
   });
-  const Time = IDL.Int;
   const DistributionType__1 = IDL.Variant({
     'Public' : IDL.Null,
     'Whitelist' : IDL.Null,
+  });
+  const Time = IDL.Int;
+  const VestingType = IDL.Variant({
+    'Standard' : IDL.Null,
+    'Single' : IDL.Null,
   });
   const Recipient = IDL.Record({
     'note' : IDL.Opt(IDL.Text),
@@ -37,7 +41,7 @@ export const idlFactory = ({ IDL }) => {
     'canisterId' : IDL.Text,
   });
   const ContractData = IDL.Record({
-    'startTime' : Time,
+    'startTime' : IDL.Nat,
     'distributionType' : DistributionType__1,
     'durationTime' : IDL.Nat,
     'durationUnit' : IDL.Nat,
@@ -50,10 +54,12 @@ export const idlFactory = ({ IDL }) => {
     'description' : IDL.Text,
     'cliffTime' : IDL.Nat,
     'cliffUnit' : IDL.Nat,
+    'vestingType' : VestingType,
     'maxRecipients' : IDL.Nat,
     'recipients' : IDL.Opt(IDL.Vec(Recipient)),
     'totalAmount' : IDL.Nat,
     'tokenInfo' : TokenInfo,
+    'initialUnlockPercentage' : IDL.Nat,
     'unlockSchedule' : IDL.Nat,
     'allowCancel' : IDL.Bool,
   });

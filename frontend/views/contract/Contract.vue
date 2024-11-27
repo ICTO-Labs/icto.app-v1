@@ -22,8 +22,8 @@
             case 'all':
             default:
                 return [
-                    ...contracts.value.publicContracts,
-                    ...contracts.value.privateContracts
+                    ...contracts.value?.publicContracts ?? [],
+                    ...contracts.value?.privateContracts ?? []
                 ];
         }
     });
@@ -36,7 +36,7 @@
         </h3>
         <div class="d-flex flex-wrap my-2">
             <div class="me-4">
-                <select name="status" data-control="select2" class="form-select form-select-sm form-select-white" v-model="filter">
+                <select name="status" class="form-select form-select-sm form-select-white" v-model="filter">
                     <option value="all">All</option>
                     <option value="public">Only public</option>
                     <option value="whitelist">Only related to me</option>

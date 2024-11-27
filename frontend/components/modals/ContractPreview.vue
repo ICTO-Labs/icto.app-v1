@@ -3,7 +3,7 @@
     import EventBus from "@/services/EventBus";
     import { DURATION, SCHEDULE} from "@/config/constants"
     import { onMounted, ref } from 'vue';
-	import { showError, showSuccess, txtToPrincipal, principalToText, closeMessage, showLoading } from '@/utils/common';
+	import { showError, showSuccess, txtToPrincipal, principalToText, closeMessage, showLoading, getVariantType } from '@/utils/common';
     import moment from 'moment';
     import Copy from "@/components/icons/Copy.vue";
     import _api from "@/ic/api";
@@ -20,6 +20,9 @@
 
     const closeModal = ()=>{
         contractDetailsModal.value = false;
+    }
+    const calInitialUnlock = (amount, initialUnlock)=>{
+        return { initialUnlock: amount*initialUnlock/100, vestingAmount: amount-amount*initialUnlock/100 };
     }
     const calTotalAmount = (recipients)=>{
 		return recipients.reduce((acc,cur) => acc + Number(cur.amount), 0);
@@ -68,7 +71,7 @@
                 description: contractData.value.description,
                 durationTime: Number(contractData.value.durationTime),
                 durationUnit: Number(contractData.value.durationUnit),
-                cliffTime: Number(contractData.value.cliffTime),
+                cliffTime: Number(contractData.value.durationTime),//Number(contractData.value.cliffTime),
                 cliffUnit: Number(contractData.value.cliffUnit),
                 unlockSchedule: Number(contractData.value.unlockSchedule),
                 allowCancel: contractData.value.allowCancel,
@@ -86,8 +89,10 @@
                 },
                 recipients: [recipients],
                 distributionType: contractData.value.distributionType,
+                initialUnlock: Number(contractData.value.initialUnlock),
+                vestingType: contractData.value.vestingType,
                 autoTransfer: contractData.value.autoTransfer,
-                blockId: contractData.value.blockId,
+                blockId: contractData.value.useBlockId ? contractData.value.blockId : 0,
                 maxRecipients: contractData.value.maxRecipients,
                 owner: Principal.fromText(walletStore.principal)
             };
@@ -133,10 +138,8 @@
 </script>
 
 <template>
-    <VueFinalModal v-model="contractDetailsModal" :z-index-base="2000" classes="modal fade show" content-class="modal-dialog modal-lg modal-dialog-scrollable modal-dialog-centered" content-transition="vfm-fade"
-      overlay-transition="vfm-fade">
+    <VueFinalModal v-model="contractDetailsModal" :z-index-base="2000" classes="modal fade show" content-class="modal-dialog modal-lg modal-dialog-scrollable modal-dialog-centered" content-transition="vfm-fade" overlay-transition="vfm-fade">
             <div class="modal-content absolute inset-0 h-full overflow-auto">
-               
                 <div class="modal-header pt-5 pb-3">
                     <h4 class="modal-title">{{ contractData.name }}</h4>
                     <div class="btn btn-icon btn-sm btn-bg-light btn-active-light-danger ms-2" data-bs-dismiss="modal" aria-label="Close" @click="closeModal()">
@@ -166,6 +169,12 @@
                                     </div>
                                 </div>
 
+                                <div class="d-flex flex-column flex-sm-row gap-7 gap-md-10 mt-5" v-if="contractData.initialUnlock > 0">
+                                    <div class="alert alert-info">
+                                        <i class="fas fa-info-circle text-info"></i> 
+                                        <span> This contract will unlock <span class="fw-bold text-danger">{{contractData.initialUnlock}}%</span> of the each recipient's amount immediately, the rest will be unlocked in the following schedule.</span>
+                                    </div>
+                                </div>
                                 <div class="d-flex flex-column flex-sm-row gap-7 gap-md-10 mt-5">
 
                                     <div class="flex-root d-flex flex-column">
@@ -186,7 +195,8 @@
                                     <div class="flex-root d-flex flex-column">
                                         <span class="fw-bold">Unlock Schedule</span>
                                         <span class="fs-6 text-gray-600">
-                                            <span v-if="contractData.unlockSchedule == 0">Unlock immediately</span>
+                                            <span v-if="contractData.durationUnit == 0" class="text-danger">None</span>
+                                            <span v-else-if="contractData.unlockSchedule == contractData.durationTime*contractData.durationUnit" class="text-info">Fully unlock after {{contractData.durationUnit}} {{DURATION[contractData.durationTime]}}</span>
                                             <span v-else>{{SCHEDULE[contractData.unlockSchedule]}}</span>
                                         </span>
                                     </div>
@@ -211,8 +221,8 @@
                                     </div>
                                     <div class="flex-root d-flex flex-column">
                                         <span class="fw-bold">Distribution type</span>
-                                        <span :class="contractData.distributionType ? 'text-danger' : 'text-success'">
-                                            {{contractData.distributionType ? 'Whitelist' : 'Public'}}
+                                        <span :class="getVariantType(contractData.distributionType) == 'Whitelist' ? 'text-danger' : 'text-success'">
+                                            {{getVariantType(contractData.distributionType) == 'Whitelist' ? 'Whitelist' : 'Public'}}
                                         </span>
                                     </div>
                                 </div>
@@ -227,30 +237,34 @@
                                                 <tr class="border-bottom fs-7 fw-bold text-gray-800 bg-light">
                                                     <th class="pb-2 text-center">#</th>
                                                     <th class="min-w-155px pb-2">Recipient</th>
-                                                    <th class="min-w-70px text-end pb-2 pe-2">Amount</th>
+                                                    <th class="min-w-70px text-end pb-2 pe-2">Initial Unlock</th>
+                                                    <th class="min-w-70px text-end pb-2 pe-2">Vesting Amount</th>
+                                                    <th class="min-w-70px text-end pb-2 pe-2">Total Amount</th>
                                                 </tr>
                                             </thead>
 
                                             <tbody class="fw-semibold text-gray-600">
                                                 <tr v-for="(recipient, idx) in contractData.recipients">
                                                     <td class="text-center">{{ idx+1 }}.</td>
-                                                    <td class="fw-semibold">
+                                                    <td class="fw-normal">
                                                         <ClickToCopy :text="recipient.address">{{ recipient.address }}
                                                         <span class="badge badge-light-primary fw-normal" v-if="recipient.note">{{ recipient.note }}</span></ClickToCopy>
                                                     </td>
+                                                    <td class="text-end text-danger fw-bold  pe-2">{{ (calInitialUnlock(recipient.amount, contractData.initialUnlock).initialUnlock) }} {{ contractData.token.symbol }}</td>
+                                                    <td class="text-end text-info fw-bold  pe-2">{{ (calInitialUnlock(recipient.amount, contractData.initialUnlock).vestingAmount) }} {{ contractData.token.symbol }}</td>
                                                     <td class="text-end text-gray-800 fw-bold  pe-2">{{ (recipient.amount) }} {{ contractData.token.symbol }}</td>
                                                 </tr>
                                                 <tr class="bg-light fs-7">
-                                                    <td class="text-end fw-bold w-90" colspan="2">Amount:</td>
+                                                    <td class="text-end fw-bold w-90" colspan="4">Amount:</td>
                                                     <td class="text-end fw-bold text-danger pe-2">{{currencyFormat(contractData.totalAmount)}} {{ contractData.token.symbol }}</td>
                                                 </tr>
                                                 <tr class="bg-light fs-7">
-                                                    <td class="text-end fw-bold" colspan="2">Creation Fee:</td>
+                                                    <td class="text-end fw-bold" colspan="4">Creation Fee:</td>
                                                     <td class="text-end fw-bold text-danger pe-2">0 ICP </td>
                                                 </tr>
                                                 
                                                 <tr class="bg-light fs-7">
-                                                    <td class="text-end fw-bold" colspan="2">Final amount:</td>
+                                                    <td class="text-end fw-bold" colspan="4">Final amount:</td>
                                                     <td class="text-end fw-bold text-danger pe-2">{{currencyFormat(contractData.totalAmount)}} {{ contractData.token.symbol }}</td>
                                                 </tr>
 

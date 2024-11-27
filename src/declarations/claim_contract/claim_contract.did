@@ -1,3 +1,8 @@
+type VestingType = 
+ variant {
+   Single;
+   Standard;
+ };
 type TokenInfo = 
  record {
    canisterId: text;
@@ -29,7 +34,7 @@ type RecipientClaimInfo =
    claimHistory: vec ClaimRecord;
    claimInterval: nat;
    claimedAmount: nat;
-   lastClaimedTime: nat;
+   lastClaimedTime: Time;
    recipient: Recipient__1;
    remainingAmount: nat;
    vestingCliff: nat;
@@ -39,7 +44,7 @@ type RecipientClaim =
  record {
    claimInterval: nat;
    claimedAmount: nat;
-   lastClaimedTime: nat;
+   lastClaimedTime: Time;
    recipient: Recipient__1;
    remainingAmount: nat;
    vestingCliff: nat;
@@ -56,16 +61,30 @@ type DistributionType =
    Public;
    Whitelist;
  };
+type ContractStatus = 
+ variant {
+   CANCELED;
+   ENDED;
+   NOT_STARTED;
+   PAUSED;
+   PENDING;
+   STARTED;
+ };
 type ContractData = 
  record {
    allowCancel: bool;
    allowTransfer: bool;
    autoTransfer: bool;
    blockId: nat;
+   cliffTime: nat;
+   cliffUnit: nat;
    created: Time;
    cyclesBalance: nat;
    description: text;
    distributionType: DistributionType;
+   durationTime: nat;
+   durationUnit: nat;
+   initialUnlockPercentage: nat;
    isCanceled: bool;
    isPaused: bool;
    isStarted: bool;
@@ -73,7 +92,9 @@ type ContractData =
    maxRecipients: nat;
    owner: principal;
    requiredScore: nat;
-   startTime: nat;
+   startNow: bool;
+   startTime: Time;
+   status: ContractStatus;
    title: text;
    tokenInfo: TokenInfo;
    tokenPerRecipient: nat;
@@ -81,18 +102,22 @@ type ContractData =
    totalClaimedAmount: nat;
    totalRecipients: nat;
    unlockSchedule: nat;
+   vestingType: VestingType;
  };
 type Contract = 
  service {
    addRecipient: (principal, nat, nat, nat, nat) -> (Result);
+   cancelTimer: () -> ();
    checkClaimable: (principal) -> (nat) query;
    checkEligibility: () -> (Result);
    claim: () -> (Result_1);
    getClaimHistory: (principal) -> (opt vec ClaimRecord) query;
    getContractInfo: () -> (ContractData) query;
+   getCounter: () -> (nat) query;
    getRecipientClaimInfo: (principal) -> (opt RecipientClaimInfo) query;
    getRecipients: (nat) -> (vec RecipientClaim) query;
    getTimePeriod: () -> (nat) query;
+   init: () -> ();
    setRequiredScore: (nat) -> (Result);
    startContract: () -> (Result);
    transferOwnership: (principal) -> (Result);
@@ -100,7 +125,7 @@ type Contract =
 type ClaimRecord = 
  record {
    amount: nat;
-   claimedAt: nat;
+   claimedAt: Time;
    txId: nat;
  };
 service : (record {
@@ -114,13 +139,15 @@ service : (record {
              distributionType: DistributionType;
              durationTime: nat;
              durationUnit: nat;
+             initialUnlockPercentage: nat;
              maxRecipients: nat;
              owner: principal;
              recipients: opt vec Recipient;
              startNow: bool;
-             startTime: Time;
+             startTime: nat;
              title: text;
              tokenInfo: TokenInfo;
              totalAmount: nat;
              unlockSchedule: nat;
+             vestingType: VestingType;
            }) -> Contract

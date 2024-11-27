@@ -8,6 +8,7 @@
 	import { useAssetStore } from "@/store/token";
 	import { useGetMyBalance } from '@/services/Token';
 	import PreviewChart from '@/components/contract/PreviewChart.vue';
+	import VestingChart from '@/components/contract/VestingChart.vue';
     import { DURATION, SCHEDULE} from "@/config/constants"
     import Codemirror from "codemirror-editor-vue3";
 
@@ -52,6 +53,7 @@
 		blockId: 0,
 		allowCancel: false,
 		autoTransfer: false,
+		initialUnlock: 0,
 		distributionType: whitelistDistribution.value
 	});
 	const unlockFrequency = ref(86400);
@@ -161,7 +163,48 @@ zxcjx-7yvay-ow7hh-nbocq-5aaru-n7nwq-xyhau-jnr6m-f36ho-xzufk-rae,50`;
 		}
 		validateVesting();
 	}
-	const validateVesting = ()=>{
+	const validateVesting = () => {
+    // Đảm bảo các giá trị không âm
+    contractData.value.cliffUnit = Math.max(0, contractData.value.cliffUnit);
+    contractData.value.durationUnit = Math.max(0, contractData.value.durationUnit);
+
+    if (unlockFrequency.value == -1) {
+        // Single unlock - Sử dụng duration làm thời điểm unlock
+        contractData.value.unlockSchedule = Number(contractData.value.durationUnit) * Number(contractData.value.durationTime);
+		contractData.value.cliffUnit = 0;
+    } else if (unlockFrequency.value == 0) {
+        // Unlock immediately
+        contractData.value.durationUnit = 0;
+        contractData.value.cliffUnit = 0;
+        contractData.value.unlockSchedule = 0;
+    } else {
+        // Standard vesting
+        contractData.value.unlockSchedule = unlockFrequency.value;
+    }
+
+    // Kiểm tra cliff không được lớn hơn duration
+    let cliffInSeconds = contractData.value.cliffUnit * contractData.value.durationTime;
+    let durationInSeconds = contractData.value.durationUnit * contractData.value.durationTime;
+    
+    if (cliffInSeconds > durationInSeconds) {
+        contractData.value.cliffUnit = contractData.value.durationUnit;
+    }
+
+    // Đảm bảo unlock schedule không lớn hơn tổng thời gian
+    if (contractData.value.unlockSchedule > 0) {
+        let totalDuration = Number(contractData.value.durationTime) * Number(contractData.value.durationUnit);
+        if (totalDuration < Number(contractData.value.unlockSchedule)) {
+            contractData.value.unlockSchedule = contractData.value.durationTime;
+        }
+    }
+
+	//Check unlock frequency not greater than duration
+	if(unlockFrequency.value > 0 && unlockFrequency.value > Number(contractData.value.durationTime)*Number(contractData.value.durationUnit)){
+		unlockFrequency.value = contractData.value.durationTime;
+		showError("Unlock frequency cannot be greater than duration!");
+	}
+}
+	const validateVesting1 = ()=>{
 		if(unlockFrequency.value == -1){
 			contractData.value.unlockSchedule = Number(contractData.value.durationUnit)*Number(contractData.value.durationTime);
 		}else if(unlockFrequency.value == 0){
@@ -269,11 +312,14 @@ zxcjx-7yvay-ow7hh-nbocq-5aaru-n7nwq-xyhau-jnr6m-f36ho-xzufk-rae,50`;
 			}
 		}
 
-		contractData.value.recipients = recipients.value;
+		contractData.value.recipients = whitelistDistribution.value ? recipients.value : [];
 		contractData.value.token = token.value;
 		contractData.value.maxRecipients = totalRecipient.value;
 		contractData.value.totalAmount = contractData.value.totalAmount;
 		contractData.value.distributionType = whitelistDistribution.value ? {Whitelist: null} : {Public: null};
+		contractData.value.cliffTime = Number(contractData.value.durationTime);
+		contractData.value.initialUnlock = whitelistDistribution.value ? Number(contractData.value.initialUnlock) : 0;
+		contractData.value.vestingType = unlockFrequency.value == -1 ? { Single: null } : { Standard: null };
 		console.log('preview', contractData.value.totalAmount, contractData.value);
 
 		EventBus.emit("showContractDetailsModal", {...contractData.value, status: true})
@@ -330,22 +376,6 @@ zxcjx-7yvay-ow7hh-nbocq-5aaru-n7nwq-xyhau-jnr6m-f36ho-xzufk-rae,50`;
 										</template>
 									</VueMultiselect>
 
-										<!-- <VueMultiselect v-model="token" :options="storeAsset.assets" track-by="name" @update:model-value="setSelectedToken" :option-height="104" :custom-label="customLabel" :show-labels="false">
-											<template slot="singleLabel" slot-scope="props">
-												<img class="option__image" src="https://app.icpswap.com/static/media/icp.971d3265.svg" ><span class="option__desc"><span class="option__title">{{ props.option.name }} - {{ props.option.canisterId }}</span></span>
-											</template>
-											<template slot="option" slot-scope="props">
-												<img class="option__image" src="https://app.icpswap.com/static/media/icp.971d3265.svg">
-												<div class="option__desc">
-													<span class="option__title">{{ props.option.name }}</span>
-													<span class="option__small">{{ props.option.canisterId }}</span>
-												</div>
-											</template>
-										</VueMultiselect> -->
-										<!-- <select class="form-select" @change="setSelectedToken" v-model="token" placeholder="Select token">
-											<option :value="{symbol: 'icp', name: 'Internet Computer', canisterId: 'ryjl3-tyaaa-aaaaa-aaaba-cai', standard: 'ledger'}" selected>Internet Computer (ICP)</option>
-											<option :value="asset" v-for="asset in storeAsset.assets"  :key="asset.canisterId">{{ asset.name }} ({{ asset.symbol }}) | {{ asset.canisterId }}</option>
-										</select> -->
 								</div>
 								<div class="col-md-4 fv-row">
 									<label class="fs-6 fw-bold form-label mb-2">Balance
@@ -357,6 +387,27 @@ zxcjx-7yvay-ow7hh-nbocq-5aaru-n7nwq-xyhau-jnr6m-f36ho-xzufk-rae,50`;
 
 									</label>
 									<input type="text" readonly class="form-control form-control-solid" :value="currencyFormat(tokenBalance)">
+								</div>
+							</div>
+							<div class="row mb-3">
+								<div class="col-md-6 fv-row">
+									<label class="required fs-6 fw-bold form-label mb-2">Distribution Type</label>
+									<div class="row fv-row">
+										<div class="col-12">
+											<select name="releaseFrequencyPeriod" class="form-select" v-model="whitelistDistribution">
+													<option :value="false">Public/Airdrops</option>
+													<option :value="true" selected>Whitelist</option>
+											</select>
+										</div>
+									</div>
+								</div>
+								<div class="col-md-6 fv-row">
+									<label class="required fs-6 fw-bold form-label mb-2">Initial Unlock (%)</label>
+									<div class="row fv-row">
+										<div class="col-12">
+											<input type="text" class="form-control" v-model="contractData.initialUnlock" required placeholder="Enter initial unlock percent" min="0" max="100" @change="validateVesting" :disabled="!whitelistDistribution" />
+										</div>
+									</div>
 								</div>
 							</div>
 							<div class="row mb-3">
@@ -390,10 +441,10 @@ zxcjx-7yvay-ow7hh-nbocq-5aaru-n7nwq-xyhau-jnr6m-f36ho-xzufk-rae,50`;
 								<div class="col-md-4 fv-row">
 									<label class="required fs-6 fw-bold form-label mb-2">Vesting Duration</label>
 									<div class="row fv-row">
-										<div class="col-4">
+										<div class="col-5">
 											<input type="text" class="form-control" v-model="contractData.durationUnit" required placeholder="Number" @change="validateVesting" :disabled="unlockFrequency==0" />
 										</div>
-										<div class="col-8">
+										<div class="col-7">
 											<select name="duration" class="form-select" @change="validateVesting" v-model="contractData.durationTime" :disabled="unlockFrequency==0" >
 												<!-- <option value="1">Second</option>
 												<option value="60">Minute</option>
@@ -411,36 +462,45 @@ zxcjx-7yvay-ow7hh-nbocq-5aaru-n7nwq-xyhau-jnr6m-f36ho-xzufk-rae,50`;
 								<div class="col-md-4 fv-row">
 									<label class="required fs-6 fw-bold form-label mb-2">Cliff</label>
 									<div class="row fv-row">
-										<div class="col-4">
-											<input type="text" class="form-control" v-model="contractData.cliffUnit" @change="validateVesting" required placeholder="Number" :disabled="unlockFrequency==0" />
-										</div>
-										<div class="col-8">
-											<select name="cliff" class="form-select" @change="validateVesting" v-model="contractData.cliffTime" :disabled="unlockFrequency==0" >
-												<!-- <option value="1">Second</option>
-												<option value="60">Minute</option>
-												<option value="3600">Hour</option> -->
-												<option value="86400">Day</option>
-												<option value="604800">Week</option>
-												<option value="2628002" selected>Month</option>
-												<option value="7884006">Quarter</option>
-												<option value="31536000">Year</option>
-											</select>
-										</div>
-										
+											<div class="input-group">
+												<input type="number" 
+													class="form-control" 
+													v-model="contractData.cliffUnit" 
+													required 
+													min="0"
+													placeholder="Number" 
+													@change="validateVesting"
+													:disabled="unlockFrequency<=0"
+												/>
+												<span class="input-group-text">{{DURATION[contractData.durationTime]}}</span>
+											</div>
 									</div>
 								</div>
 								
 							</div>
 							<div class="row mb-0">
-								<div class="">
-									<span class="fw-normal text-info">
-										<i class="fas fa-info-circle"></i> 
-										<span v-if="unlockFrequency == -1"> All token will be unlocked after <span class="badge badge-light-primary" v-if="contractData.cliffUnit>0">{{contractData.cliffUnit}} {{DURATION[contractData.cliffTime]}} (cliff)</span> <span v-if="contractData.cliffUnit>0">+</span> <span class="badge badge-light-primary">{{contractData.durationUnit}} {{DURATION[contractData.durationTime]}} (vesting)</span></span>
-										<span v-else-if="unlockFrequency == 60"> Tokens unlock linearly at a constant rate per block 1 minutes</span>
-										<span v-else-if="unlockFrequency == 0"> All recipients can claim their tokens one contract is started</span>
-										<span v-else> Token can be claimed <span class="badge badge-light-primary">{{SCHEDULE[contractData.unlockSchedule]}}</span> in <span class="badge badge-light-primary">{{contractData.durationUnit}} {{DURATION[contractData.durationTime]}}</span>
-										<span v-if="contractData.cliffUnit>0">after</span> <span class="badge badge-light-primary" v-if="contractData.cliffUnit>0">{{contractData.cliffUnit}} {{DURATION[contractData.cliffTime]}} (cliff)</span>
+								<div class="alert alert-light-primary">
+									<i class="fas fa-info-circle"></i> 
+									<span v-if="unlockFrequency == -1">
+										All tokens will be unlocked after 
+										<span class="badge badge-light-primary" v-if="contractData.cliffUnit>0">
+											{{contractData.cliffUnit}} {{DURATION[contractData.durationTime]}} (cliff)
+										</span> 
+										<span v-if="contractData.cliffUnit>0">+</span> 
+										<span class="badge badge-light-primary">
+											{{contractData.durationUnit}} {{DURATION[contractData.durationTime]}} (vesting)
+										</span>
 									</span>
+									<span v-else-if="unlockFrequency == 0">
+										All recipients can claim their tokens once contract is started
+									</span>
+									<span v-else>
+										Tokens can be claimed 
+										<span class="badge badge-light-primary">{{SCHEDULE[contractData.unlockSchedule]}}</span> 
+										over <span class="badge badge-light-primary">{{contractData.durationUnit}} {{DURATION[contractData.durationTime]}}</span>
+										<span v-if="contractData.cliffUnit>0">
+											after <span class="badge badge-light-primary">{{contractData.cliffUnit}} {{DURATION[contractData.durationTime]}} cliff period</span>
+										</span>
 									</span>
 								</div>
 							</div>
@@ -455,7 +515,8 @@ zxcjx-7yvay-ow7hh-nbocq-5aaru-n7nwq-xyhau-jnr6m-f36ho-xzufk-rae,50`;
 						<label class="fs-4 fw-bold form-label mb-2 text-primary">Vesting Schedule</label>
 					</div>
 					<div class="card-body pt-5 pb-2">
-						<PreviewChart :contractInfo="contractDataComputed"></PreviewChart>
+						<VestingChart :contractInfo="contractDataComputed"></VestingChart>
+						<!-- <PreviewChart :contractInfo="contractDataComputed"></PreviewChart> -->
 						<!-- <div class="d-flex align-items-center mb-3">
 							<div class="flex-grow-1">
 								<span class="text-gray-800 text-hover-primary fw-bold fs-6">Vesting duration</span>
@@ -489,14 +550,11 @@ zxcjx-7yvay-ow7hh-nbocq-5aaru-n7nwq-xyhau-jnr6m-f36ho-xzufk-rae,50`;
 		<div class="card-header align-items-center">
 			<h3 class="card-title align-items-start flex-column">
 				<div class="card-label fw-bolder fs-3 mb-1">
-					<div class="form-check form-switch form-check-custom form-check-solid">
-						<input class="form-check-input" type="checkbox" value="true" id="whitelistDistribution" v-model="whitelistDistribution"/>
-						<label class="form-check-label" for="whitelistDistribution" title="Switch distribution type">
-							<span v-if="whitelistDistribution">Whitelist</span>
-							<span v-else>Public</span>
-							distribution
-						</label>
-					</div>
+					<label class="form-check-label" for="whitelistDistribution" title="Switch distribution type">
+						<span v-if="whitelistDistribution">Whitelist</span>
+						<span v-else>Public</span>
+						distribution
+					</label>
 				</div>
 				<div class="text-gray mt-1 fw-bold fs-7">
 					<span v-if="whitelistDistribution">Only recipients in the list will receive/claim tokens</span>
@@ -720,9 +778,9 @@ zxcjx-7yvay-ow7hh-nbocq-5aaru-n7nwq-xyhau-jnr6m-f36ho-xzufk-rae,50`;
 						<input class="form-check-input h-20px w-30px" type="checkbox" v-model="contractData.useBlockId" :disabled="whitelistDistribution"/>
 						<span :class="`form-check-label fw-bold ${contractData.useBlockId?'':'text-muted'}`">Require BlockID score to claim</span>
 					</label>
-					<div class="d-flex mt-2">
+					<div class="d-flex mt-2" v-if="contractData.useBlockId">
 						<div class="">
-							<input type="number" class="form-control form-control-sm text-end w-20" placeholder="0" v-model="contractData.blockId" min="1"/>
+							<input type="number" class="form-control form-control-sm text-end w-20" placeholder="0" v-model="contractData.blockId" min="0"/>
 						</div>
 						<div class="pt-2 ps-2">
 							<span class="form-check-label fs-7 ">Define the BlockID score, 0 for disable. <a href="https://docs.icto.app/block-id/about" target="_blank">What is BlockID?</a></span>

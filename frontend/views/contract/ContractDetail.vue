@@ -3,6 +3,7 @@
     import {useRoute} from 'vue-router';
     import moment from 'moment';
     import { useGetContract, useCancelContract, useCheckEligibility, useGetContractRecipients, useGetMyClaimedAmount, useGetRecipientInfo, useClaim } from "@/services/Contract";
+    import VueCountdown from '@chenfengyuan/vue-countdown';
     import CountUp from 'vue-countup-v3'
     import "vue3-circle-progress/dist/circle-progress.css";
     import CircleProgress from "vue3-circle-progress";
@@ -11,7 +12,7 @@
     import { currencyFormat } from "@/utils/token"
     import IndicativeChart from '@/components/contract/IndicativeChart.vue';
     import ClaimRecord from '@/components/contract/ClaimRecord.vue';
-    import { showLoading, showSuccess, showError, closeMessage } from '@/utils/common';
+    import { showLoading, showSuccess, showError, closeMessage, getTimeFromNano, getVariantType } from '@/utils/common';
     import { parseTokenAmount } from '@/utils/token';
     import walletStore from '@/store';
     const route = useRoute();
@@ -128,7 +129,7 @@
                     <!--begin::Status-->
                     <div class="d-flex align-items-center mb-1">
                         <span class="text-primary fs-2 fw-bold me-3">{{contractInfo?.title}}</span>
-                        <span class="badge badge-light-success me-auto" v-if="contractInfo && 'Public' in contractInfo.distributionType">PUBLIC</span>
+                        <span class="badge badge-light-success me-auto" v-if="getVariantType(contractInfo.distributionType) == 'Public'">PUBLIC</span>
                         <span class="badge badge-light-danger me-auto" v-else>WHITELIST</span>
                     </div>
                     <div class="d-flex flex-wrap fw-bold fs-6 mb-4 pe-2">
@@ -146,7 +147,7 @@
                         <button type="button" class="btn btn-sm btn-light-primary me-3" @click="loadContract(false)" :disabled="isLoading">{{isLoading?'Reloading...':'Refresh '}} <i class="fas fa-sync"></i></button>
                         <div class="input-group py-0 w-auto">
                             <!-- <input type="text" class="form-control" :value="parseTokenAmount(claimAbleAmount, contractInfo.tokenInfo.decimals)" disabled> -->
-                            <button class="btn btn-sm btn-secondary disabled" title="Claimable amount" v-if="'Vesting' in contractInfo.distributionType">{{parseTokenAmount(claimAbleAmount, contractInfo.tokenInfo.decimals)}} {{contractInfo?.tokenInfo.symbol}}</button>
+                            <button class="btn btn-sm btn-secondary disabled" title="Claimable amount" v-if="getVariantType(contractInfo.distributionType) == 'Whitelist'">{{parseTokenAmount(claimAbleAmount, contractInfo.tokenInfo.decimals)}} {{contractInfo?.tokenInfo.symbol}}</button>
                             <button class="btn btn-sm btn-secondary disabled" title="Claimable amount" v-else>{{parseTokenAmount(contractInfo?.tokenPerRecipient, contractInfo.tokenInfo.decimals)}} {{contractInfo?.tokenInfo.symbol}}</button>
                             <button type="button" class="btn btn-sm btn-success" @click="claimToken()">Claim <i class="fas fa-coins"></i></button>
                         </div>
@@ -162,8 +163,8 @@
                             {{ contractInfo?.description }}
                         </div>
 
-                        <div class="notice bg-light-primary rounded border-primary  p-2 fs-6" v-if="contractInfo && 'FirstComeFirstServed' in contractInfo.distributionType">
-                            <i class="fas fa-rocket text-primary" ></i> Everyone can participate. Tokens will be distributed on a first-come, first-served basis until supplies run out!
+                        <div class="notice bg-light-primary rounded border-primary  p-2 fs-6" v-if="contractInfo && getVariantType(contractInfo.distributionType) == 'Public'">
+                            <i class="fas fa-parachute-box text-primary" ></i> Everyone can participate. Tokens will be distributed on a first-come, first-served basis until supplies (total amount) run out!
                         </div>
 
                         <div class="mt-5">
@@ -206,13 +207,20 @@
                     <div class="border border-gray-300 border-dashed rounded min-w-125px py-3 px-4 me-6 mb-3">
                         <!--begin::Number-->
                         <div class="d-flex align-items-center text-hover-primary">
-                            <div class="fs-5 fw-bold">{{ contractInfo?.isStarted ? moment.unix(Number(contractInfo?.startTime)).format("lll") : 'NOT STARTED' }}</div>
+                            <div class="fs-5 fw-bold">
+                                <span>{{ getTimeFromNano(contractInfo?.startTime) }}</span>
+                               
+                            </div>
+
+                            
                         </div>
-                        <div class="fs-6 text-gray-500">Start Time</div>
+                        <div class="fs-6 text-gray-500">
+                            {{getVariantType(contractInfo.status)}}
+                        </div>
                     </div>
                     <div class="border border-gray-300 border-dashed rounded min-w-125px py-3 px-4 me-6 mb-3 hover-primary">
                         <div class="d-flex align-items-center text-hover-primary">
-                            <div class="fs-5 fw-bold">{{ contractInfo?.isStarted ? moment.unix(Number(contractInfo?.startTime)+(Number(contractInfo.lockDuration))).format("lll"): '---' }}</div>
+                            <div class="fs-5 fw-bold">{{ contractInfo?.isStarted ? getTimeFromNano(Number(contractInfo?.startTime)+(Number(contractInfo.lockDuration))) : '---' }}</div>
                         </div>
                         <div class="fs-6 text-gray-500">Next Unlock</div>
                     </div>

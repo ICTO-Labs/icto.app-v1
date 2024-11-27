@@ -1,4 +1,9 @@
 type canister_id = principal;
+type VestingType = 
+ variant {
+   Single;
+   Standard;
+ };
 type TokenInfo = 
  record {
    canisterId: text;
@@ -49,15 +54,17 @@ type ContractData =
    distributionType: DistributionType__1;
    durationTime: nat;
    durationUnit: nat;
+   initialUnlockPercentage: nat;
    maxRecipients: nat;
    owner: principal;
    recipients: opt vec Recipient;
    startNow: bool;
-   startTime: Time;
+   startTime: nat;
    title: text;
    tokenInfo: TokenInfo;
    totalAmount: nat;
    unlockSchedule: nat;
+   vestingType: VestingType;
  };
 type CanisterStatus = 
  record {

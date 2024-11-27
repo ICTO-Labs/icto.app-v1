@@ -238,6 +238,19 @@ export const getRef = () => {
         return [];
     }
 }
+export const getTimeFromNano = (nanoseconds)=>{
+    return moment.unix(Number(nanoseconds)/1e9).format('lll');
+}
+export const getTimeFromNanoToSeconds = (nanoseconds)=>{
+    return Number(nanoseconds)/1e9;
+}
+export const getVariantType = (variant) => {
+    try{
+        return Object.keys(variant)[0];
+    }catch(e){
+        return '---';
+    }
+}
 export default {
     validateAddress,
     showError

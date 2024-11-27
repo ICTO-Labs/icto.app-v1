@@ -140,9 +140,13 @@ export const getMyBalance = async(canisterId, standard)=>{
   
 }
 
+export const numberFromE8s = (value)=>{
+  return Number(value)/100_000_000;
+}
+
 export const currencyFormat = (value, e8s)=>{
   if(e8s){
-    value = value/100_000_000;
+    value = numberFromE8s(value);
   }
   return new Intl.NumberFormat('en-US', { maximumSignificantDigits: 6 }).format(value);
   // let val = (value/1).toFixed(6).replace(',', '.').replace(/[.,]000000$/, "")

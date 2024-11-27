@@ -177,7 +177,7 @@ export const useTransferToken = async(tokenId, to, amount)=>{
                 subaccount: [],
             },
             amount: _amount,
-            fee: [_fee],
+            fee: [],
             memo: [],
             created_at_time: [],
         }
