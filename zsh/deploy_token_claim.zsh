@@ -20,7 +20,7 @@ dfx deploy "claim_contract" --argument "(
         \"totalAmount\"= 10000000000000;
         \"initialUnlockPercentage\"= 40;
         \"distributionType\"= variant { Whitelist };
-        \"vestingType\"= variant { Standard }; # Standard or Single
+        \"vestingType\"= variant { Standard };
         \"autoTransfer\"= false;
         \"tokenInfo\"= record {
             \"canisterId\"= \"ajuq4-ruaaa-aaaaa-qaaga-cai\";

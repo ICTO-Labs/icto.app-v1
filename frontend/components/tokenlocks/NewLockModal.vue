@@ -5,7 +5,7 @@
     import LoadingButton from "@/components/LoadingButton.vue"
     import { VueFinalModal } from 'vue-final-modal'
     import { useGetPoolMeta, useGetTokenMeta, useGetPoolLP, useApprovePosition, useTransferPosition, useGetPoolValue } from '@/services/SwapPool';
-    import { useCreateLiquidLocker } from '@/services/Deployer';
+    import { useCreateLiquidLocker } from '@/services/LockDeployer';
     import { showError, showSuccess, showLoading, closeMessage} from '@/utils/common';
     import { currencyFormat } from "@/utils/token";
     import walletStore from '@/store/';
@@ -124,7 +124,7 @@
         }).then(async (result) => {
             if(result.isConfirmed){
                 showLoading("Approving Position...");
-                let _rs = await useApprovePosition(poolCanister.value, config.DEPLOYER_CANISTER_ID, positionId);
+                let _rs = await useApprovePosition(poolCanister.value, config.LOCK_DEPLOYER_CANISTER_ID, positionId);
                 if(!_rs){
                     showError("Approved failed, please try again later!");
                 }else{

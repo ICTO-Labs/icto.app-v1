@@ -1,0 +1,67 @@
+type _anon_class_34_1 = 
+ service {
+   addAdmin: (text) -> ();
+   cancelContract: (principal) -> ();
+   createContract: (LockContractInit) -> (Result);
+   cycleBalance: () -> (nat) query;
+   getAllAdmins: () -> (vec text) query;
+   getAllContracts: () -> (vec record {
+                                 text;
+                                 LockContract;
+                               }) query;
+   getContract: (text) -> (opt LockContract) query;
+   getContracts: (nat) -> (vec LockContract) query;
+   getOwner: (text) -> (opt text) query;
+   getTotalContract: () -> (nat) query;
+   getUserContracts: (text, nat) -> (vec LockContract) query;
+   getUserTotalTokens: (text) -> (nat) query;
+   removeAdmin: (text) -> ();
+   updateContractStatus: (text, text) -> ();
+   updateInitCycles: (nat) -> ();
+   updateMinDeployerCycles: (nat) -> ();
+ };
+type TokenInfo = 
+ record {
+   address: text;
+   name: text;
+   standard: text;
+ };
+type Time = int;
+type Result = 
+ variant {
+   err: text;
+   ok: text;
+ };
+type LockContractInit = 
+ record {
+   durationTime: nat;
+   durationUnit: nat;
+   meta: vec text;
+   poolId: text;
+   poolName: text;
+   positionId: nat;
+   provider: text;
+   token0: TokenInfo;
+   token1: TokenInfo;
+ };
+type LockContract = 
+ record {
+   contractId: opt text;
+   created: Time;
+   durationTime: nat;
+   durationUnit: nat;
+   lockedTime: opt Time;
+   meta: vec text;
+   poolId: text;
+   poolName: text;
+   positionId: nat;
+   positionOwner: principal;
+   provider: text;
+   status: text;
+   token0: TokenInfo;
+   token1: TokenInfo;
+   unlockedTime: opt Time;
+   version: text;
+   withdrawnTime: opt Time;
+ };
+service : () -> _anon_class_34_1

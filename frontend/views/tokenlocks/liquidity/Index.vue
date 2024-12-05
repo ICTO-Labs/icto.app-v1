@@ -1,7 +1,7 @@
 <script setup>
     import { onMounted, ref } from 'vue';
     import { useRoute } from 'vue-router';
-    import { useGetContracts } from "@/services/Deployer";
+    import { useGetContracts } from "@/services/LockDeployer";
     import { shortPrincipal, shortAccount, principalToAccountId } from '@/utils/common';
     import config from '@/config';
     import moment from "moment";

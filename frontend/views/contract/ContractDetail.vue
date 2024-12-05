@@ -147,8 +147,8 @@
                         <button type="button" class="btn btn-sm btn-light-primary me-3" @click="loadContract(false)" :disabled="isLoading">{{isLoading?'Reloading...':'Refresh '}} <i class="fas fa-sync"></i></button>
                         <div class="input-group py-0 w-auto">
                             <!-- <input type="text" class="form-control" :value="parseTokenAmount(claimAbleAmount, contractInfo.tokenInfo.decimals)" disabled> -->
-                            <button class="btn btn-sm btn-secondary disabled" title="Claimable amount" v-if="getVariantType(contractInfo.distributionType) == 'Whitelist'">{{parseTokenAmount(claimAbleAmount, contractInfo.tokenInfo.decimals)}} {{contractInfo?.tokenInfo.symbol}}</button>
-                            <button class="btn btn-sm btn-secondary disabled" title="Claimable amount" v-else>{{parseTokenAmount(contractInfo?.tokenPerRecipient, contractInfo.tokenInfo.decimals)}} {{contractInfo?.tokenInfo.symbol}}</button>
+                            <button class="btn btn-sm btn-secondary disabled" title="Claimable amount" v-if="getVariantType(contractInfo.distributionType) == 'Whitelist'">{{parseTokenAmount(claimAbleAmount, contractInfo?.tokenInfo?.decimals)}} {{contractInfo?.tokenInfo?.symbol}}</button>
+                            <button class="btn btn-sm btn-secondary disabled" title="Claimable amount" v-else>{{parseTokenAmount(contractInfo?.tokenPerRecipient, contractInfo?.tokenInfo?.decimals)}} {{contractInfo?.tokenInfo?.symbol}}</button>
                             <button type="button" class="btn btn-sm btn-success" @click="claimToken()">Claim <i class="fas fa-coins"></i></button>
                         </div>
 
@@ -172,7 +172,7 @@
                             <div class="card flex-row flex-stack flex-wrap">
                                 <div class="text-primary px-3 py-2 me-5 fw-bold">
                                     <img class="mw-20px mw-lg-25px" :src="`https://${config.CANISTER_STORAGE_ID}.raw.icp0.io/${contractInfo?.tokenInfo?.canisterId}.png`">
-                                    {{ contractInfo?.tokenInfo.name }} <span class="badge badge-light ms-auto">{{contractInfo?.tokenInfo.standard.toUpperCase()}}</span>
+                                    {{ contractInfo?.tokenInfo?.name }} <span class="badge badge-light ms-auto">{{contractInfo?.tokenInfo?.standard?.toUpperCase()}}</span>
 
                                 </div>
                                 <div class=" text-primary px-3 py-2 fw-bold">
