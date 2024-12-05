@@ -5,8 +5,8 @@ description: ICTO is an innovative new platform allowing any project on Internet
 logo: logo.png
 url: https://icto.app
 NnsProposal:
-  title: Create a SNS for the ICTO DAO.
-  url: https://forum.dfinity.org/t/proposal-for-the-creation-of-a-new-sns-for-the-icto/1111
+  title: NNS Proposal to create an SNS named 'ICTO DAO'
+  url: https://forum.dfinity.org/t/upcoming-icto-dao-sns-decentralization-sale/38176
   summary: Test
 fallback_controller_principals:
   - lekqg-fvb6g-4kubt-oqgzu-rd5r7-muoce-kppfz-aaem3-abfaj-cxq7a-dqe
