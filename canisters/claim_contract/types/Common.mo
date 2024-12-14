@@ -31,6 +31,7 @@ module {
         maxRecipients: Nat;
         blockId: Nat;//BlockID Score required to claim, 0 for no requirement
         autoTransfer: Bool;
+        governanceId: ?Principal;
     };
     
     // public type ContractData = {

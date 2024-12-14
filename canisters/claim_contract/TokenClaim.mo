@@ -3,8 +3,9 @@ import Hash "mo:base/Hash";
 import Iter "mo:base/Iter";
 import Text "mo:base/Text";
 import Principal "mo:base/Principal";
+
 import Array "mo:base/Array";
-import Prim "mo:prim";
+import Prim "mo:⛔";
 import Buffer "mo:base/Buffer";
 import Trie "mo:base/Trie";
 import Int "mo:base/Int";
@@ -43,6 +44,7 @@ shared ({ caller = creator }) actor class Contract({
     initialUnlockPercentage: Nat;
     autoTransfer: Bool;
     maxRecipients: Nat;
+    governanceId: ?Principal;
 }) = this {
     type ContractInfo = {
         title: Text;
@@ -324,6 +326,31 @@ shared ({ caller = creator }) actor class Contract({
         #ok(true);    
     };
 
+    //DAO: Cancel contract and return the rest of token to owner
+    public shared({caller}) func cancelContract(): async Result.Result<Bool, Text> {
+        assert(_hasPermission(caller));
+        contractInfo := {
+                contractInfo with
+                isCanceled = true;
+                status = #CANCELED;
+            };
+        //Check the rest balance of token    
+        let balance = await getContractTokenBalance();
+        if (balance >= Nat.mul(contractInfo.tokenInfo.fee, 2)) {
+            let transferResult = await* _transfer(contractInfo.owner, balance);
+            switch(transferResult){
+                case(#ok(_)) {
+                    return #ok(true);
+                };
+                case(#err(err)) {
+                    return #err(debug_show(err));
+                };
+            };
+        }else{
+            return #err("There is no enough token to return to owner");
+        };
+    };
+
 
     //Start contract
     public shared(msg) func startContract(): async Result.Result<Bool, Text> {
@@ -331,7 +358,7 @@ shared ({ caller = creator }) actor class Contract({
         // checkOwner(msg.caller);
         //Check if time now greater than setting
         if(Time.now() >= startTime and contractInfo.status == #NOT_STARTED){
-            let contractBalance = if(msg.caller == contractInfo.owner) 100_000_000*E8S else await getContractTokenBalance();
+            let contractBalance = await getContractTokenBalance();
             if (contractBalance < totalAmount) {
                 return #err("Insufficient "# tokenInfo.symbol #" in the contract, please send "# debug_show(totalAmount/E8S) #" "# tokenInfo.symbol #" to the contract");
             };
@@ -620,8 +647,17 @@ shared ({ caller = creator }) actor class Contract({
     // private func startTimer<system>() : () {
     //     timerId := Timer.recurringTimer<system>(#seconds(50), checkStartTime);//50 seconds
     // };
+
+    private func _hasPermission(caller: Principal): Bool {
+        return Prim.isController(caller) or (switch (governanceId) {case (?id) { Principal.equal(caller, id) }; case (_) { false };});
+    };
+
+    public query func getGovernanceId() : async Result.Result<?Principal, Text> {
+        return #ok(governanceId);
+    };
+
     public func init() : async () {
-        Debug.print("init-----------timer");
+        // Debug.print("init-----------timer");
         timerId := Timer.recurringTimer<system>(#seconds(10), checkStartTime);
     };
 

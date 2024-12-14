@@ -25,6 +25,7 @@ actor {
     stable var CYCLES_FOR_INSTALL: Nat = 300_000_000_000;
     private stable var MIN_CYCLES_IN_DEPLOYER: Nat = 2_000_000_000_000;//Minimum cycles in deployer
     let ic: IC.Self = actor "aaaaa-aa";
+    private stable var GOVERNANCE_CANISTER_ID: Principal = Principal.fromText("aaaaa-aa");
     private stable var _admins : [Text] = ["lekqg-fvb6g-4kubt-oqgzu-rd5r7-muoce-kppfz-aaem3-abfaj-cxq7a-dqe"];
     private stable var _contracts : [Text] = [];//list of all contracts
     private stable var ownerContracts : Trie.Trie<Text, [Text]> = Trie.empty();
@@ -175,7 +176,13 @@ actor {
         Cycles.add<system>(CYCLES_FOR_INSTALL);
         Debug.print("Contract data: " # debug_show(contract));
         //must add VERSION to contract data
-        let ContractActor = await TokenClaim.Contract(contract);
+
+        //Add governanceId to contract data
+        let _contract = {
+            contract with
+            governanceId = ?GOVERNANCE_CANISTER_ID;
+        };
+        let ContractActor = await TokenClaim.Contract(_contract);
         let contractId = Principal.fromActor(ContractActor);
         //Update settings;
         // await CA.updateCanisterSettings({
