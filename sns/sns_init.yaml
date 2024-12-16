@@ -7,15 +7,48 @@ url: https://icto.app
 NnsProposal:
   title: NNS Proposal to create an SNS named 'ICTO DAO'
   url: https://forum.dfinity.org/t/upcoming-icto-dao-sns-decentralization-sale/38176
-  summary: Test
+  summary: |
+    # Summary
+    Proposal to create an SNS DAO for the project ICTO.
+
+    # About
+    ICTO is a comprehensive token management and launchpad platform built on the Internet Computer (IC) blockchain. It addresses the critical need for automated token operations within the IC ecosystem. 
+    Our target users are developers and project teams building on IC who require robust tools for token vesting, payroll, locking, and fundraising. [ICTO](https://icto.app)
+
+    ## Token distribution
+    The total supply at time of the SNS sale is 1_000_000_000 Tokens.
+    * 25% allocated to the decentralization sale (250_000_000 Tokens)
+    * 14% allocated to the team and advisors (140_000_000 Tokens)
+    * 1% allocated to the Marketing (Pre-SNS) (10_000_000 Tokens)
+    * 60% allocated to the treasury (600_000_000 Tokens)
+    
+    ## Decentralization Swap
+    * Minimum number of participants: 10
+    * Minimum raised through direct participation: 40_000 ICP
+    * Maximum raised through direct participation: 165_000 ICP
+    * Minimum contribution through direct participation: 1 ICP
+    * Maximum contribution through direct participation: 20_000 ICP
+    * Neuron fund participation: Yes
+    
+    ## The dApp
+    The following canisters on ICTO will be governed by SNS post the SNS swap:
+    * Backend/TokenClaim: ys3lq-iiaaa-aaaap-qb7ba-cai
+    * TokenDeployer: p7bu5-uyaaa-aaaap-qca3q-cai
+    * LockDeployer: setw5-xaaaa-aaaap-qcc7a-cai
+    * Launchpad: xzpva-miaaa-aaaap-qhi7q-cai
+
+    ## Verification
+    All information about the project can be verified through the links below: 
+    * [whitepaper](https://docs.icto.app/icto-sns-dao-whitepaper)
+    * [Github](https://github.com/ICTO-Labs)
+    * [X Profile](https://x.com/icto_app)
 fallback_controller_principals:
   - lekqg-fvb6g-4kubt-oqgzu-rd5r7-muoce-kppfz-aaem3-abfaj-cxq7a-dqe
 dapp_canisters:
-  - y3yam-6aaaa-aaaap-qb7aq-cai
   - ys3lq-iiaaa-aaaap-qb7ba-cai
-  - setw5-xaaaa-aaaap-qcc7a-cai
-  - 2phil-viaaa-aaaap-qhoka-cai
   - p7bu5-uyaaa-aaaap-qca3q-cai
+  - setw5-xaaaa-aaaap-qcc7a-cai
+  - xzpva-miaaa-aaaap-qhi7q-cai
 Token:
   name: ICTO
   symbol: ICTO
@@ -506,8 +539,9 @@ Swap:
   restricted_countries:
     - US
     - VN
-    - CN
     - SY
+    - KR
+    - JP
   VestingSchedule:
     events: 5
     interval: 3 months
