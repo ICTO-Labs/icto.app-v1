@@ -89,7 +89,7 @@ const router = useRoute();
 											</div>
 											<div :class="`menu-item menu-lg-down-accordion me-lg-1 ${router.name=='tokenClaim' || router.name=='newContract' ?'here':''}`">
 												<router-link class="menu-link py-3" to="/token-claim">
-													<span class="menu-title text-success"><i class="fas fa-coins me-2 text-success"></i> Token Claim</span>
+													<span class="menu-title text-primary"><i class="fas fa-coins me-2 text-primary"></i> Token Claim</span>
                                                 </router-link>
 											</div>
 											<!-- <div :class="`menu-item menu-lg-down-accordion me-lg-1 ${router.name=='contract' || router.name=='contract-detail' ?'here':''}`">
@@ -104,16 +104,20 @@ const router = useRoute();
 											</div>
 											-->
 											<div :class="`menu-item menu-lg-down-accordion me-lg-1 ${router.name=='launchpad' || router.name=='new-launchpad' ?'here':''}`">
-												<router-link class="menu-link py-3" to="/launchpad">
-													<span class="menu-title">Launchpad</span>
+												<router-link class="menu-link py-3 btn-light-danger text-danger" to="/launchpad">
+													<span class="text-danger">Launchpad</span>
                                                 </router-link>
 											</div>
 											<div :class="`menu-item menu-lg-down-accordion me-lg-1 ${router.name=='marketplace' || router.name=='collection-detail' ?'here':''}`">
-												<router-link class="btn btn-sm btn-light-danger" to="/marketplace">
+												<router-link class="menu-link py-3 " to="/marketplace">
 													<span class="">Marketplace</span>
                                                 </router-link>
 											</div>
-											
+											<div class="menu-item menu-lg-down-accordion me-lg-1">
+												<a class="menu-link py-3" href="https://blockid.cc" target="_blank">
+													<span class="menu-title text-success me-2"><i class="fas fa-shield-alt me-2 text-success"></i> BlockID</span>  <i class="fas fa-external-link"></i>
+                                                </a>
+											</div>
 										</div>
 										<!--end::Menu-->
 									</div>
