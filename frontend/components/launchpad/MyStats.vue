@@ -13,15 +13,15 @@
     }, { immediate: true });
     // Calculate the number of tokens to receive
     const tokensToReceive = computed(() => {
-        if (props.stats.totalAmountCommitted === 0) return 0;
-        const share = Number(myStats.value.totalAmount) / Number(props.stats.totalAmountCommitted);
-        return share * Number(props.launchpadInfo.launchParams.sellAmount);
+        if (props?.stats?.totalAmountCommitted === 0) return 0;
+        const share = Number(myStats?.value?.totalAmount) / Number(props?.stats?.totalAmountCommitted) || 0;
+        return share * Number(props?.launchpadInfo?.launchParams?.sellAmount);
     });
 
     // Calculate the pool share
     const poolShare = computed(() => {
-        if (props.stats.totalAmountCommitted === 0) return 0;
-        return (Number(myStats.value.totalAmount) / Number(props.stats.totalAmountCommitted) * 100).toFixed(3);
+        if (props?.stats?.totalAmountCommitted === 0) return 0;
+        return (Number(myStats?.value?.totalAmount) / Number(props?.stats?.totalAmountCommitted) * 100).toFixed(3);
     });
 
 </script>
@@ -32,7 +32,7 @@
                 <tbody class="fs-7 fw-bold text-gray-600">
                     <tr>
                         <td>Your commitment</td>
-                        <td class="text-end text-primary">{{ currencyFormat(parseTokenAmount(myStats.totalAmount, launchpadInfo.purchaseToken.decimals))}} {{launchpadInfo.purchaseToken.symbol}} </td>
+                        <td class="text-end text-primary">{{ currencyFormat(parseTokenAmount(myStats?.totalAmount, launchpadInfo?.purchaseToken?.decimals))}} {{launchpadInfo?.purchaseToken?.symbol}} </td>
                     </tr>
                     <tr>
                         <td>Pool share</td>
@@ -40,7 +40,7 @@
                     </tr>
                     <tr>
                         <td>Tokens to receive </td>
-                        <td class="text-end text-primary">{{currencyFormat(parseTokenAmount(tokensToReceive, launchpadInfo.saleToken.decimals))}} {{launchpadInfo.saleToken.symbol}} </td>
+                        <td class="text-end text-primary">{{currencyFormat(parseTokenAmount(tokensToReceive, launchpadInfo?.saleToken?.decimals))}} {{launchpadInfo?.saleToken?.symbol}} </td>
                     </tr>
                 </tbody>
             </table>

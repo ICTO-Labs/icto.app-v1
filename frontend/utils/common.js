@@ -218,6 +218,10 @@ export const getPoolStatus = (status)=>{
             text = 'Claiming';
             colorClass = 'warning';
             break;
+        case 'REFUNDING':
+            text = 'Refunding';
+            colorClass = 'danger';
+            break;
         default:
             text = 'Unknown';
             colorClass = 'muted';

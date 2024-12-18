@@ -1,0 +1,147 @@
+type VestingInfo = 
+ record {
+   cliff: nat;
+   duration: nat;
+   unlockFrequency: nat;
+ };
+type TokenInfo = 
+ record {
+   canisterId: text;
+   decimals: nat;
+   logo: text;
+   metadata: opt blob;
+   name: text;
+   symbol: text;
+   transferFee: nat;
+ };
+type Timeline = 
+ record {
+   claimTime: Time;
+   createdTime: Time;
+   endTime: Time;
+   listingTime: Time;
+   startTime: Time;
+ };
+type Time = int;
+type Result_2 = 
+ variant {
+   err: text;
+   ok: text;
+ };
+type Result_1 = 
+ variant {
+   err: text;
+   ok: opt principal;
+ };
+type Result = 
+ variant {
+   err: text;
+   ok;
+ };
+type Recipient = 
+ record {
+   address: text;
+   amount: nat;
+   note: opt text;
+ };
+type ProjectInfo = 
+ record {
+   banner: opt text;
+   description: text;
+   isAudited: bool;
+   isVerified: bool;
+   links: opt vec text;
+   logo: text;
+   metadata: opt vec record {
+                       text;
+                       text;
+                     };
+   name: text;
+ };
+type LaunchpadStatus = 
+ variant {
+   Claim;
+   Completed;
+   Ended;
+   Live;
+   Upcoming;
+ };
+type LaunchpadIndex = 
+ record {
+   createdAt: Time;
+   description: text;
+   id: text;
+   name: text;
+   owner: principal;
+   status: LaunchpadStatus;
+   timeline: Timeline;
+   updatedAt: Time;
+ };
+type LaunchpadDetail = 
+ record {
+   affiliate: nat;
+   creator: text;
+   distribution: Distribution;
+   fee: nat;
+   launchParams: LaunchParams;
+   projectInfo: ProjectInfo;
+   purchaseToken: TokenInfo;
+   restrictedArea: opt vec text;
+   saleToken: TokenInfo;
+   timeline: Timeline;
+ };
+type LaunchParams = 
+ record {
+   hardCap: nat;
+   maximumAmount: nat;
+   minimumAmount: nat;
+   sellAmount: nat;
+   softCap: nat;
+ };
+type FixClaimContract = 
+ record {
+   description: text;
+   title: text;
+   total: nat;
+   vesting: VestingInfo;
+ };
+type Distribution = 
+ record {
+   fairlaunch: FixClaimContract;
+   liquidity: FixClaimContract;
+   others: vec ClaimContract;
+   team: ClaimContract;
+ };
+type ClaimContract = 
+ record {
+   description: text;
+   recipients: vec Recipient;
+   title: text;
+   total: nat;
+   vesting: VestingInfo;
+ };
+service : {
+  createLaunchpad: (LaunchpadDetail) -> (Result_2);
+  getAllLaunchpads: () ->
+   (vec record {
+          text;
+          LaunchpadIndex;
+          LaunchpadStatus;
+        }) query;
+  getGovernanceId: () -> (Result_1) query;
+  getLaunchpadsByStatus: (LaunchpadStatus) ->
+   (vec record {
+          text;
+          LaunchpadIndex;
+        }) query;
+  getUserParticipations: (text) ->
+   (record {
+      participatedLaunchpads:
+       vec record {
+             text;
+             LaunchpadIndex;
+             LaunchpadStatus;
+           };}) query;
+  updateGovernanceCanister: (opt principal) -> (Result);
+  updateUserParticipation: (text) -> (Result);
+}

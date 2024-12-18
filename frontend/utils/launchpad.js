@@ -14,6 +14,9 @@ export const processDataForBackend = (originalData, tokenInfo) => {
     processedData.maxBuy *= config.E8S;
     processedData.minBuy *= config.E8S;
 
+    //Convert to Number of fees
+    processedData.saleToken.transferFee = processedData.saleToken.transferFee * config.E8S;
+
     for (const key in processedData.timeline) {
             //Process timeline
     // processedData.timeline.startTime = processedData.timeline.startTime.valueOf();

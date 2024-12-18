@@ -34,9 +34,9 @@
                 <i :class="status == 'LIVE' ? 'fa fa-caret-right text-success fs-4' : ''"></i>
             </div>
             <div class="timeline-badge">
-                <i :class="['LIVE', 'FINISHED', 'CLAIMING'].includes(status) ? 'fa fa-check-circle text-success fs-4' : 'fa fa-circle text-muted fs-4'"></i>
+                <i :class="['LIVE', 'FINISHED', 'CLAIMING', 'REFUNDING'].includes(status) ? 'fa fa-check-circle text-success fs-4' : 'fa fa-circle text-muted fs-4'"></i>
             </div>
-            <div class="timeline-content" :class="['LIVE', 'FINISHED', 'CLAIMING'].includes(status) ? 'text-success' : 'text-muted'">
+            <div class="timeline-content" :class="['LIVE', 'FINISHED', 'CLAIMING', 'REFUNDING'].includes(status) ? 'text-success' : 'text-muted'">
                 <span class="fw-bolder ps-3">Pool Start</span>
                 <div class="fw-normal justify-content-between p-1 ps-3">
                     Pool start at <span class="badge badge-light-danger fs-8 fw-bold">{{timeFromNano(timeline.startTime)}}</span>
@@ -50,9 +50,9 @@
                 <i :class="status == 'FINISHED' ? 'fa fa-caret-right text-success fs-4' : ''"></i>
             </div>
             <div class="timeline-badge">
-                <i :class="['FINISHED', 'CLAIMING'].includes(status) ? 'fa fa-check-circle text-success fs-4' : 'fa fa-circle text-muted fs-4'"></i>
+                <i :class="['FINISHED', 'CLAIMING', 'REFUNDING'].includes(status) ? 'fa fa-check-circle text-success fs-4' : 'fa fa-circle text-muted fs-4'"></i>
             </div>
-            <div class="timeline-content fw-bolder" :class="['FINISHED', 'CLAIMING'].includes(status) ? 'text-success' : 'text-muted'">
+            <div class="timeline-content fw-bolder" :class="['FINISHED', 'CLAIMING', 'REFUNDING'].includes(status) ? 'text-success' : 'text-muted'">
                 <span class="fw-bolder ps-3">Pool End</span>
                 <div class="fw-normal justify-content-between p-1 ps-3">
                     Pool end at <span class="badge badge-light-danger fs-8 fw-bold">{{timeFromNano(timeline.endTime)}}</span>
@@ -63,15 +63,15 @@
         <!-- Claim tokens -->
         <div class="timeline-item">
             <div class="timeline-label fw-bolder text-gray-800 fs-6 text-end pe-5">
-                <i :class="status == 'CLAIMING' ? 'fa fa-caret-right text-success fs-4' : ''"></i>
+                <i :class="status == 'CLAIMING' || status == 'REFUNDING' ? 'fa fa-caret-right text-success fs-4' : ''"></i>
             </div>
             <div class="timeline-badge">
-                <i :class="status === 'CLAIMING' ? 'fa fa-check-circle text-success fs-4' : 'fa fa-circle text-muted fs-4'"></i>
+                <i :class="status === 'CLAIMING' || status === 'REFUNDING' ? 'fa fa-check-circle text-success fs-4' : 'fa fa-circle text-muted fs-4'"></i>
             </div>
-            <div class="timeline-content fw-bolder" :class="status === 'CLAIMING' ? 'text-success' : 'text-muted'">
-                <span class="fw-bolder ps-3">Claim Tokens</span>
+            <div class="timeline-content fw-bolder" :class="status === 'CLAIMING' || status === 'REFUNDING' ? 'text-success' : 'text-muted'">
+                <span class="fw-bolder ps-3">{{status === 'CLAIMING' ? 'Claim Tokens' : 'Refund Tokens'}}</span>
                 <div class="fw-normal justify-content-between p-1 ps-3">
-                    Claim at <span class="badge badge-light-danger fs-8 fw-bold">{{timeFromNano(timeline.claimTime)}}</span>
+                    {{status === 'CLAIMING' ? 'Claim at' : 'Refund at'}} <span class="badge badge-light-danger fs-8 fw-bold">{{timeFromNano(timeline.claimTime)}}</span>
                 </div>
             </div>
         </div>

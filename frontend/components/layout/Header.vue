@@ -114,7 +114,7 @@ const router = useRoute();
                                                 </router-link>
 											</div>
 											<div class="menu-item menu-lg-down-accordion me-lg-1">
-												<a class="menu-link py-3" href="https://blockid.cc" target="_blank">
+												<a class="menu-link py-3" href="https://blockid.cc" target="_blank" title="BlockID">
 													<span class="menu-title text-success me-2"><i class="fas fa-shield-alt me-2 text-success"></i> BlockID</span>  <i class="fas fa-external-link"></i>
                                                 </a>
 											</div>
