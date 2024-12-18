@@ -18,6 +18,7 @@ import TokenClaim "../claim_contract/TokenClaim";
 import Debug "mo:base/Debug";
 import Result "mo:base/Result";
 import ICRCLedger "../utils/ICRCLedger";
+import Prim "mo:⛔";
 
 actor {
     stable var currentValue: Nat = 0;
@@ -26,17 +27,33 @@ actor {
     private stable var MIN_CYCLES_IN_DEPLOYER: Nat = 2_000_000_000_000;//Minimum cycles in deployer
     let ic: IC.Self = actor "aaaaa-aa";
     private stable var GOVERNANCE_CANISTER_ID: Principal = Principal.fromText("aaaaa-aa");
-    private stable var _admins : [Text] = ["lekqg-fvb6g-4kubt-oqgzu-rd5r7-muoce-kppfz-aaem3-abfaj-cxq7a-dqe"];
+    private stable var _admins : [Text] = [];
     private stable var _contracts : [Text] = [];//list of all contracts
     private stable var ownerContracts : Trie.Trie<Text, [Text]> = Trie.empty();
     private stable var contractsMetadata : Trie.Trie<Text, Types.ContractMetadata> = Trie.empty();
-
+    private stable var launchpadContracts : Trie.Trie<Text, [Text]> = Trie.empty(); // launchpadId -> contracts
     // private stable var INDEXING_CANISTER : Text = "avqkn-guaaa-aaaaa-qaaea-cai";
     private let icrcLedger : ICRCLedger.Self = actor ("ryjl3-tyaaa-aaaaa-aaaba-cai");//For ICRC transfer
     private stable var privateContracts : Trie.Trie<Text, [Text]> = Trie.empty(); // wallet -> contracts
     private stable var publicContracts : [Text] = []; // list of public contracts
 
     ////////// HELPERS //////////
+    // Helper function to add contract to launchpad mapping
+    private func addContractToLaunchpad(launchpadId: Text, contractId: Text) {
+        let existing = Trie.get(launchpadContracts, keyT(launchpadId), Text.equal);
+        let contracts = switch (existing) {
+            case (null) {[contractId]};
+            case (?existing) {
+                if (Array.find<Text>(existing, func(x) { x == contractId }) == null) {
+                    Array.append(existing, [contractId])
+                } else {
+                    existing
+                };
+            };
+        };
+        launchpadContracts := Trie.put(launchpadContracts, keyT(launchpadId), Text.equal, contracts).0;
+    };
+
     // Helper function to add contract to owner mapping
     private func addContractToOwner(owner: Text, contractId: Text) {
         let existing = Trie.get(ownerContracts, keyT(owner), Text.equal);
@@ -54,14 +71,20 @@ actor {
     };
 
     // Helper function to save contract metadata
-    private func saveContractMetadata(contractId: Text, owner: Text, distributionType: ContractTypes.DistributionType) {
+    private func saveContractMetadata(contractId: Text, owner: Text, distributionType: ContractTypes.DistributionType, launchpadId: ?Text) {
         let metadata : Types.ContractMetadata = {
             id = contractId;
             owner = owner;
             distributionType = distributionType;
             createdAt = Time.now();
+            launchpadId = launchpadId;
         };
         contractsMetadata := Trie.put(contractsMetadata, keyT(contractId), Text.equal, metadata).0;
+        // If launchpadId, add contract to launchpad mapping
+        switch(launchpadId) {
+            case (?id) { addContractToLaunchpad(id, contractId); };
+            case (null) {};
+        };
     };
 
     //Call created contract init function
@@ -118,17 +141,25 @@ actor {
         };
     };
 
+    // Query to get all contracts of a launchpad
+    public query func getContractsByLaunchpad(launchpadId: Text) : async [Types.ContractMetadata] {
+        switch (Trie.get(launchpadContracts, keyT(launchpadId), Text.equal)) {
+            case (null) { [] };
+            case (?contractIds) {
+                Array.mapFilter<Text, Types.ContractMetadata>(contractIds, func(id) {
+                    Trie.get(contractsMetadata, keyT(id), Text.equal)
+                });
+            };
+        };
+    };
+
     private func createICRC1Actor(id : Text) : async ICRCLedger.Self {
         actor(id);
     };
 
-    private func _isAdmin(p : Text) : (Bool) {
-        for (i in _admins.vals()) {
-            if (i == p) {
-                return true;
-            };
-        };
-        return false;
+    private func _isAdmin(p : Text) : Bool {
+        Prim.isController(Principal.fromText(p)) or 
+        Array.find<Text>(_admins, func(admin : Text) = admin == p) != null
     };
 
 
@@ -139,16 +170,8 @@ actor {
         return { hash = x; key = x };
     };
     
-    //Generate time now to second
-    func timeNow(): Nat{
-        Int.abs(Time.now()/1_000_000_000)
-    };
     public shared (msg) func whoami() : async Principal {
         msg.caller
-    };
-    private func transferFrom(canisterId: Text, payload: Actor.TransferFromArg) : async Actor.TransferFromResult {
-        let ICRC : Actor.ICRC = actor(canisterId);
-        await ICRC.icrc2_transfer_from(payload)
     };
     public func canister_status(canister_id: IC.canister_id): async Types.CanisterStatus{
         await ic.canister_status({canister_id = canister_id})
@@ -165,7 +188,7 @@ actor {
             }
         });
     };
-    public shared (msg) func createContract(contract: ContractTypes.ContractData): async Result.Result<Principal, Text>{
+    public shared (msg) func createContract(contract: ContractTypes.ContractData, launchpadId: ?Text): async Result.Result<Principal, Text>{
         // assert not Principal.isAnonymous(msg.caller);
         // if (not _isAdmin(Principal.toText(msg.caller))){//Only admin can create contract
         //     return #err("Sorry, only admin can create contract in testing phase!");
@@ -201,7 +224,7 @@ actor {
         Debug.print("Contract id: " # _contractId);
         addContract(_contractId);//Add to contract list
         addContractToOwner(Principal.toText(msg.caller), _contractId);//Add to owner mapping
-        saveContractMetadata(_contractId, Principal.toText(msg.caller), contract.distributionType);//Save metadata
+        saveContractMetadata(_contractId, Principal.toText(msg.caller), contract.distributionType, launchpadId);//Save metadata
         //Map created contract
         let _recipients = Option.get(contract.recipients, []);
         if(contract.distributionType == #Whitelist and _recipients.size() > 0){//Whitelist contract

@@ -58,6 +58,7 @@ module {
         owner: Text;
         distributionType: DistributionType;
         createdAt: Int;
+        launchpadId: ?Text;
     };
 
 }
