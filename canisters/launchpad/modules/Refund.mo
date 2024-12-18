@@ -148,7 +148,7 @@ module {
                 return [];
             };
             let end = Nat.min(start + limit, size);
-            let length = end - start;
+            let length = Nat.sub(end, start);
             let subBuffer = Buffer.subBuffer(transactions, start, length);
             Buffer.toArray(subBuffer);
         };

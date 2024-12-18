@@ -118,6 +118,7 @@ module {
         affiliate: Nat;//Percent
         fee: Nat;//Fee (percent) for the success launch
         restrictedArea: ?[Text];//Restricted area
+        blockId: Nat;//BlockID required score, 0: no required
     };
 
     public type LaunchpadStatus = {

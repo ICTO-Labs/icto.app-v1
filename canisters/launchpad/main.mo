@@ -1,180 +1,246 @@
-import A "mo:base/AssocList";
-import Array "mo:base/Array";
-import Blob "mo:base/Blob";
-import Bool "mo:base/Bool";
-import Buffer "mo:base/Buffer";
-import Cycles "mo:base/ExperimentalCycles";
-import Error "mo:base/Error";
-import Char "mo:base/Char";
-import Hash "mo:base/Hash";
-import HashMap "mo:base/HashMap";
-import Int "mo:base/Int";
-import Int16 "mo:base/Int16";
-import Int8 "mo:base/Int8";
-import Iter "mo:base/Iter";
-import List "mo:base/List";
-import Nat "mo:base/Nat";
-import Nat8 "mo:base/Nat8";
-import Nat32 "mo:base/Nat32";
-import Nat64 "mo:base/Nat64";
-import Option "mo:base/Option";
-import Prelude "mo:base/Prelude";
+import Common "../launchpad/types/Common";
+import Trie "mo:base/Trie";
 import Principal "mo:base/Principal";
 import Result "mo:base/Result";
+import Array "mo:base/Array";
+import Buffer "mo:base/Buffer";
 import Text "mo:base/Text";
-import Time "mo:base/Time";
-import Trie "mo:base/Trie";
-import Debug "mo:base/Debug";
-import Trie2D "mo:base/Trie";
-import IC "../utils/IC";
+import BackendUtils "../utils/Backend";
+import Option "mo:base/Option";
 import LaunchpadContract "./Contract";
-import Types "./types/Common";
+import Cycles "mo:base/ExperimentalCycles";
+import Debug "mo:base/Debug";
+import Time "mo:base/Time";
+import Timer "mo:base/Timer";
+import Prim "mo:⛔";
 
-// shared ({ caller = deployer }) actor Deployer {
-shared ({ caller }) actor class () = self {
-    //Stable Memory
-    private func deployer() : Principal = caller;
-    private stable var _contracts : Trie.Trie<Text, Types.LaunchpadDetail> = Trie.empty(); //mapping of token_canister_id -> Token details
-    private stable var _owners : Trie.Trie<Text, Text> = Trie.empty(); //mapping  token_canister_id -> owner principal id
-    private stable var _admins : [Text] = [Principal.toText(caller)];
-    private stable var CYCLES_FOR_INSTALL: Nat = 300_000_000_000;//1T 1_000_000_000_000, 0.3T
-    private stable var MIN_CYCLES_IN_DEPLOYER: Nat = 3_000_000_000_000;//3T
-    private stable var CURRENT_LOCK_VERSION = "1.0.0";
+actor {
+    // Save launchpad details
+    stable var CYCLES_FOR_INSTALL = 300_000_000_000;
+    stable var MIN_CYCLES_IN_DEPLOYER = 2_000_000_000_000;
+    private var timerId: Nat = 0;
+    private var GOVERNANCE_CANISTER_ID: ?Principal = null;
 
-    //IC Management Canister
-    let ic: IC.Self = actor "aaaaa-aa";
 
-    //Utility Functions
-    private func key(x : Nat32) : Trie.Key<Nat32> {
-        return { hash = x; key = x };
-    };
-
-    private func keyT(x : Text) : Trie.Key<Text> {
-        return { hash = Text.hash(x); key = x };
-    };
-
-    private func textToNat(txt : Text) : Nat {
-        assert (txt.size() > 0);
-        let chars = txt.chars();
-
-        var num : Nat = 0;
-        for (v in chars) {
-            let charToNum = Nat32.toNat(Char.toNat32(v) -48);
-            assert (charToNum >= 0 and charToNum <= 9);
-            num := num * 10 + charToNum;
-        };
-
-        return num;
-    };
-
-    public query func cycleBalance() : async Nat {
-        Cycles.balance();
-    };
-
-    private func _isAdmin(p : Text) : (Bool) {
-        for (i in _admins.vals()) {
-            if (i == p) {
-                return true;
+    // Update status of all launchpads
+    private func updateAllLaunchpadStatuses() : async () {
+        for ((id, index) in Trie.iter(launchpads)) {
+            let updatedIndex = updateLaunchpadStatus(id, index);
+            if (updatedIndex.status != index.status) {
+                launchpads := Trie.put(launchpads, BackendUtils.keyT(id), Text.equal, updatedIndex).0;
             };
         };
-        return false;
     };
 
-    //Update Initial cycles for new token canister
-    public shared ({ caller }) func updateInitCycles(i : Nat) : async () {
-        assert (_isAdmin(Principal.toText(caller)));
-        CYCLES_FOR_INSTALL := i;
+    // Update status of a specific launchpad
+    private func updateLaunchpadStatus(id: Text, index: LaunchpadIndex) : LaunchpadIndex {
+        let currentStatus = determineStatus(index.timeline);
+        if (currentStatus != index.status) {
+            {
+                id = index.id;
+                name = index.name;
+                description = index.description;
+                owner = index.owner;
+                status = currentStatus;
+                timeline = index.timeline;
+                updatedAt = Time.now();
+                createdAt = index.createdAt;
+            }
+        } else {
+            index
+        }
     };
-    public shared ({ caller }) func updateMinDeployerCycles(i : Nat) : async () {
-        assert (_isAdmin(Principal.toText(caller)));
-        MIN_CYCLES_IN_DEPLOYER := i;
+
+    // Define launchpad statuses
+    public type LaunchpadStatus = {
+        #Upcoming;  // Not started
+        #Live;      // Live
+        #Ended;     // Ended
+        #Claim;     // In claim phase
+        #Completed; // Completed
     };
-    public shared ({ caller }) func addAdmin(p : Text) : async () {
-        assert (_isAdmin(Principal.toText(caller)));
-        var b : Buffer.Buffer<Text> = Buffer.Buffer<Text>(0);
-        for (i in _admins.vals()) {
-            if (p != i) {
-                b.add(i);
-            };
+
+    // Define launchpad index
+    private type LaunchpadIndex = {
+        id: Text;  // Canister ID
+        name: Text;
+        description: Text;
+        owner: Principal;
+        timeline: Common.Timeline;
+        status: LaunchpadStatus;
+        updatedAt: Time.Time;
+        createdAt: Time.Time;
+    };
+
+    // Main collections
+    private stable var launchpads : Trie.Trie<Text, LaunchpadIndex> = Trie.empty();
+    private stable var userParticipations : Trie.Trie<Text, [Text]> = Trie.empty();
+
+    // Update governance canister
+    public shared({ caller }) func updateGovernanceCanister(canisterId: ?Principal) : async Result.Result<(), Text> {
+        if (not _hasPermission(caller)) {
+            return #err("Unauthorized");
         };
-        b.add(p);
-        _admins := Buffer.toArray(b);
+        GOVERNANCE_CANISTER_ID := canisterId;
+        #ok()
     };
 
-    public shared ({ caller }) func removeAdmin(p : Text) : async () {
-        assert (_isAdmin(Principal.toText(caller)));
-        var b : Buffer.Buffer<Text> = Buffer.Buffer<Text>(0);
-        for (i in _admins.vals()) {
-            if (p != i) {
-                b.add(i);
-            };
+    //Change cycles for install and min cycles in deployer
+    public shared({ caller }) func updateCyclesForInstall(cycles: Nat) : async Result.Result<(), Text> {
+        if (not _hasPermission(caller)) {
+            return #err("Unauthorized");
         };
-        _admins := Buffer.toArray(b);
+        CYCLES_FOR_INSTALL := cycles;
+        #ok()
     };
 
-    public query func getAllAdmins() : async ([Text]) {
-        return _admins;
-    };
-
-    //Internal Functions
-    //
-    private func _isOwner(p : Principal, canister_id : Text) : async (Bool) {
-        for ((i, v) in Trie.iter(_owners)) {
-            if (canister_id == i and p == Principal.fromText(v)) {
-                return true;
-            };
+    public shared({ caller }) func updateMinCyclesInDeployer(cycles: Nat) : async Result.Result<(), Text> {
+        if (not _hasPermission(caller)) {
+            return #err("Unauthorized");
         };
-        return false;
+        MIN_CYCLES_IN_DEPLOYER := cycles;
+        #ok()
+    };
+
+    private func _hasPermission(caller: Principal): Bool {
+        return Prim.isController(caller) or (switch (GOVERNANCE_CANISTER_ID) {case (?id) { Principal.equal(caller, id) }; case (_) { false };});
+    };
+
+    public query func getGovernanceId() : async Result.Result<?Principal, Text> {
+        return #ok(GOVERNANCE_CANISTER_ID);
     };
 
 
-    private func blackhole_canister(a : actor {}) : async () {
-        let cid = { canister_id = Principal.fromActor(a) };
-        await (
-            ic.update_settings({
-                canister_id = cid.canister_id;
-                settings = {
-                    controllers = ?[];
-                    compute_allocation = null;
-                    memory_allocation = null;
-                    freezing_threshold = ?31_540_000;
+    // Add new launchpad
+    public shared({ caller }) func createLaunchpad(detail: Common.LaunchpadDetail) : async Result.Result<Text, Text> {
+        //Prevent anyone to create launchpad
+        if (Principal.isAnonymous(caller)) {
+            return #err("Unauthorized");
+        };
+
+        let _cycleBalance = Cycles.balance();
+        if (_cycleBalance < CYCLES_FOR_INSTALL + MIN_CYCLES_IN_DEPLOYER) {
+            return #err("Not enough cycles in deployer, balance: "# debug_show(_cycleBalance) #"T");
+        };
+
+        Cycles.add<system>(CYCLES_FOR_INSTALL);
+        let ContractActor = await LaunchpadContract.LaunchpadCanister();
+        let launchpadId = Principal.fromActor(ContractActor);
+        let launchpadIdTxt = Principal.toText(launchpadId);
+
+        //Step 2: Installing...
+        let _installResult = await ContractActor.install(detail, []);
+        switch (_installResult) {
+            case (#err(err)) {
+                return #err(err);
+            };
+            case (#ok(_)) {
+                // Create new index, remove logo and banner
+                let index : LaunchpadIndex = {
+                    id = launchpadIdTxt;
+                    name = detail.projectInfo.name;
+                    description = detail.projectInfo.description;
+                    owner = caller;
+                    timeline = detail.timeline;
+                    status = #Upcoming; // Default status is upcoming
+                    updatedAt = Time.now();
+                    createdAt = Time.now();
                 };
-            })
-        );
-    };
-
-    //Queries
-    //
-    public query func getOwner(canister_id : Text) : async (?Text) {
-        var owner : ?Text = Trie.find(_owners, keyT(canister_id), Text.equal);
-        return owner;
-    };
-
-    public query func getUserTotalTokens(uid : Text) : async (Nat) {
-        var size = 0;
-        for ((i, v) in Trie.iter(_owners)) {
-            if (v == uid) {
-                size := size + 1;
+                launchpads := Trie.put(launchpads, BackendUtils.keyT(launchpadIdTxt), Text.equal, index).0;
+                #ok(launchpadIdTxt)
             };
         };
-        return size;
     };
 
-
-    //Remote check transaction from created contract.
-    private func checkTransaction(contractId: Principal): async Result.Result<Bool, Text>{
-        let SmartContract = actor(Principal.toText(contractId)) : actor {
-            verify : shared () -> async { #ok : Bool; #err : Text };
+    // Helper function to determine status based on timeline
+    private func determineStatus(timeline: Common.Timeline) : LaunchpadStatus {
+        let now = Time.now();
+        if (now < timeline.startTime) {
+            #Upcoming
+        } else if (now < timeline.endTime) {
+            #Live
+        } else if (now < timeline.claimTime) {
+            #Ended
+        } else if (now < timeline.listingTime) {
+            #Claim
+        } else {
+            #Completed
         };
-        await SmartContract.verify();
     };
 
-
-    //Add to beta test - remove unused canister
-    public shared ({caller}) func cancelContract(canister_id: Principal) : async (){
-        assert (_isAdmin(Principal.toText(caller)));
-        _contracts := Trie.remove(_contracts, keyT(Principal.toText(canister_id)), Text.equal).0;
-        await ic.stop_canister({ canister_id = canister_id });
-        await ic.delete_canister({ canister_id = canister_id });
+    // Query launchpads by status
+    public query func getLaunchpadsByStatus(status: LaunchpadStatus) : async [(Text, LaunchpadIndex)] {
+        let now = Time.now();
+        let result = Buffer.Buffer<(Text, LaunchpadIndex)>(0);
+        
+        for ((id, index) in Trie.iter(launchpads)) {
+            if (index.status == status) {
+                result.add((id, index));
+            };
+        };
+        
+        Buffer.toArray(result)
     };
-};
+
+    // Query all launchpads with current status
+    public query func getAllLaunchpads() : async [(Text, LaunchpadIndex, LaunchpadStatus)] {
+        let result = Buffer.Buffer<(Text, LaunchpadIndex, LaunchpadStatus)>(0);
+        
+        for ((id, index) in Trie.iter(launchpads)) {
+            let currentStatus = determineStatus(index.timeline);
+            result.add((id, index, currentStatus));
+        };
+        
+        Buffer.toArray(result)
+    };
+
+    // Query launchpads where user participated
+    public query func getUserParticipations(userId: Text) : async {
+        participatedLaunchpads: [(Text, LaunchpadIndex, LaunchpadStatus)];
+    } {
+        let userLaunchpads = Option.get(Trie.get(userParticipations, BackendUtils.keyT(userId), Text.equal), []);
+        let result = Buffer.Buffer<(Text, LaunchpadIndex, LaunchpadStatus)>(0);
+        
+        for (id in userLaunchpads.vals()) {
+            switch(Trie.get(launchpads, BackendUtils.keyT(id), Text.equal)) {
+                case (?index) {
+                    let currentStatus = determineStatus(index.timeline);
+                    result.add((id, index, currentStatus));
+                };
+                case null {};
+            };
+        };
+        
+        {
+            participatedLaunchpads = Buffer.toArray(result);
+        }
+    };
+
+    // Update user participation (called by launchpad contract)
+    public shared({ caller }) func updateUserParticipation(userId: Text) : async Result.Result<(), Text> {
+        let launchpadId = Principal.toText(caller);
+        switch (Trie.get(launchpads, BackendUtils.keyT(launchpadId), Text.equal)) {
+            case (null) {
+                return #err("Launchpad not found");
+            };
+            case (?_) {
+                let existing = Trie.get(userParticipations, BackendUtils.keyT(userId), Text.equal);
+                let updatedLaunchpads = switch (existing) {
+                    case (null) {[launchpadId]};
+                    case (?existing) {
+                        if (Array.find<Text>(existing, func(x) { x == launchpadId }) == null) {
+                            Array.append(existing, [launchpadId])
+                        } else {
+                            existing
+                        };
+                    };
+                };
+                userParticipations := Trie.put(userParticipations, BackendUtils.keyT(userId), Text.equal, updatedLaunchpads).0;
+                #ok()
+            };
+        };
+    };
+
+    //System timer
+    timerId := Timer.recurringTimer<system>(#seconds(60), updateAllLaunchpadStatuses);
+}
