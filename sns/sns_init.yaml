@@ -272,17 +272,17 @@ Distribution:
       dissolve_delay: 1 month
       vesting_period: 2 months
     - principal: whay4-dkigk-om4ik-upli2-4omzz-77k5u-d6xna-vmkrk-6xf56-sov7c-vqe
-      stake: 366_667 tokens
+      stake: 383_334 tokens
       memo: 0
       dissolve_delay: 1 month
       vesting_period: 0 months
     - principal: whay4-dkigk-om4ik-upli2-4omzz-77k5u-d6xna-vmkrk-6xf56-sov7c-vqe
-      stake: 366_667 tokens
+      stake: 383_333 tokens
       memo: 1
       dissolve_delay: 1 month
       vesting_period: 1 months
     - principal: whay4-dkigk-om4ik-upli2-4omzz-77k5u-d6xna-vmkrk-6xf56-sov7c-vqe
-      stake: 366_666 tokens
+      stake: 383_333 tokens
       memo: 2
       dissolve_delay: 1 month
       vesting_period: 2 months
@@ -421,21 +421,6 @@ Distribution:
       memo: 2
       dissolve_delay: 1 month
       vesting_period: 2 months
-    - principal: 6kug4-nrn4l-wisyi-xs2vy-io7dj-nmzb6-tya3f-mg47l-u4g7l-ouaxe-rqe
-      stake: 50_000 tokens
-      memo: 0
-      dissolve_delay: 1 month
-      vesting_period: 0 months
-    - principal: 6kug4-nrn4l-wisyi-xs2vy-io7dj-nmzb6-tya3f-mg47l-u4g7l-ouaxe-rqe
-      stake: 50_000 tokens
-      memo: 1
-      dissolve_delay: 1 month
-      vesting_period: 1 months
-    - principal: 6kug4-nrn4l-wisyi-xs2vy-io7dj-nmzb6-tya3f-mg47l-u4g7l-ouaxe-rqe
-      stake: 50_000 tokens
-      memo: 2
-      dissolve_delay: 1 month
-      vesting_period: 2 months
     - principal: qawtt-csqpv-qvi42-fy25l-3cctk-v566r-wej37-ijccn-6nbvr-m324i-hqe
       stake: 166_667 tokens
       memo: 0
@@ -482,17 +467,17 @@ Distribution:
       dissolve_delay: 1 month
       vesting_period: 2 months
     - principal: ysbfx-f7g5i-aijds-w7rw6-fggpa-hlhsp-53luk-47pvw-vq46y-zmkw4-kqe
-      stake: 466_667 tokens
+      stake: 500_000 tokens
       memo: 0
       dissolve_delay: 1 month
       vesting_period: 0 months
     - principal: ysbfx-f7g5i-aijds-w7rw6-fggpa-hlhsp-53luk-47pvw-vq46y-zmkw4-kqe
-      stake: 466_667 tokens
+      stake: 500_000 tokens
       memo: 1
       dissolve_delay: 1 month
       vesting_period: 1 months
     - principal: ysbfx-f7g5i-aijds-w7rw6-fggpa-hlhsp-53luk-47pvw-vq46y-zmkw4-kqe
-      stake: 466_666 tokens
+      stake: 500_000 tokens
       memo: 2
       dissolve_delay: 1 month
       vesting_period: 2 months
@@ -527,7 +512,7 @@ Distribution:
       dissolve_delay: 1 month
       vesting_period: 2 months  
   InitialBalances:
-    governance: 600_000_000 tokens
+    treasury: 600_000_000 tokens
     swap: 250_000_000 tokens
   total: 1_000_000_000 tokens
 Swap:
