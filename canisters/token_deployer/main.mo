@@ -31,18 +31,19 @@ import Ledger "./Ledger";
 import IC "./IC";
 import ICRCLedger "./ICRCLedger";
 import Hex "./Hex";
+import Prim "mo:⛔";
 
 actor class Self() = this {
     private func deployer() : Principal = Principal.fromActor(this);
     private stable var _tokens : Trie.Trie<Text, Token> = Trie.empty(); //mapping of token_canister_id -> Token details
     private stable var _logos : Trie.Trie<Text, Text> = Trie.empty(); //mapping of token_canister_id -> base64
     private stable var _owners : Trie.Trie<Text, Text> = Trie.empty(); //mapping  token_canister_id -> owner principal id
-    private stable var _admins : [Text] = ["lekqg-fvb6g-4kubt-oqgzu-rd5r7-muoce-kppfz-aaem3-abfaj-cxq7a-dqe"];
+    private stable var _admins : [Text] = [];
 
     private stable var CREATION_FEE : Nat = 1*100_000_000;//E8S in ICP
 
     private stable var MIN_CYCLES_IN_DEPLOYER: Nat = 2_000_000_000_000;//Minimum cycles in deployer
-    private stable var CYCLES_FOR_INSTALL: Nat = 300_000_000_000;//1T 1_000_000_000_000, 0.3T, initial cycles for install
+    private stable var CYCLES_FOR_INSTALL: Nat = 1_000_000_000_000;//1T , initial cycles for install
     private stable var CYCLES_FOR_ARCHIVE: Nat64 = 300_000_000_000;//
     private stable var SNS_WASM_VERSION : Blob = "af8fc1469e553ac90f704521a97a1e3545c2b68049b4618a6549171b4ea4fba8";//lastest version hash
     private stable var SNS_WASM : Blob = "";//lastest wasm file
@@ -50,7 +51,7 @@ actor class Self() = this {
     private let ic : IC.Self = actor ("aaaaa-aa");
     private let snsWasm : SNSWasm.Self = actor ("qaa6y-5yaaa-aaaaa-aaafa-cai");
     private let icrcLedger : ICRCLedger.Self = actor ("ryjl3-tyaaa-aaaaa-aaaba-cai");//For fee payment
-
+    private let wasmChunks : Buffer.Buffer<Blob> = Buffer.Buffer(0);
 
     //Types
     public type Token = {
@@ -112,20 +113,16 @@ actor class Self() = this {
     };
 
     private func _isAdmin(p : Text) : (Bool) {
-        for (i in _admins.vals()) {
-            if (i == p) {
-                return true;
-            };
-        };
-        return false;
+        Prim.isController(Principal.fromText(p)) or 
+        Array.find<Text>(_admins, func(admin : Text) = admin == p) != null
     };
     private func create_canister() : async Principal {
         try {
             // Create canister
-            Cycles.add(CYCLES_FOR_INSTALL);
+            Cycles.add<system>(CYCLES_FOR_INSTALL);
             let { canister_id } = await ic.create_canister({
                 settings = ?{
-                    controllers = ?[];//Blackhole
+                    controllers = ?[deployer()];//Blackhole
                     freezing_threshold = ?9_331_200; // 108 days
                     memory_allocation = null;
                     compute_allocation = null;
@@ -256,7 +253,6 @@ actor class Self() = this {
         };
 
         let canister_id = await create_canister();
-
         // Install code
         try {
             await ic.install_code({
@@ -306,6 +302,32 @@ actor class Self() = this {
     //Get deployer ICP balance
     public shared ({ caller }) func balance() : async Nat {
         await icrcLedger.icrc1_balance_of({ owner = deployer(); subaccount = null });
+    };
+    //Upload chunk to deployer: For manual wasm upload
+    public shared ({ caller }) func uploadChunk(chunk: [Nat8]) : async Nat {
+        assert (_isAdmin(Principal.toText(caller)));
+        wasmChunks.add(Blob.fromArray(chunk));
+        return chunk.size();
+    };
+    public shared ({ caller }) func clearChunks() : async () {
+        assert (_isAdmin(Principal.toText(caller)));
+        wasmChunks.clear();
+    };
+    // Turn a list of blobs into one blob.
+    private func _flattenPayload (payload : [Blob]) : async Blob {
+        Blob.fromArray(
+            Array.foldLeft<Blob, [Nat8]>(payload, [], func (a : [Nat8], b : Blob) {
+                Array.append(a, Blob.toArray(b));
+            })
+        );
+    };
+
+    //Manual add wasm file
+    public shared ({ caller }) func addWasm(hash : [Nat8]) : async Result.Result<Text, Text> {
+        assert (_isAdmin(Principal.toText(caller)));
+        SNS_WASM_VERSION := Blob.fromArray(hash);
+        SNS_WASM := await _flattenPayload(wasmChunks.toArray());
+        return #ok("Wasm added successfully: " # debug_show(SNS_WASM.size()));
     };
     //Transfer ICP from deployer
     public shared ({ caller }) func transfer(amount : Nat, to : Principal) : async Result.Result<Nat, Text> {
