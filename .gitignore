@@ -13,3 +13,4 @@
 # frontend code
 node_modules/
 dist/
+sns_icrc_wasm_file.wasm
