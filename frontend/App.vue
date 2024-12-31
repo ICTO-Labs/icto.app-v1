@@ -7,6 +7,7 @@ import Modals from "./components/Modals.vue"
 import Popup from "./components/Popup.vue"
 import Wallet from "./components/Wallet.vue"
 import WalletManager from "@/services/WalletManager";
+import NotificationBar from "./components/layout/NotificationBar.vue";
 import walletStore from './store';
 walletStore.getICPPrice();//init ICP price
 WalletManager.checkLoginStatus();
@@ -21,6 +22,12 @@ WalletManager.checkLoginStatus();
           <!--begin::Wrapper-->
           <div class="wrapper d-flex flex-column flex-row-fluid" id="kt_wrapper">
             <Header></Header>
+            <notification-bar
+              message="🎉 ICTO SNS swap is now LIVE! Join now to become a member of ICTO DAO. <a href='https://nns.ic0.app/project/?project=pvbcq-kiaaa-aaaaq-aad6q-cai' target='_blank'>Click here to participate</a>. "
+              :use-html="true"
+              type="info"
+            />
+
             <!--begin::Content-->
             <div class="content d-flex flex-column flex-column-fluid" id="kt_content">
               <!--begin::Post-->
