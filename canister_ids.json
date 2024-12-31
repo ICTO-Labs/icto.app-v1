@@ -5,17 +5,20 @@
   "claim_contract": {
     "ic": "u7mxj-jyaaa-aaaap-qhpja-cai"
   },
-  "deployer": {
+  "lock_deployer": {
     "ic": "setw5-xaaaa-aaaap-qcc7a-cai"
   },
   "frontend": {
     "ic": "y3yam-6aaaa-aaaap-qb7aq-cai"
   },
-  "indexing_canister": {
+  "launchpad": {
     "ic": "xzpva-miaaa-aaaap-qhi7q-cai"
   },
   "launchpad_contract": {
     "ic": "2phil-viaaa-aaaap-qhoka-cai"
+  },
+  "launchpad_quokka": {
+    "ic": "u76jp-uaaaa-aaaap-qpmoa-cai"
   },
   "token_deployer": {
     "ic": "p7bu5-uyaaa-aaaap-qca3q-cai"

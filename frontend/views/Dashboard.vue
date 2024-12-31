@@ -77,7 +77,8 @@
 	])
 </script>
 <template>
-	<div class="card1 mt-0 dashboard">
+	<div class="mt-10"></div>
+	<div class="card1 mt-10 dashboard">
 		<div class="card-body p-lg-10">
 			<div class="row">
 				<!--begin::Col-->

@@ -69,16 +69,16 @@ const launchpad = ref({
     fee: 3,//Launchpad fee
     whitelistEnabled: 0,
     totalToken: 0,
-    softcap: 0,
-    hardcap: 0,
+    softcap: 2222,
+    hardcap: 8888,
     minPrice: 0,
     maxPrice: 0,
-    maxBuy: 10000,
-    minBuy: 5,
+    maxBuy: 100,
+    minBuy: 0.1,
     creator: "lekqg-fvb6g-4kubt-oqgzu-rd5r7-muoce-kppfz-aaem3-abfaj-cxq7a-dqe",
     affiliate: 3,
     affiliateEnabled: 0,
-    currency: "3mj2l-5aaaa-aaaap-qkmfq-cai",
+    currency: "ryjl3-tyaaa-aaaaa-aaaba-cai",
     listingLiquidity: 51,
     listingTokenAmount: 0,
     listing: 'ICPSwap',
@@ -110,7 +110,7 @@ const launchpad = ref({
         team: {
             title: "Team",
             description: "Team allocation",
-            total: 20_000,
+            total: 4_444_444,
             vesting: {
                 cliff: 0,
                 duration: 2 * 365 * 24 * 60 * 60,
@@ -119,35 +119,30 @@ const launchpad = ref({
             recipients: [
             {
                         amount: 10_000,
-                        address: "lekqg-fvb6g-4kubt-oqgzu-rd5r7-muoce-kppfz-aaem3-abfaj-cxq7a-dqe",
+                        address: "ohly7-skp3f-oyygj-py67p-ntatv-elayh-cnuvl-ipajb-pxam5-smuxk-tae",
                         note: "Founder"
-                    },
-                    {
-                        amount: 10_000,
-                        address: "v57dj-hev4p-lsvdl-dckvv-zdcvg-ln2sb-tfqba-nzb4g-iddrv-4rsq3-mae",
-                        note: "Developer"
                     }
             ]
         },
         others: []
     },
     saleToken: {
-        name: "ICTO Token Test",
-        symbol: "tICTO",
+        name: "Quokka",
+        symbol: "Quokka",
         decimals: 8,
-        transferFee: 0,
+        transferFee: 100000,
         metadata: [],
         logo: "",
         canisterId: ""
     },
     purchaseToken: {
-        name: "Test ICP",
-        symbol: "tICP",
+        name: "Internet Computer",
+        symbol: "ICP",
         decimals: 8,
         transferFee: 10_000,
         metadata: [],
-        logo: "https://psh4l-7qaaa-aaaap-qasia-cai.raw.icp0.io/3mj2l-5aaaa-aaaap-qkmfq-cai.png",
-        canisterId: "3mj2l-5aaaa-aaaap-qkmfq-cai"
+        logo: "https://psh4l-7qaaa-aaaap-qasia-cai.raw.icp0.io/ryjl3-tyaaa-aaaaa-aaaba-cai.png",
+        canisterId: "ryjl3-tyaaa-aaaaa-aaaba-cai"
     },
     launchParams: {
         sellAmount: 250_000,
@@ -157,7 +152,7 @@ const launchpad = ref({
         maximumAmount: 5000
     },
     projectInfo: {
-        name: "ICTO Launchpad Test (Phase 2)",
+        name: "Quokka = the happiest animal in the world WP",
         description: `Project Title: Aim for a short, unambiguous, and memorable title. 
 Overview: This is a high-level summary (no more than one or two paragraphs).
 Project Justification: Explain the problem or opportunity and why the project is necessary.
@@ -167,18 +162,18 @@ Metrics for Evaluating and Monitoring: Include the metrics you’ll use to evalu
 Timeline: Outline the timeline for each phase, including the basic tasks that you will accomplish, with start and end dates.
 Estimated Budget: Include the budget and projected costs.`,
         isAudited: false,
-        isVerified: false,
-        links: ["https://icto.app", "https://x.com/icto_app", "https://youtube.com/icto_app", "https://github.com/ICTO-Labs", "https://t.me/icto_app"],
+        isVerified: true,
+        links: ["https://x.com/Quokka_memecoin", "https://happy-quokka.xyz", "https://oc.app/group/5szpf-oyaaa-aaaar-bgmxa-cai/?ref=voyul-caaaa-aaaar-bhigq-cai"],
         logo: "",
         banner: [],
         metadata: []
     },
     timeline:{
-        createdTime: moment().valueOf(),
-        startTime: moment().add(1, "minutes").valueOf(),
-        endTime: moment().add(10, "minutes").valueOf(),
-        claimTime: moment().add(15, "minutes").valueOf(),
-        listingTime: moment().add(20, "minutes").valueOf(),
+        createdTime: moment().utc().valueOf(),
+        startTime: moment().utc().add(1, "minutes").valueOf(),
+        endTime: moment().utc().add(10, "minutes").valueOf(),
+        claimTime: moment().utc().add(15, "minutes").valueOf(),
+        listingTime: moment().utc().add(20, "minutes").valueOf(),
     }
 })
 const money3Config = {
@@ -245,9 +240,9 @@ const installLaunchpad = async () => {
 		}).then(async (result) => {
             if (result.isConfirmed) {
                 showLoading('Creating new launch, please wait...');
-                let _rs = await install(_formattedData, whitelist.value, "2phil-viaaa-aaaap-qhoka-cai");
+                let _rs = await install(_formattedData, whitelist.value, "aovwi-4maaa-aaaaa-qaagq-cai");
                 if(_rs && "ok" in _rs) {
-                    showSuccess('Launchpad created. Your launchpad canister Id: 2phil-viaaa-aaaap-qhoka-cai', true);
+                    showSuccess('Launchpad created. Your launchpad canister Id: aovwi-4maaa-aaaaa-qaagq-cai', true);
                 }else{
                     showError(_rs.err, true);
                 }
@@ -565,6 +560,7 @@ const installLaunchpad = async () => {
                                         <div class="col-12">
                                             <select name="listing" class="form-select" v-model="launchpad.currency"
                                                 readonly>
+                                                <option value="ryjl3-tyaaa-aaaaa-aaaba-cai">ICP (Internet Computer)</option>
                                                 <option value="3mj2l-5aaaa-aaaap-qkmfq-cai">tICP (Test ICP)</option>
                                             </select>
                                             <div class="form-text">Participants will commit with <strong>tICP</strong> for
@@ -824,8 +820,8 @@ const installLaunchpad = async () => {
                             <div class="row mb-5">
                                 <div class="col-md-6 fv-row">
                                     <label class="d-flex align-items-center fs-6 fw-bold mb-2"><span
-                                            class="required">Start Time (UTC)</span></label>
-                                    <VueDatePicker v-model="launchpad.timeline.startTime" :min-date="new Date()"
+                                            class="required">Start Time (UTC) {{new Date().toISOString()}}</span></label>
+                                    <VueDatePicker v-model="launchpad.timeline.startTime"
                                         :enable-time-picker="true" placeholder="Start time" time-picker-inline
                                         auto-apply></VueDatePicker>
                                 </div>
@@ -899,12 +895,12 @@ const installLaunchpad = async () => {
                             </label>
                             <input type="file" class="form-control" name="logo" value="" @change="processImage($event, 'logo')">
                         </div>
-                        <!-- <div class="d-flex flex-column mb-3 fv-row fv-plugins-icon-container">
+                        <div class="d-flex flex-column mb-3 fv-row fv-plugins-icon-container">
                             <label class="d-flex align-items-center fs-6 fw-bold form-label mb-2">
                                 <span class="">Launchpad Banner</span>
                             </label>
                             <input type="file" class="form-control" name="banner" value="" @change="processImage($event, 'banner')">
-                        </div> -->
+                        </div>
                         <div class="d-flex flex-column mb-3 fv-row fv-plugins-icon-container">
                             <label class="d-flex align-items-center fs-6 fw-bold form-label mb-2">
                                 <span class="required">Description</span>

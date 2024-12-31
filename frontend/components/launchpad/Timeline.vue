@@ -69,9 +69,9 @@
                 <i :class="status === 'CLAIMING' || status === 'REFUNDING' ? 'fa fa-check-circle text-success fs-4' : 'fa fa-circle text-muted fs-4'"></i>
             </div>
             <div class="timeline-content fw-bolder" :class="status === 'CLAIMING' || status === 'REFUNDING' ? 'text-success' : 'text-muted'">
-                <span class="fw-bolder ps-3">{{status === 'CLAIMING' ? 'Claim Tokens' : 'Refund Tokens'}}</span>
+                <span class="fw-bolder ps-3">{{status === 'REFUNDING' ? 'Refund Tokens' : 'Claim Tokens'}}</span>
                 <div class="fw-normal justify-content-between p-1 ps-3">
-                    {{status === 'CLAIMING' ? 'Claim at' : 'Refund at'}} <span class="badge badge-light-danger fs-8 fw-bold">{{timeFromNano(timeline.claimTime)}}</span>
+                    {{status === 'REFUNDING' ? 'Refund at' : 'Claim at'}} <span class="badge badge-light-danger fs-8 fw-bold">{{timeFromNano(timeline.claimTime)}}</span>
                 </div>
             </div>
         </div>

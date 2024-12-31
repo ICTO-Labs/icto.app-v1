@@ -19,34 +19,36 @@
     <div class="launchpad-info">
         <h3>General Settings</h3>
         <table class="table table-flush align-middle table-row-bordered gy-3 table-hover">
-            <tr>
-                <td>Governance Model:</td>
-                <td class="text-end">{{ launchpad.governanceModel ? 'Yes' : 'No' }}</td>
-            </tr>
-            <tr>
-                <td>Whitelist:</td>
-                <td class="text-end">{{ launchpad.whitelist > 0 ?"Yes":"No" }}</td>
-            </tr>
-            <!-- <tr>
-                <td>Total Supply:</td>
-                <td class="text-end">{{ launchpad.totalToken }}</td>
-            </tr> -->
-            <tr>
-                <td>Affiliate:</td>
-                <td class="text-end">{{ launchpad.affiliate>0? "Yes ("+launchpad.affiliate+"%)":"No" }}</td>
-            </tr>
-            <tr>
-                <td>Listing Liquidity:</td>
-                <td class="text-end">{{ launchpad.listingLiquidity }}%</td>
-            </tr>
-            <tr>
-                <td>Listing Token Amount:</td>
-                <td class="text-end">{{ currencyFormat(launchpad.listingTokenAmount) }}</td>
-            </tr>
-            <tr>
+            <tbody>
+                <tr>
+                    <td>Governance Model:</td>
+                    <td class="text-end">{{ launchpad.governanceModel ? 'Yes' : 'No' }}</td>
+                </tr>
+                <tr>
+                    <td>Whitelist:</td>
+                    <td class="text-end">{{ launchpad.whitelist > 0 ?"Yes":"No" }}</td>
+                </tr>
+                <!-- <tr>
+                    <td>Total Supply:</td>
+                    <td class="text-end">{{ launchpad.totalToken }}</td>
+                </tr> -->
+                <tr>
+                    <td>Affiliate:</td>
+                    <td class="text-end">{{ launchpad.affiliate>0? "Yes ("+launchpad.affiliate+"%)":"No" }}</td>
+                </tr>
+                <tr>
+                    <td>Listing Liquidity:</td>
+                    <td class="text-end">{{ launchpad.listingLiquidity }}%</td>
+                </tr>
+                <tr>
+                    <td>Listing Token Amount:</td>
+                    <td class="text-end">{{ currencyFormat(launchpad.listingTokenAmount) }}</td>
+                </tr>
+                <tr>
                 <td>Listing on:</td>
-                <td class="text-end">{{ launchpad.listing }}</td>
-            </tr>
+                    <td class="text-end">{{ launchpad.listing }}</td>
+                </tr>
+            </tbody>
         </table>
 
         <h3>Sale Token</h3>

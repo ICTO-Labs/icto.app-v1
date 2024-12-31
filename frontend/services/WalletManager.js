@@ -5,7 +5,6 @@ import walletStore from "@/store";
 import config from "@/config";
 import { showSuccess } from "@/utils/common";
 import {StoicIdentity} from "ic-stoic-identity";
-import { Artemis } from 'artemis-web3-adapter'
 
 const loginSuccessAction = () =>{
     showSuccess("Login successful!")
@@ -170,16 +169,6 @@ class walletManager {
             }
         });
     };
-    async artemisWallet(){
-        console.log('config.HOST', config.HOST);
-        const connectObj = { whitelist: config.CANISTER_WHITE_LIST, host: config.HOST };
-
-        const artemisWalletAdapter = new Artemis();
-
-        let _rs = await artemisWalletAdapter.connect('plug', connectObj)
-        console.log('Artemis wallet connected:', _rs, artemisWalletAdapter)
-
-    };
     async plugWallet(){
         //Test if the user has Plug extension installed (other way?)
         if (typeof window?.ic?.plug == "undefined") {
@@ -273,24 +262,59 @@ class walletManager {
     };
 
     async stoicWallet(){
-        alert('Stoic Wallet is not supported yet');return;
+        // alert('Stoic Wallet is not supported yet');return;
         this.connectLoading();
         try{
-            const identity = await StoicIdentity.connect();
-            const _current_account = {
-                name: "Stoic Wallet",
-                address: principalToAccountId(identity.getPrincipal().toText(), 0),
-            };
-            walletStore.setIdentity(identity);
-            walletStore.setAccount([_current_account]);
-            walletStore.setCurrentAccount(_current_account);
-            walletStore.setLoginState('stoic');
-            loginSuccessAction();
-            window.Swal.close();
+            return StoicIdentity.load('https://www.stoicwallet.com').then(async identity => {
+                if (identity !== false) {
+                    //Already connected
+                    console.log('Already connected');
+                    const _current_account = {
+                        name: "Stoic Wallet",
+                        address: principalToAccountId(identity.getPrincipal().toText(), 0),
+                    };
+                    walletStore.setIdentity(identity);
+                    walletStore.setAccount([_current_account]);
+                    walletStore.setCurrentAccount(_current_account);
+                    walletStore.setLoginState('stoic');
+                    loginSuccessAction();
+                    window.Swal.close();
+                }else{
+                    //Not connected, connecting...
+                    console.log('Not connected, connecting...');
+                    const identity = await StoicIdentity.connect();
+                    const _current_account = {
+                        name: "Stoic Wallet",
+                        address: principalToAccountId(identity.getPrincipal().toText(), 0),
+                    };
+                    walletStore.setIdentity(identity);
+                    walletStore.setAccount([_current_account]);
+                    walletStore.setCurrentAccount(_current_account);
+                    walletStore.setLoginState('stoic');
+                    loginSuccessAction();
+                    window.Swal.close();
+                }
+            });
         }catch(e){
             window.Swal.close();
             console.log(e);
         }
+        // try{
+        //     const identity = await StoicIdentity.connect();
+        //     const _current_account = {
+        //         name: "Stoic Wallet",
+        //         address: principalToAccountId(identity.getPrincipal().toText(), 0),
+        //     };
+        //     walletStore.setIdentity(identity);
+        //     walletStore.setAccount([_current_account]);
+        //     walletStore.setCurrentAccount(_current_account);
+        //     walletStore.setLoginState('stoic');
+        //     loginSuccessAction();
+        //     window.Swal.close();
+        // }catch(e){
+        //     window.Swal.close();
+        //     console.log(e);
+        // }
     }
     async iiWallet(){
         this.connectLoading();
