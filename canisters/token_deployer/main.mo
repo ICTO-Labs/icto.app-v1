@@ -32,6 +32,7 @@ import IC "./IC";
 import ICRCLedger "./ICRCLedger";
 import Hex "./Hex";
 import Prim "mo:⛔";
+import Timer "mo:base/Timer";
 
 actor class Self() = this {
     private func deployer() : Principal = Principal.fromActor(this);
@@ -39,14 +40,15 @@ actor class Self() = this {
     private stable var _logos : Trie.Trie<Text, Text> = Trie.empty(); //mapping of token_canister_id -> base64
     private stable var _owners : Trie.Trie<Text, Text> = Trie.empty(); //mapping  token_canister_id -> owner principal id
     private stable var _admins : [Text] = [];
-
+    private stable var timerId : Nat = 0;
     private stable var CREATION_FEE : Nat = 1*100_000_000;//E8S in ICP
 
     private stable var MIN_CYCLES_IN_DEPLOYER: Nat = 2_000_000_000_000;//Minimum cycles in deployer
     private stable var CYCLES_FOR_INSTALL: Nat = 1_000_000_000_000;//1T , initial cycles for install
-    private stable var CYCLES_FOR_ARCHIVE: Nat64 = 300_000_000_000;//
+    private stable var CYCLES_FOR_ARCHIVE: Nat64 = 500_000_000_000;//
     private stable var SNS_WASM_VERSION : Blob = "af8fc1469e553ac90f704521a97a1e3545c2b68049b4618a6549171b4ea4fba8";//lastest version hash
     private stable var SNS_WASM : Blob = "";//lastest wasm file
+    private stable var WHITE_LIST_CANISTERS: [Principal] = [];//list of canisters that can deploy token
     //IC Services
     private let ic : IC.Self = actor ("aaaaa-aa");
     private let snsWasm : SNSWasm.Self = actor ("qaa6y-5yaaa-aaaaa-aaafa-cai");
@@ -112,6 +114,17 @@ actor class Self() = this {
         return num;
     };
 
+    //Get remote canister id from imported canister
+    private func getRemoteCanisterId(canister: Text) : async Principal {
+        switch(canister){
+            case ("launchpad") {
+                return Principal.fromText("xzpva-miaaa-aaaap-qhi7q-cai");
+            };
+            case _ {
+                return Principal.fromText("qaa6y-5yaaa-aaaaa-aaafa-cai");
+            };
+        };
+    };
     private func _isAdmin(p : Text) : (Bool) {
         Prim.isController(Principal.fromText(p)) or 
         Array.find<Text>(_admins, func(admin : Text) = admin == p) != null
@@ -246,10 +259,14 @@ actor class Self() = this {
         // Check if this canister has enough cycles
         let balance = Cycles.balance();
         if (balance < CYCLES_FOR_INSTALL + MIN_CYCLES_IN_DEPLOYER) return #err("Not enough cycles in deployer, balance: "# debug_show(balance) #"T");
-
-        if (not _isAdmin(Principal.toText(caller))) switch (await icrcLedger.icrc2_transfer_from({ from = { owner = caller; subaccount = null }; spender_subaccount = null; to = { owner = deployer(); subaccount = null }; fee = null; memo = null; from_subaccount = null; created_at_time = null; amount = CREATION_FEE })) {
-            case (#Ok(_)) ();
-            case (#Err(e)) return #err("Payment error: " # debug_show(e));
+        //Check if caller is in white list or is admin > not need to pay creation fee
+        let is_admin = _isAdmin(Principal.toText(caller));
+        let is_in_white_list = Array.find<Principal>(WHITE_LIST_CANISTERS, func(x) { x == caller }) != null;
+        if (not is_admin and not is_in_white_list) {
+            switch (await icrcLedger.icrc2_transfer_from({ from = { owner = caller; subaccount = null }; spender_subaccount = null; to = { owner = deployer(); subaccount = null }; fee = null; memo = null; from_subaccount = null; created_at_time = null; amount = CREATION_FEE })) {
+                case (#Ok(_)) ();
+                case (#Err(e)) return #err("Payment error: " # debug_show(e));
+            };
         };
 
         let canister_id = await create_canister();
@@ -479,5 +496,20 @@ actor class Self() = this {
             };
         };
     };
+
+    //Add canister to white list canisters - Called by launchpad when creating new launchpad
+    public shared ({ caller }) func addToWhiteList(canister_id : Principal) : async Result.Result<Bool, Text> {
+        let LAUNCHPAD_CANISTER_ID = await getRemoteCanisterId("launchpad");
+        if (caller != LAUNCHPAD_CANISTER_ID) return #err("Only launchpad can add to white list");
+        WHITE_LIST_CANISTERS := Array.append(WHITE_LIST_CANISTERS, [canister_id]);
+        return #ok(true);
+    };
+
+    private func get_wasm_version(): async () {
+        let _ = await get_lastest_version();
+        ();
+    };
+    //Set timer to fetch new version of wasm, 1 day
+    timerId := Timer.recurringTimer<system>(#seconds(24*60*60), get_wasm_version);
 
 }
