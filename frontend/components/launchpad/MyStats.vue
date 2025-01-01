@@ -1,11 +1,14 @@
 <script setup>
-    import { ref, watch, watchEffect, computed } from 'vue';
+    import { ref, watch, watchEffect, computed, defineExpose } from 'vue';
     import { getParticipantInfo } from '@/services/Launchpad';
     import { parseTokenAmount, formatTokenAmount, currencyFormat } from '@/utils/token';
     import walletStore from '@/store/';
     const props = defineProps(['launchpadId', 'stats', 'launchpadInfo']);
     const { data: myStats, isError, error, isLoading, isFetched, refetch } = getParticipantInfo(props.launchpadId, walletStore.principal);
 
+    defineExpose({
+        refetch
+    })
     watch(() => walletStore.isLogged, (newIsLogged) => {
         if (newIsLogged) {
             refetch();

@@ -11,6 +11,7 @@ import extNFTIDL from '@/ic/candid/extNFT.did';
 import contractIDL from '@/ic/candid/contract.did';
 import swapPoolIDL from '@/ic/candid/icpswap/swapPool.did';
 import shortLinkIDL from '@/ic/candid/shortLink.did';
+import blockIdIDL from '@/ic/candid/blockId.did';
 import {idlFactory as lockDeployerIDL} from '../../../src/declarations/lock_deployer/lock_deployer.did.js';
 import {idlFactory as tokenDeployerIDL} from '../../../src/declarations/token_deployer/token_deployer.did.js';
 import {idlFactory as backendIDL} from '../../../src/declarations/backend/backend.did.js';
@@ -18,7 +19,6 @@ import {idlFactory as lockContractIDL} from '../../../src/declarations/lock_cont
 import {idlFactory as claimContractIDL} from '../../../src/declarations/claim_contract/claim_contract.did.js';
 import {idlFactory as launchpadIDL} from '../../../src/declarations/launchpad/launchpad.did.js';
 import {idlFactory as launchpadDetailIDL} from '../../../src/declarations/launchpad_contract/launchpad_contract.did.js';
-
 export const preloadIdls = {
     'cycles' : cyclesIDL,
     'nns': nnsIDL,
@@ -40,6 +40,7 @@ export const preloadIdls = {
     'lock_contract': lockContractIDL,
     'backend': backendIDL,
     'swapPool': swapPoolIDL,
+    'blockId': blockIdIDL,
 }
 export const mapIdls = {
     'aaaaa-aa' : icIDL,

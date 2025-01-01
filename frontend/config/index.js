@@ -11,7 +11,8 @@ const NETWORK = {
         host: "http://127.0.0.1:8000",
         identityProvider: "http://127.0.0.1:8000/?canisterId="+local_canisters?.internet_identity?.local+"#authorize",
         scan: "http://127.0.0.1:8000/?canisterId=bd3sg-teaaa-aaaaa-qaaba-cai&id=",
-        shortlink_id: "727zs-iiaaa-aaaap-qhoua-cai"
+        shortlink_id: "727zs-iiaaa-aaaap-qhoua-cai",
+        blockid_id: "727zs-iiaaa-aaaap-qhoua-cai"
     },
     "staging": {
         canister_id: "bkyz2-fmaaa-aaaaa-qaaaq-cai",
@@ -29,7 +30,8 @@ const NETWORK = {
         host: "https://icp-api.io",
         scan: "https://dashboard.internetcomputer.org/canister/",
         identityProvider: "https://identity.ic0.app/#authorize",
-        shortlink_id: "727zs-iiaaa-aaaap-qhoua-cai"
+        shortlink_id: "727zs-iiaaa-aaaap-qhoua-cai",
+        blockid_id: "3c7yh-4aaaa-aaaap-qhria-cai"
     }
 }
 const ENV = 'ic';//process.env.NODE_ENV == "development" ? "dev" : "ic";
@@ -45,6 +47,7 @@ const config = {
     BACKEND_CANISTER_ID: NETWORK[ENV]['backend_id'],
     LAUNCHPAD_CANISTER_ID: NETWORK[ENV]['launchpad_id'],
     SHORTLINK_CANISTER_ID: NETWORK[ENV]['shortlink_id'],
+    BLOCKID_CANISTER_ID: NETWORK[ENV]['blockid_id'],
     CANIC_CANISTER_ID: "mxftc-eyaaa-aaaap-qanga-cai",
     CANISTER_CYCLE_MINTING: "rkp4c-7iaaa-aaaaa-aaaca-cai",
     CANISTER_IC_MANAGEMENT: "aaaaa-aa",

@@ -7,6 +7,7 @@
     import RefererLink from '@/components/launchpad/RefererLink.vue';
     import MyStats from '@/components/launchpad/MyStats.vue';
     import ProjectScore from '@/components/launchpad/ProjectScore.vue';
+    import BlockIDNotice from '@/components/launchpad/BlockIDNotice.vue';
     import 'vue-skeletor/dist/vue-skeletor.css';
     import { Skeletor } from 'vue-skeletor';
 
@@ -50,7 +51,10 @@
     }
     // const launchpadInfo = ref(null);
     // import { useGetLaunchpad } from "@/services/Launchpad";
-
+    const myStatsRef = ref(null)
+    const updateMyStats = () => {
+        myStatsRef.value?.refetch()
+    }
     const checkPurchaseBalance = async()=>{
         // showLoading('Checking balance...');
         const _balance = await useGetMyBalance(purchaseToken.value.canisterId);
@@ -141,6 +145,7 @@
 
                     if(_deposit && "ok" in _deposit) {
                         showSuccess('Your commit has been successfully processed!', true);
+                        updateMyStats();
                     }else{
                         showError('Can not process, please try again later: '+JSON.stringify(_deposit), true);
                     }
@@ -431,20 +436,9 @@
                         <span class="badge badge-light text-success">This contract is verified by <a href="https://blockid.cc" target="_blank"><span class=" badge badge-light text-success"><i class="fas fa-shield-alt text-success"></i> BlockID</span></a></span> 
                     </div> -->
 
-                    <div class="px-3 py-2 fw-bold text-center border-rounded mb-5 border border-dashed">
-                        <div class="text-success" v-if="eligibleToCommit && 'ok' in eligibleToCommit">
-                            <i class="fas fa-check-circle text-success"></i> You are eligible!
-                        </div>
-                        <div class="text-danger" v-else>
-                            <i class="fas fa-times-circle text-danger"></i> Not eligible: {{ eligibleToCommit?.err || '0 point' }}
-                        </div>
-                        <div>
-                            <button type="button" class="btn btn-sm btn-light-primary" @click="checkEligible"><i class="fas fa-history"></i> Check again</button>
-                        </div>
-                    </div>
                     <div class="px-5">
                         <div class="bg-light-success p-3 mb-3 border-rounded text-success" v-if="status?.totalAmountCommitted>launchpadInfo?.launchParams?.softCap">
-                            <i class="fas fa-check-circle text-success" ></i> Congratulations, Softcap has been reached!
+                            🎉 Congratulations, Softcap has been reached!
                         </div>
                         <div class="bg-light-success p-3 mb-3 border-rounded text-success" v-if="status?.totalAmountCommitted>launchpadInfo?.launchParams?.hardCap">
                             <i class="fas fa-check-circle text-success" ></i> Congratulations, Hardcap has been reached!
@@ -473,7 +467,7 @@
                                 <div class="text-primary">Soft cap: {{currencyFormat(parseTokenAmount(launchpadInfo?.launchParams?.softCap, purchaseToken?.decimals))}} {{ purchaseToken?.symbol }}</div>
                                 <div class="text-danger">Hard cap: {{currencyFormat(parseTokenAmount(launchpadInfo?.launchParams?.hardCap, purchaseToken?.decimals))}} {{ purchaseToken?.symbol }}</div>
                             </div>
-                            <MyStats :launchpadId="launchpadId" :stats="status" :launchpadInfo="launchpadInfo" v-if="launchpadInfo" />
+                            <MyStats :launchpadId="launchpadId" :stats="status" :launchpadInfo="launchpadInfo" v-if="launchpadInfo" ref="myStatsRef" />
                             
                             <div v-if="status?.status == 'LIVE'">
                                 <div class="separator"></div>
@@ -485,14 +479,14 @@
                                         <a href="javascript:void(0)" @click="checkPurchaseBalance()" title="Refresh my Balance" class="badge badge-light-primary ms-2"><i class="fas fa-refresh text-primary"></i> </a>
                                     </div>
                                     <div class="form-control-wrap mt-2">
-                                        <input type="text" class="form-control form-control-solid form-control-sm" placeholder="Enter amount" v-model="depositAmount" :disabled="status.status !='LIVE'" />
+                                        <input type="text" class="form-control form-control-solid form-control-sm" placeholder="Enter amount" v-model="depositAmount" :disabled="status.status !='LIVE' || !walletStore.isLogged" />
                                     </div>
                                 </div>
                                 <div class="pt-5 d-flex flex-column">
-                                    <button class="btn btn-primary btn-sm btn-block" @click="depositBtn" :disabled="status.status !='LIVE'">Commit</button>
+                                    <button class="btn btn-primary btn-sm btn-block" @click="depositBtn" :disabled="status.status !='LIVE' || !walletStore.isLogged">Commit</button>
                                 </div>  
                             </div>
-                            
+                            <BlockIDNotice :launchpadId="launchpadId" v-if="launchpadInfo" />
                         </div>
                         <div class="table-responsive">
                             <table class="table table-flush align-middle table-row-bordered gy-3">
