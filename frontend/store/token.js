@@ -7,7 +7,7 @@ import { TOKEN_DATA } from "@/config/constants";
 export const useAssetStore = defineStore({
     id: "assetState",
     state: () => ({
-        assets: useStorage('importedTokens', TOKEN_DATA),
+        assets: TOKEN_DATA//useStorage('importedTokens', TOKEN_DATA),
     }),
     getters: {
         getWalletToken: (state) => {

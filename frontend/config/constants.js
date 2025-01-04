@@ -33,6 +33,17 @@ export const TOKEN_DATA = [
         type: "default"
     },
     {
+        name: "Quokka", 
+        decimals: 8, 
+        fee: 100000, 
+        symbol: "QUOKKA", 
+        logo: "/media/icons/k25mb-qiaaa-aaaap-qpodq-cai.png", 
+        standard: "ICRC2", 
+        canisterId: "k25mb-qiaaa-aaaap-qpodq-cai",
+        balance: 0,
+        type: "default"
+    },
+    {
         name: "ckETH", 
         decimals: 18, 
         fee: 200, 

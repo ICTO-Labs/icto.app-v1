@@ -21,14 +21,14 @@ export const useCommit = async (canisterId, amount, refCode) =>{
 }
 
 //Get details
-export const getInfo = (canisterId) =>{
+export const getInfo = (canisterId, status) =>{
     try{
         return useQuery({
-            queryKey: ['getInfo', canisterId],
+            queryKey: ['getInfo', canisterId, status],
             queryFn: async () => await Connect.canister(canisterId, 'launchpad_detail', true).launchpadInfo(),
             keepPreviousData: false,
             retry: 3,
-            refetchInterval: 30000
+            refetchInterval: ['FINISHED', 'CLAIMING'].includes(status) ? 0 : 30000
         })
         // return await Connect.canister(canisterId, 'launchpad_detail').launchpadInfo();
     }catch(e){

@@ -255,6 +255,9 @@ export const getVariantType = (variant) => {
         return '---';
     }
 }
+export const cycleFormat = (cycle) => {
+    return (Number(cycle)/1e12).toFixed(2) + ' T';
+}
 export default {
     validateAddress,
     showError

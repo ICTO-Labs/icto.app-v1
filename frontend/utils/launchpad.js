@@ -77,7 +77,7 @@ export const formatTokenomic = (distribution) => {
     }
 
     // Process 'others'
-    if (Array.isArray(distribution.others)) {
+    if (Array.isArray(distribution?.others)) {
         distribution.others.forEach(item => {
             if (item.title) {
             tokenomics.push({

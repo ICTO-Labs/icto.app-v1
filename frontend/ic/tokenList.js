@@ -8,6 +8,14 @@ const Tokens = [
     "symbol": "ICP"
     },
     {
+    "fee": 100000,
+    "decimals": 8,
+    "canisterId": "k25mb-qiaaa-aaaap-qpodq-cai",
+    "name": "Quokka",
+    "standard": "ICRC2",
+    "symbol": "QUOKKA"
+    },
+    {
     "fee": 10000,
     "decimals": 8,
     "canisterId": "3mj2l-5aaaa-aaaap-qkmfq-cai",

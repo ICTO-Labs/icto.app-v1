@@ -10,7 +10,10 @@ type Subaccount = blob;
 type Self = 
  service {
    addAdmin: (text) -> ();
+   addToWhiteList: (principal) -> (Result_3);
+   addWasm: (vec nat8) -> (Result_2);
    balance: () -> (nat);
+   clearChunks: () -> ();
    cycleBalance: () -> (nat) query;
    getAllAdmins: () -> (vec text) query;
    getCurrentWasmVersion: () -> (text) query;
@@ -20,22 +23,34 @@ type Self =
    getTotalTokens: () -> (nat) query;
    getUserTokens: (text, nat) -> (vec Token) query;
    getUserTotalTokens: (text) -> (nat) query;
-   get_lastest_version: () -> (Result_1);
-   install: (InitArgsRequested) -> (Result);
+   get_lastest_version: () -> (Result_2);
+   install: (InitArgsRequested, opt principal) -> (Result_1);
    removeAdmin: (text) -> ();
+   transfer: (nat, principal) -> (Result);
    updateCreationFee: (nat) -> ();
    updateInitCycles: (nat) -> ();
    updateMinCycles: (nat) -> ();
+   uploadChunk: (vec nat8) -> (nat);
  };
-type Result_1 = 
+type Result_3 = 
+ variant {
+   err: text;
+   ok: bool;
+ };
+type Result_2 = 
  variant {
    err: text;
    ok: text;
  };
-type Result = 
+type Result_1 = 
  variant {
    err: text;
    ok: principal;
+ };
+type Result = 
+ variant {
+   err: text;
+   ok: nat;
  };
 type InitArgsRequested = 
  record {

@@ -47,7 +47,7 @@ export const useGetTokenBalance = async(tokenId, principal, standard='icrc1')=>{
 }
 export const useTransferFrom = async(tokenId, payload, standard="icrc2")=>{
     let _token = getTokenInfo(tokenId);
-    const _amount = BigInt(parseFloat(payload.amount) * (_token ? Math.pow(10, _token.decimals) : config.E8S));
+    const _amount = _token?formatTokenAmount(payload.amount, _token.decimals) : payload.amount*config.E8S;
     const _fee = BigInt(_token?_token.fee:0);
     const _from = txtToPrincipal(payload.from);
     const _to = txtToPrincipal(payload.to);
@@ -239,7 +239,7 @@ export const useInstallToken = async (payload)=>{
     try {
         const _payload = {...payload};
         _payload.transfer_fee = Number(formatTokenAmount(_payload.transfer_fee, _payload.decimals));
-        const canisterId = await Connect.canister(config.TOKEN_DEPLOYER_CANISTER_ID, 'token_deployer').install(_payload);
+        const canisterId = await Connect.canister(config.TOKEN_DEPLOYER_CANISTER_ID, 'token_deployer').install(_payload, []);
         return canisterId;
     } catch (error) {
         throw error;
