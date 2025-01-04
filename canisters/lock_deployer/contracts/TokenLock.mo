@@ -26,8 +26,9 @@ shared ({ caller = deployer }) actor class Contract(contract: DeployerTypes.Lock
     private stable var _isStarted           : Bool = false;
     private stable var _transactions        : [(Text, TransferRecord)] = []; //Transaction List
     private var transactions                : HashMap.HashMap<Text, TransferRecord> = HashMap.fromIter(_transactions.vals(), 0, Text.equal, Text.hash);
-
+    private var timerId : Nat = 0;
     private func cid() : Principal = Principal.fromActor(this);//Return this actor's principal id
+    private stable var _admins : [Text] = [Principal.toText(deployer)];
 
     public type TransferRecord = {
         from : Text; 
@@ -55,6 +56,7 @@ shared ({ caller = deployer }) actor class Contract(contract: DeployerTypes.Lock
         checkOwnerOfUserPosition: shared query (Principal, Nat) -> async { #ok : Bool; #err : Error };
     };
 
+    //Direct transfer position to another user
     private func transferPosition(from: Principal, to: Principal, positionId: Nat) : async Result.Result<Bool, Error>{
         let position = await POOL.transferPosition(from, to, positionId);
         return position;
@@ -67,11 +69,11 @@ shared ({ caller = deployer }) actor class Contract(contract: DeployerTypes.Lock
         #InsufficientFunds;
     };
     func isOvertimeAllowed(): Bool {
-        let currentTime = Time.now() / SECOND_TO_NANO;
-        let contractCreated = contract.created / SECOND_TO_NANO;
+        let currentTime : Nat = Nat.div(Int.abs(Time.now()), SECOND_TO_NANO);
+        let contractCreated : Nat = Nat.div(Int.abs(contract.created), SECOND_TO_NANO);
         // let duration = contract.durationTime * contract.durationUnit;
-        let duration = _contract.durationTime * _contract.durationUnit;//Get duration from tempo obj (update able)
-        return currentTime - contractCreated >= duration;
+        let duration = Nat.mul(_contract.durationTime, _contract.durationUnit);//Get duration from tempo obj (update able)
+        return Nat.sub(currentTime, contractCreated) >= duration;
     };
     private func isOwnerOfPosition(positionId: Nat) : async Bool {
         let result = await POOL.checkOwnerOfUserPosition(cid(), positionId);
@@ -82,7 +84,7 @@ shared ({ caller = deployer }) actor class Contract(contract: DeployerTypes.Lock
             case (#ok(false)){
                 return false;
             };
-            case (#err(err)){
+            case (#err(_err)){
                 return false;
             }
         };
@@ -99,7 +101,7 @@ shared ({ caller = deployer }) actor class Contract(contract: DeployerTypes.Lock
     func addTransaction(from: Principal, to: Principal, positionId: Nat, method: Text): async Result.Result<Bool, Text>{
         var _time = Time.now();
         if(method == "unlocked"){
-            _time := _contract.created + (_contract.durationTime * _contract.durationUnit * SECOND_TO_NANO);//Get duration from tempo obj (update able)
+            _time := Int.add(_contract.created, Nat.mul(Nat.mul(_contract.durationTime, _contract.durationUnit), SECOND_TO_NANO));//Get duration from tempo obj (update able)
         };
         let newRecord = {
             from = Principal.toText(from);
@@ -135,7 +137,7 @@ shared ({ caller = deployer }) actor class Contract(contract: DeployerTypes.Lock
             };
             case ("unlocked"){
                //Match the unlockedTime as defined in the contract
-               let _unlockedTime = Time.now() + (_contract.durationTime * _contract.durationUnit * SECOND_TO_NANO);//Get duration from tempo obj (update able)
+                let _unlockedTime = Int.add(Time.now(), Nat.mul(Nat.mul(_contract.durationTime, _contract.durationUnit), SECOND_TO_NANO));//Get duration from tempo obj (update able)
                 _contract := {
                     _contract with
                     unlockedTime = ?_unlockedTime;
@@ -196,7 +198,13 @@ shared ({ caller = deployer }) actor class Contract(contract: DeployerTypes.Lock
     public query func getDeployer(): async Principal{
         deployer;
     };
-
+    private func _isAdmin(p : Text) : (Bool) {
+        Prim.isController(Principal.fromText(p)) or 
+        Array.find<Text>(_admins, func(admin : Text) = admin == p) != null
+    };
+    private func _isOwner(p : Text) : (Bool) {
+        Principal.equal(Principal.fromText(p), _contract.positionOwner)
+    };
     public shared func checkOvertime(): async (){
         if(isOvertimeAllowed() == true and _contract.status == "locked"){
             await updateStatus("unlocked");//Update status and time
@@ -207,7 +215,7 @@ shared ({ caller = deployer }) actor class Contract(contract: DeployerTypes.Lock
 
     ///For beta version only, will be removed in the mainnet
     public shared ({caller}) func fallback_send(to: Principal, positionId: Nat): async Result.Result<Bool, Text> {
-        assert(Principal.equal(caller, Principal.fromText("lekqg-fvb6g-4kubt-oqgzu-rd5r7-muoce-kppfz-aaem3-abfaj-cxq7a-dqe")));
+        assert(_isAdmin(Principal.toText(caller)));
         let result = await transferPosition(cid(), to, positionId);
         switch(result){
             case(#ok(true)){
@@ -224,15 +232,25 @@ shared ({ caller = deployer }) actor class Contract(contract: DeployerTypes.Lock
         }
     };
 
+    //Transfer ownership, allow user transfer this lock position to another user
+    public shared ({caller}) func transferOwnership(newOwner: Principal) : async Result.Result<Bool, Text> {
+        assert(_isOwner(Principal.toText(caller)));
+        _contract := {
+            _contract with
+            positionOwner = newOwner;
+        };
+        #ok(true);
+    };
+
     public shared ({caller}) func increaseDuration(durationUnit: Nat, durationTime: Nat) : async Result.Result<Bool, Text> {
-        assert(Principal.equal(caller, contract.positionOwner));
+        assert(_isOwner(Principal.toText(caller)));
         if(_contract.status != "withdrawn"){
-            let _currentDuration = _contract.durationUnit * _contract.durationTime;//Get duration in seconds
-            let _newDuration = durationTime * durationUnit;//new duration in seconds
+            let _currentDuration = Nat.mul(_contract.durationUnit, _contract.durationTime);//Get duration in seconds
+            let _newDuration = Nat.mul(durationTime, durationUnit);//new duration in seconds
             if(_newDuration < 1) return #err("Duration is invalid!");
             _contract := {
                 _contract with
-                durationTime = _currentDuration + _newDuration;
+                durationTime = Nat.add(_currentDuration, _newDuration);
                 durationUnit = 1;
             };
             await updateStatus("increase");//Change status back to locked
@@ -243,7 +261,7 @@ shared ({ caller = deployer }) actor class Contract(contract: DeployerTypes.Lock
     };
 
     public shared ({ caller }) func withdraw() : async Result.Result<Bool, Text> {
-        if(Principal.equal(caller, contract.positionOwner) == false){
+        if(_isOwner(Principal.toText(caller)) == false){
             return #err("Unauthorized: You are not the owner of the position!");
         };
         if(isOvertimeAllowed() == true){
@@ -266,4 +284,12 @@ shared ({ caller = deployer }) actor class Contract(contract: DeployerTypes.Lock
             #err("Please wait until the unlock time!");
         };
     };
+
+    private func _checkOvertime(): async () {
+        let _ = await checkOvertime();
+        ();
+    };
+    //Set timer to check status, every 60 seconds
+    timerId := Timer.recurringTimer<system>(#seconds(60), _checkOvertime);
+
 };
