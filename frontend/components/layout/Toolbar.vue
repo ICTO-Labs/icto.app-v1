@@ -55,7 +55,7 @@
 			<!--begin::Actions-->
 			<div class="d-flex align-items-center py-1">
 				<a href="#" @click.stop="showBtnModal" :class="`btn btn-sm me-2 ${toolbarProps.css?toolbarProps.css:'btn-danger'}`" v-if="props.showBtn"><i :class="`fas ${toolbarProps.icon}`"></i> {{toolbarProps.label}}</a> 
-				<router-link to="/new-contract" class="btn btn-sm btn-danger me-2" v-if="router.name =='token-claim' || router.name =='contract-detail'">New Contract</router-link>
+				<router-link to="/token-claim/create" class="btn btn-sm btn-danger me-2" v-if="router.name =='token-claim' || router.name =='contract-detail'">New Contract</router-link>
 				<router-link to="/launchpad/create" class="btn btn-sm btn-danger me-2" v-if="router.name =='launchpad' || router.name =='launchpad-detail'"><i class="fas fa-rocket"></i> Create</router-link>
 				<!-- <a href="#" @click.stop="showWallet" class="btn btn-sm btn-primary me-2"><i class="fas fa-wallet"></i> My Wallet</a>  -->
 			</div>

@@ -8,7 +8,7 @@ import TokenDetail from './views/token/TokenDetail.vue'
 import ContractDetail from './views/contract/ContractDetail.vue'
 import Launchpad from './views/launchpad/Launchpad.vue'
 import Create from './views/launchpad/Create.vue'
-import LaunchpadDetail from './views/launchpad/LaunchpadDetail.vue'
+import LaunchpadDetail from './views/launchpad/LaunchpadDetail/index.vue'
 import Marketplace from './views/marketplace/Marketplace.vue'
 import CollectionDetail from './views/marketplace/Collection.vue'
 import ItemDetail from './views/marketplace/Item.vue'
@@ -34,6 +34,12 @@ const router = createRouter({
       meta: {title: 'Token Claims'},
       name: 'token-claim',
       component: Contract,
+    },
+    {
+      path: '/token-claim/create',
+      meta: {title: 'New Contract'},
+      name: 'new-contract',
+      component: NewContract
     },
     {
       path: '/launchpad',
@@ -88,12 +94,6 @@ const router = createRouter({
         { path: 'token', component: TokenLocks, name: 'Token'},
         { path: 'nft', component: NftLocks, name: 'Nft'},
       ],
-    },
-    {
-      path: '/new-contract',
-      meta: {title: 'New Contract'},
-      name: 'new-contract',
-      component: NewContract
     },
     {
       path: '/tokens',
