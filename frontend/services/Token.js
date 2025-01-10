@@ -99,21 +99,19 @@ export const useGetTransactions = (tokenId, standard, start, length)=>{
     return useQuery({
         queryKey: ['tokenTransactions', tokenId],
         queryFn: async () => {
-            let _payload = {
-                "start": Number(start),
-                "length": Number(length)
-            };
-            console.log('payload', _payload, tokenId, standard, start, length);
-            let _data = await Connect.canister(tokenId, 'icrc2', true).get_transactions(_payload);
-            console.log('_data transaction', _data);
-            let _rs = {
-                transactions: decodeTransaction(_data.transactions),
-                first_index: _data.first_index,
-                log_length: _data.log_length
+            try{
+                let _data = await Connect.canister(tokenId, standard, true).get_transactions({start: Number(start),length: Number(length)});
+                let _rs = {
+                    transactions: decodeTransaction(_data.transactions),
+                    first_index: _data.first_index,
+                    log_length: _data.log_length
+                }
+                return _rs;
+            }catch(e){
+                throw new Error("Network Error: "+tokenId);
             }
-            return _rs;
         },
-        keepPreviousData: false,
+        keepPreviousData: true,
     })
 }
 export const useGetTokenSupply = (tokenId, standard)=>{
