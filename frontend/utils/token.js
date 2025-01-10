@@ -5,10 +5,8 @@ import { showError, principalToAccountId } from "./common";
 import config from "../config";
 import tokenList from "@/ic/tokenList";
 export const decodeTransaction = (transactions) => {
-    console.log('=>>>>>>>>>>>>>>>>>>>>>>>>>transactions', transactions);
     let _transactions = transactions
         .map((transaction, txId) => {
-            console.log('transaction', transaction);
             const timestamp = Math.round(Number(transaction.timestamp) / 1_000_000_000) // ns to s
             // const txId = Number(transaction.index);
             if (transaction.kind === 'transfer' && transaction.transfer[0]) {
