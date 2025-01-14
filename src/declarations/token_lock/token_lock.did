@@ -1,0 +1,170 @@
+type UnlockEvent = 
+ record {
+   amount: nat;
+   contractId: nat;
+   endTime: Time;
+   lockRatio: float64;
+   remainingTime: Duration;
+   startTime: Time;
+   tokenInfo: TokenInfo;
+ };
+type Transaction = 
+ record {
+   amount: opt nat;
+   from: principal;
+   method: text;
+   positionId: opt nat;
+   time: Time;
+   to: principal;
+   txId: opt nat;
+ };
+type TokenLockService = 
+ service {
+   addAdmin: (principal) -> (Result);
+   addSupportedLP: (text, LPInfo__1) -> (Result);
+   addSupportedToken: (text) -> (Result);
+   createLPLock: (text, nat, nat, vec text) -> (Result_1);
+   createTokenLock: (principal, nat, nat, bool) -> (Result_1);
+   getLPLockDetails: (nat) -> (opt LPLockContract) query;
+   getLPLocks: (text) -> (vec LPLockContract) query;
+   getLedgerMeta: (principal) -> (LedgerMeta);
+   getPendingWithdrawals: () -> (vec PendingWithdrawal);
+   getSupportedTokens: () -> (vec text) query;
+   getTokenLockDetails: (nat) -> (opt TokenLockContract) query;
+   getTokenLocks: (principal) -> (vec TokenLockContract) query;
+   getTokenUpcomingUnlocks: (principal) -> (opt UnlockEvent) query;
+   getTotalValueLocked: (principal) -> (nat) query;
+   isSupportedStandards: (principal) -> (bool);
+   removeAdmin: (principal) -> (Result);
+   removeSupportedToken: (text) -> (Result);
+   resolvePendingWithdrawal: (nat) -> (Result);
+   withdrawLP: (nat) -> (Result);
+   withdrawToken: (nat) -> (Result);
+ };
+type TokenLockContract = 
+ record {
+   amount: nat;
+   autoWithdraw: bool;
+   created: Time;
+   duration: nat;
+   endTime: Time;
+   id: nat;
+   lockedTime: opt Time;
+   owner: principal;
+   startTime: Time;
+   status: LockStatus;
+   token: TokenInfo;
+   transactions: vec Transaction;
+   unlockedTime: opt Time;
+   withdrawnTime: opt Time;
+ };
+type TokenInfo = 
+ record {
+   canisterId: principal;
+   decimals: nat8;
+   fee: nat;
+   name: text;
+   standard: text;
+   symbol: text;
+ };
+type Time = int;
+type Result_1 = 
+ variant {
+   err: text;
+   ok: nat;
+ };
+type Result = 
+ variant {
+   err: text;
+   ok;
+ };
+type ProviderInfo = 
+ variant {
+   ICPEx: record {
+            poolType: text;
+            poolVersion: text;
+          };
+   ICPSwap: record {
+              fee: nat;
+              tickLower: int;
+              tickUpper: int;
+            };
+   KongSwap: record {poolData: text;};
+   Sonic: record {
+            lpTokenId: text;
+            poolType: text;
+          };
+ };
+type Provider = 
+ variant {
+   ICPEx;
+   ICPSwap;
+   KongSwap;
+   Sonic;
+ };
+type PendingWithdrawal = 
+ record {
+   amount: nat;
+   caller: principal;
+   contractId: nat;
+   detail: text;
+   time: Time;
+   to: principal;
+ };
+type LockStatus = 
+ variant {
+   Created;
+   Locked;
+   Unlocked;
+   Withdrawn;
+ };
+type LedgerMeta = 
+ record {
+   decimals: nat;
+   fee: nat;
+   name: text;
+   symbol: text;
+ };
+type LPLockContract = 
+ record {
+   created: Time;
+   duration: nat;
+   endTime: Time;
+   id: nat;
+   lockedTime: opt Time;
+   lpInfo: LPInfo;
+   meta: vec text;
+   owner: principal;
+   positionId: nat;
+   startTime: Time;
+   status: LockStatus;
+   transactions: vec Transaction;
+   unlockedTime: opt Time;
+   withdrawnTime: opt Time;
+ };
+type LPInfo__1 = 
+ record {
+   poolId: text;
+   poolName: text;
+   provider: Provider;
+   providerInfo: ProviderInfo;
+   token0: TokenInfo;
+   token1: TokenInfo;
+ };
+type LPInfo = 
+ record {
+   poolId: text;
+   poolName: text;
+   provider: Provider;
+   providerInfo: ProviderInfo;
+   token0: TokenInfo;
+   token1: TokenInfo;
+ };
+type Duration = 
+ record {
+   days: nat;
+   hours: nat;
+   minutes: nat;
+   seconds: nat;
+ };
+service : () -> TokenLockService

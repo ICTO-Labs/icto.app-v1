@@ -1,56 +1,92 @@
-type Token = 
+type TokenInfo = 
  record {
-   canister: text;
+   canisterId: principal;
+   createdAt: int;
+   description: opt text;
+   launchpadId: opt principal;
+   links: opt vec text;
+   lockContracts: opt vec record {
+                            text;
+                            principal;
+                          };
    logo: text;
+   moduleHash: text;
    name: text;
+   owner: principal;
    symbol: text;
-   wasm_version: text;
+   tokenProvider: opt text;
+   updatedAt: int;
+ };
+type TokenData = 
+ record {
+   description: opt text;
+   launchpadId: opt principal;
+   links: opt vec text;
+   lockContracts: opt vec record {
+                            text;
+                            principal;
+                          };
+   tokenProvider: opt text;
  };
 type Subaccount = blob;
 type Self = 
  service {
    addAdmin: (text) -> ();
-   addToWhiteList: (principal) -> (Result_3);
-   addWasm: (vec nat8) -> (Result_2);
+   addToWhiteList: (principal) -> (Result);
+   addToken: (principal, TokenData) -> (Result);
+   addWasm: (vec nat8) -> (Result_3);
    balance: () -> (nat);
    clearChunks: () -> ();
    cycleBalance: () -> (nat) query;
    getAllAdmins: () -> (vec text) query;
    getCurrentWasmVersion: () -> (text) query;
+   getLedgerMeta: (principal) -> (LedgerMeta);
    getOwner: (text) -> (opt text) query;
-   getTokenDetails: (text) -> (opt Token) query;
-   getTokens: (nat) -> (vec Token) query;
+   getTokenDetails: (text) -> (opt TokenInfo) query;
+   getTokens: (nat) -> (vec TokenInfo) query;
    getTotalTokens: () -> (nat) query;
-   getUserTokens: (text, nat) -> (vec Token) query;
+   getUserTokens: (text, nat) -> (vec TokenInfo) query;
    getUserTotalTokens: (text) -> (nat) query;
-   get_lastest_version: () -> (Result_2);
-   install: (InitArgsRequested, opt principal) -> (Result_1);
+   get_lastest_version: () -> (Result_3);
+   install: (InitArgsRequested, opt principal, TokenData) -> (Result_2);
+   isSupportedStandards: (principal) -> (bool);
    removeAdmin: (text) -> ();
-   transfer: (nat, principal) -> (Result);
+   removeToken: (principal) -> (Result);
+   transfer: (nat, principal) -> (Result_1);
+   updateAllowCustomToken: (bool) -> ();
    updateCreationFee: (nat) -> ();
    updateInitCycles: (nat) -> ();
    updateMinCycles: (nat) -> ();
+   updateTokenData: (text, TokenInfo) -> (Result);
    uploadChunk: (vec nat8) -> (nat);
  };
 type Result_3 = 
  variant {
    err: text;
-   ok: bool;
+   ok: text;
  };
 type Result_2 = 
  variant {
    err: text;
-   ok: text;
+   ok: principal;
  };
 type Result_1 = 
  variant {
    err: text;
-   ok: principal;
+   ok: nat;
  };
 type Result = 
  variant {
    err: text;
-   ok: nat;
+   ok: bool;
+ };
+type LedgerMeta = 
+ record {
+   decimals: nat;
+   fee: nat;
+   logo: text;
+   name: text;
+   symbol: text;
  };
 type InitArgsRequested = 
  record {

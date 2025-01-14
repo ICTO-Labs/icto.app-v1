@@ -15,45 +15,76 @@ export interface InitArgsRequested {
   'fee_collector_account' : [] | [Account],
   'token_name' : string,
 }
-export type Result = { 'ok' : bigint } |
+export interface LedgerMeta {
+  'fee' : bigint,
+  'decimals' : bigint,
+  'logo' : string,
+  'name' : string,
+  'symbol' : string,
+}
+export type Result = { 'ok' : boolean } |
   { 'err' : string };
-export type Result_1 = { 'ok' : Principal } |
+export type Result_1 = { 'ok' : bigint } |
   { 'err' : string };
-export type Result_2 = { 'ok' : string } |
+export type Result_2 = { 'ok' : Principal } |
   { 'err' : string };
-export type Result_3 = { 'ok' : boolean } |
+export type Result_3 = { 'ok' : string } |
   { 'err' : string };
 export interface Self {
   'addAdmin' : ActorMethod<[string], undefined>,
-  'addToWhiteList' : ActorMethod<[Principal], Result_3>,
-  'addWasm' : ActorMethod<[Uint8Array | number[]], Result_2>,
+  'addToWhiteList' : ActorMethod<[Principal], Result>,
+  'addToken' : ActorMethod<[Principal, TokenData], Result>,
+  'addWasm' : ActorMethod<[Uint8Array | number[]], Result_3>,
   'balance' : ActorMethod<[], bigint>,
   'clearChunks' : ActorMethod<[], undefined>,
   'cycleBalance' : ActorMethod<[], bigint>,
   'getAllAdmins' : ActorMethod<[], Array<string>>,
   'getCurrentWasmVersion' : ActorMethod<[], string>,
+  'getLedgerMeta' : ActorMethod<[Principal], LedgerMeta>,
   'getOwner' : ActorMethod<[string], [] | [string]>,
-  'getTokenDetails' : ActorMethod<[string], [] | [Token]>,
-  'getTokens' : ActorMethod<[bigint], Array<Token>>,
+  'getTokenDetails' : ActorMethod<[string], [] | [TokenInfo]>,
+  'getTokens' : ActorMethod<[bigint], Array<TokenInfo>>,
   'getTotalTokens' : ActorMethod<[], bigint>,
-  'getUserTokens' : ActorMethod<[string, bigint], Array<Token>>,
+  'getUserTokens' : ActorMethod<[string, bigint], Array<TokenInfo>>,
   'getUserTotalTokens' : ActorMethod<[string], bigint>,
-  'get_lastest_version' : ActorMethod<[], Result_2>,
-  'install' : ActorMethod<[InitArgsRequested, [] | [Principal]], Result_1>,
+  'get_lastest_version' : ActorMethod<[], Result_3>,
+  'install' : ActorMethod<
+    [InitArgsRequested, [] | [Principal], TokenData],
+    Result_2
+  >,
+  'isSupportedStandards' : ActorMethod<[Principal], boolean>,
   'removeAdmin' : ActorMethod<[string], undefined>,
-  'transfer' : ActorMethod<[bigint, Principal], Result>,
+  'removeToken' : ActorMethod<[Principal], Result>,
+  'transfer' : ActorMethod<[bigint, Principal], Result_1>,
+  'updateAllowCustomToken' : ActorMethod<[boolean], undefined>,
   'updateCreationFee' : ActorMethod<[bigint], undefined>,
   'updateInitCycles' : ActorMethod<[bigint], undefined>,
   'updateMinCycles' : ActorMethod<[bigint], undefined>,
+  'updateTokenData' : ActorMethod<[string, TokenInfo], Result>,
   'uploadChunk' : ActorMethod<[Uint8Array | number[]], bigint>,
 }
 export type Subaccount = Uint8Array | number[];
-export interface Token {
+export interface TokenData {
+  'lockContracts' : [] | [Array<[string, Principal]>],
+  'description' : [] | [string],
+  'links' : [] | [Array<string>],
+  'tokenProvider' : [] | [string],
+  'launchpadId' : [] | [Principal],
+}
+export interface TokenInfo {
+  'moduleHash' : string,
+  'owner' : Principal,
   'logo' : string,
   'name' : string,
-  'wasm_version' : string,
-  'canister' : string,
+  'createdAt' : bigint,
+  'lockContracts' : [] | [Array<[string, Principal]>],
+  'description' : [] | [string],
+  'links' : [] | [Array<string>],
+  'tokenProvider' : [] | [string],
+  'updatedAt' : bigint,
+  'launchpadId' : [] | [Principal],
   'symbol' : string,
+  'canisterId' : Principal,
 }
 export interface _SERVICE extends Self {}
 export declare const idlFactory: IDL.InterfaceFactory;
