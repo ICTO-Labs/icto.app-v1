@@ -33,6 +33,8 @@ import Verified from '@/components/icons/Verified.vue'
 import Empty from '@/components/layout/Empty.vue'
 import Toolbar from '@/components/layout/Toolbar.vue'
 
+import TooltipPlugin from '@/plugins/tooltip'
+
 const app = createApp(App)
 const vfm = createVfm()
 const pinia = createPinia()
@@ -62,4 +64,5 @@ app.component('Empty', Empty);
 app.component('VueDatePicker', VueDatePicker);
 app.use(InstallCodeMirror);
 app.use(VueQueryPlugin)
+app.use(TooltipPlugin)
 app.mount("#root")
