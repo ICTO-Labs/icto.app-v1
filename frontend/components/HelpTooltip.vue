@@ -9,14 +9,24 @@
             </slot>
         </div>
 
-        <transition enter-active-class="transition duration-200 ease-out" enter-from-class="translate-y-1 opacity-0"
-            enter-to-class="translate-y-0 opacity-100" leave-active-class="transition duration-150 ease-in"
-            leave-from-class="translate-y-0 opacity-100" leave-to-class="translate-y-1 opacity-0">
-            <div v-show="isVisible" class="tooltip-content" :class="[position]" @mouseenter="handleContentEnter"
-                @mouseleave="handleContentLeave">
+        <transition
+            enter-active-class="transition duration-200 ease-out"
+            enter-from-class="translate-y-1 opacity-0"
+            enter-to-class="translate-y-0 opacity-100"
+            leave-active-class="transition duration-150 ease-in"
+            leave-from-class="translate-y-0 opacity-100"
+            leave-to-class="translate-y-1 opacity-0"
+            >
+            <div 
+                v-show="isVisible"
+                class="tooltip-content"
+                :class="[position]"
+                @mouseenter="handleContentEnter"
+                @mouseleave="handleContentLeave"
+            >
                 <div class="tooltip-arrow"></div>
                 <div class="tooltip-text">
-                    <slot>{{ content }}</slot>
+                <slot>{{ content }}</slot>
                 </div>
             </div>
         </transition>
@@ -89,108 +99,123 @@ export default {
 </script>
 
 <style scoped>
-    .help-tooltip-wrapper {
-        position: relative;
-        display: inline-flex;
-        align-items: center;
-    }
+.help-tooltip-wrapper {
+    position: relative;
+    display: inline-flex;
+    align-items: center;
+}
 
-    .trigger-wrapper {
-        display: inline-flex;
-    }
+.trigger-wrapper {
+    display: inline-flex;
+}
 
-    .help-icon {
-        display: inline-flex;
-        align-items: center;
-        justify-content: center;
-        color: #6B7280;
-        cursor: help;
-        padding: 4px;
-    }
+.help-icon {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    color: #6B7280;
+    cursor: help;
+    padding: 4px;
+}
 
-    .help-icon:hover {
-        color: #9CA3AF;
-    }
+.help-icon:hover {
+    color: #9CA3AF;
+}
 
-    .tooltip-content {
-        position: absolute;
-        z-index: 50;
-        min-width: 300px;
-        max-width: 420px;
-        padding: 0.75rem 1rem;
-        background-color: #1F2937;
-        color: #F3F4F6;
-        border-radius: 0.375rem;
-        font-size: 0.875rem;
-        line-height: 1.5;
-        box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1),
-            0 4px 6px -2px rgba(0, 0, 0, 0.05);
-        pointer-events: auto;
-        opacity: 0.9;
-    }
+.tooltip-content {
+    position: absolute;
+    z-index: 50;
+    min-width: 250px;
+    max-width: 350px;
+    padding: 0.75rem 1rem;
+    background-color: #1F2937;
+    color: #F3F4F6;
+    border-radius: 0.375rem;
+    font-size: 0.875rem;
+    line-height: 1.5;
+    box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1),
+        0 4px 6px -2px rgba(0, 0, 0, 0.05);
+    pointer-events: auto;
+    text-transform: none !important;
+    font-weight: normal;
+    text-align: left;
+    letter-spacing: normal;
+    white-space: normal;
+    font-style: normal;
+    text-decoration: none;
+    opacity: .9;
+}
 
-    .tooltip-text {
-        user-select: text;
-        cursor: text;
-    }
+.tooltip-text {
+    user-select: text;
+    cursor: text;
+    text-transform: none !important;
+    font-weight: normal;
+    text-align: left;
+    letter-spacing: normal;
+    white-space: normal;
+    font-style: normal;
+    text-decoration: none;
+}
 
-    .tooltip-arrow {
-        position: absolute;
-        width: 8px;
-        height: 8px;
-        background: #1F2937;
-        transform: rotate(45deg);
-    }
+/* Các CSS khác giữ nguyên */
+.tooltip-arrow {
+    position: absolute;
+    width: 8px;
+    height: 8px;
+    background: #1F2937;
+    transform: rotate(45deg);
+}
 
-    .tooltip-content.bottom {
-        top: 100%;
-        left: 50%;
-        transform: translateX(-50%);
-        margin-top: 0.75rem;
-    }
+.tooltip-content.bottom {
+    top: 100%;
+    left: 50%;
+    transform: translateX(-50%);
+    margin-top: 0.75rem;
+}
 
-    .tooltip-content.bottom .tooltip-arrow {
-        top: -4px;
-        left: 50%;
-        margin-left: -4px;
-    }
+.tooltip-content.bottom .tooltip-arrow {
+    top: -4px;
+    left: 50%;
+    margin-left: -4px;
+}
 
-    .tooltip-content.top {
-        bottom: 100%;
-        left: 50%;
-        transform: translateX(-50%);
-        margin-bottom: 0.75rem;
-    }
+.tooltip-content.top {
+    bottom: 100%;
+    left: 50%;
+    transform: translateX(-50%);
+    margin-bottom: 0.75rem;
+}
 
-    .tooltip-content.top .tooltip-arrow {
-        bottom: -4px;
-        left: 50%;
-        margin-left: -4px;
-    }
+.tooltip-content.top .tooltip-arrow {
+    bottom: -4px;
+    left: 50%;
+    margin-left: -4px;
+}
 
-    .tooltip-content.left {
-        right: 100%;
-        top: 50%;
-        transform: translateY(-50%);
-        margin-right: 0.75rem;
-    }
+.tooltip-content.left {
+    right: 100%;
+    top: 50%;
+    transform: translateY(-50%);
+    margin-right: 0.75rem;
+}
 
-    .tooltip-content.left .tooltip-arrow {
-        right: -4px;
-        top: 50%;
-        margin-top: -4px;
-    }
+.tooltip-content.left .tooltip-arrow {
+    right: -4px;
+    top: 50%;
+    margin-top: -4px;
+}
 
-    .tooltip-content.right {
-        left: 100%;
-        top: 50%;
-        transform: translateY(-50%);
-        margin-left: 0.75rem;
-    }
+.tooltip-content.right {
+    left: 100%;
+    top: 50%;
+    transform: translateY(-50%);
+    margin-left: 0.75rem;
+}
 
-    .tooltip-content.right .tooltip-arrow {
-        left: -4px;
-        top: 50%;
-        margin-top: -4px;
-    }
+.tooltip-content.right .tooltip-arrow {
+    left: -4px;
+    top: 50%;
+    margin-top: -4px;
+}
 </style>
