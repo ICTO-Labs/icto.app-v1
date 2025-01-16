@@ -1,4 +1,3 @@
-import A "mo:base/AssocList";
 import Array "mo:base/Array";
 import Blob "mo:base/Blob";
 import Bool "mo:base/Bool";
@@ -6,26 +5,17 @@ import Buffer "mo:base/Buffer";
 import Cycles "mo:base/ExperimentalCycles";
 import Error "mo:base/Error";
 import Char "mo:base/Char";
-import Hash "mo:base/Hash";
-import HashMap "mo:base/HashMap";
 import Int "mo:base/Int";
-import Int16 "mo:base/Int16";
-import Int8 "mo:base/Int8";
-import Iter "mo:base/Iter";
-import List "mo:base/List";
 import Nat "mo:base/Nat";
 import Nat8 "mo:base/Nat8";
 import Nat32 "mo:base/Nat32";
 import Nat64 "mo:base/Nat64";
-import Option "mo:base/Option";
-import Prelude "mo:base/Prelude";
 import Principal "mo:base/Principal";
 import Result "mo:base/Result";
 import Debug "mo:base/Debug";
 import Text "mo:base/Text";
 import Time "mo:base/Time";
 import Trie "mo:base/Trie";
-import Trie2D "mo:base/Trie";
 import SNSWasm "./SNSWasm";
 import Ledger "./Ledger";
 import IC "./IC";
@@ -33,22 +23,26 @@ import ICRCLedger "./ICRCLedger";
 import Hex "./Hex";
 import Prim "mo:⛔";
 import Timer "mo:base/Timer";
-
+import Option "mo:base/Option";
 actor class Self() = this {
     private func deployer() : Principal = Principal.fromActor(this);
-    private stable var _tokens : Trie.Trie<Text, Token> = Trie.empty(); //mapping of token_canister_id -> Token details
+    private stable var _tokens : Trie.Trie<Text, TokenInfo> = Trie.empty(); //mapping of token_canister_id -> Token details
     private stable var _logos : Trie.Trie<Text, Text> = Trie.empty(); //mapping of token_canister_id -> base64
     private stable var _owners : Trie.Trie<Text, Text> = Trie.empty(); //mapping  token_canister_id -> owner principal id
+    private stable var _pendingCanisters : Trie.Trie<Text, TokenInfoFull> = Trie.empty(); //List of canisters that are pending to be deployed: owner > token info
     private stable var _admins : [Text] = [];
     private stable var timerId : Nat = 0;
     private stable var CREATION_FEE : Nat = 1*100_000_000;//E8S in ICP
-
-    private stable var MIN_CYCLES_IN_DEPLOYER: Nat = 2_000_000_000_000;//Minimum cycles in deployer
-    private stable var CYCLES_FOR_INSTALL: Nat = 1_000_000_000_000;//1T , initial cycles for install
-    private stable var CYCLES_FOR_ARCHIVE: Nat64 = 500_000_000_000;//
+    private stable var _supportedTokens: [Text] = ["ICRC-1"];
+    private stable var ALLOW_CUSTOM_TOKEN: Bool = false;
+    private stable var MIN_CYCLES_IN_DEPLOYER: Nat = 8_000_000_000_000;//Minimum cycles in deployer
+    private stable var CYCLES_FOR_INSTALL: Nat = 4_000_000_000_000;//4T , initial cycles for install
+    private stable var CYCLES_FOR_ARCHIVE: Nat64 = 2_000_000_000_000;//
     private stable var SNS_WASM_VERSION : Blob = "af8fc1469e553ac90f704521a97a1e3545c2b68049b4618a6549171b4ea4fba8";//lastest version hash
     private stable var SNS_WASM : Blob = "";//lastest wasm file
     private stable var WHITE_LIST_CANISTERS: [Principal] = [];//list of canisters that can deploy token
+    private stable var PAGE_SIZE: Nat = 12;//page size
+    private stable var CYCLE_OPPS_BLACKHOLE_ID: Principal = Principal.fromText("5vdms-kaaaa-aaaap-aa3uq-cai");//CycleOpps Blackhole ID
     //IC Services
     private let ic : IC.Self = actor ("aaaaa-aa");
     private let snsWasm : SNSWasm.Self = actor ("qaa6y-5yaaa-aaaaa-aaafa-cai");
@@ -63,6 +57,44 @@ actor class Self() = this {
         wasm_version: Text;
         logo : Text;
     };
+    public type LedgerMeta = {
+        symbol : Text;
+        name : Text;
+        decimals : Nat;
+        fee : Nat;
+        logo : Text;
+    };
+    //Additional data for token
+    public type TokenData = {
+        launchpadId : ?Principal;
+        description: ?Text;
+        links: ?[Text];
+        lockContracts: ?[(Text, Principal)]; //(provider, canisterId), eg: (Sneed, qaa6y-5yaaa-aaaaa-aaafa-cai)
+        tokenProvider: ?Text;//ICTO, SNS, etc
+        enableCycleOpps: Bool;
+    };
+    public type TokenInfo = TokenData and {
+        name : Text;
+        symbol : Text;
+        canisterId : Principal;
+        moduleHash: Text;
+        // logo : Text;
+        owner : Principal;
+        createdAt : Int;
+        updatedAt: Int;
+    };
+
+    public type TokenInfoFull = TokenData and {
+        name : Text;
+        symbol : Text;
+        canisterId : Principal;
+        moduleHash: Text;
+        logo : Text;
+        owner : Principal;
+        createdAt : Int;
+        updatedAt: Int;
+    };
+
     type ReqArgsIncluded = {
         token_symbol : Text; // max 7 chars
         transfer_fee : Nat;
@@ -149,12 +181,13 @@ actor class Self() = this {
     };
 
     //Deployer withdraw ownership from token canister and transfer to token owner
-    private func transfer_ownership(canister_id : Principal, to: Principal) : async () {
+    private func transfer_ownership(canister_id : Principal, to: Principal, enableCycleOpps: Bool) : async () {
+        let _controllers = if(enableCycleOpps) [CYCLE_OPPS_BLACKHOLE_ID, to] else [to];
         await (
             ic.update_settings({
                 canister_id = canister_id;
                 settings = {
-                    controllers = ?[to];
+                    controllers = ?_controllers;
                     compute_allocation = null;
                     memory_allocation = null;
                     freezing_threshold = ?9_331_200;
@@ -166,7 +199,7 @@ actor class Self() = this {
     };
 
     public shared({caller}) func get_lastest_version() : async Result.Result<Text, Text>{
-        // assert (_isAdmin(Principal.toText(caller)));
+        assert (_isAdmin(Principal.toText(caller)));
         let res = await snsWasm.get_latest_sns_version_pretty(null);
         for ((k) in res.vals()) {
             if (k.0 == "Ledger") {
@@ -183,7 +216,7 @@ actor class Self() = this {
                         }
                     };
                     case (#err(err)) {
-                        return #err("Error decoding version");
+                        return #err("Error decoding version: " # debug_show(err));
                     };
                 };
             };
@@ -193,13 +226,13 @@ actor class Self() = this {
 
     //Save wasm version to stable memory
     private func save_wasm_version(version : Blob) : async Result.Result<Text, Text>{
-        let wasm_resp = await snsWasm.get_wasm({ hash = SNS_WASM_VERSION });
+        let wasm_resp = await snsWasm.get_wasm({ hash = version });
         let ?wasm_ver = wasm_resp.wasm else return #err("No blessed wasm available");
         SNS_WASM := wasm_ver.wasm;
         return #ok("Wasm saved successfully");
     };
 
-    public shared ({ caller }) func install(req_args : InitArgsRequested) : async Result.Result<Principal, Text> {
+    public shared ({ caller }) func install(req_args : InitArgsRequested, target_canister: ?Principal, tokenData: TokenData) : async Result.Result<Principal, Text> {
 
         if (Text.size(req_args.token_symbol) > 8) return #err("Token symbol too long, max 8 characters");
         if (Text.size(req_args.token_name) > 32) return #err("Token name too long, max 32 characters");
@@ -214,11 +247,6 @@ actor class Self() = this {
             feature_flags = ?{ icrc2 = true };
             metadata= [("icrc1:logo", #Text(req_args.logo))];
         };
-
-        // // Get latest wasm
-        // let wasm_resp = await snsWasm.get_wasm({ hash = SNS_WASM_VERSION });
-        // let ?wasm_ver = wasm_resp.wasm else return #err("No blessed wasm available");
-        // let wasm = wasm_ver.wasm;
 
         // Make ledger initial arguments
         // Ledgers won't show some of its options, so we will not allow them to be set, which will guarantee they are good.
@@ -241,7 +269,7 @@ actor class Self() = this {
             max_memo_length = ?80 : ?Nat16;
         });
 
-        let upgradearg : Ledger.UpgradeArgs = {
+        let upgradeArgs : Ledger.UpgradeArgs = {
             token_symbol = ?req_args.token_symbol;
             transfer_fee = ?req_args.transfer_fee;
             metadata = ?init_args.metadata;
@@ -254,6 +282,7 @@ actor class Self() = this {
                 case (?acc) #SetTo(acc);
                 case (null) #Unset;
             });
+            change_archive_options = ?archive_options;
         };
 
         // Check if this canister has enough cycles
@@ -269,14 +298,36 @@ actor class Self() = this {
             };
         };
 
-        let canister_id = await create_canister();
+        let canister_id = switch(target_canister) {
+            case (?canister) canister;
+            case (null) await create_canister();
+        };
+        //Save pending canister
+        _pendingCanisters := Trie.put(_pendingCanisters, keyT(Principal.toText(caller)), Text.equal, {
+            name = req_args.token_name;
+            symbol = req_args.token_symbol;
+            canisterId = canister_id;
+            moduleHash = Hex.encode(Blob.toArray(SNS_WASM_VERSION));
+            logo = req_args.logo;
+            owner = caller;
+            createdAt = Time.now();
+            updatedAt = Time.now();
+            description = tokenData.description;
+            links = tokenData.links;
+            lockContracts = tokenData.lockContracts;
+            tokenProvider = ?"ICTO";
+            launchpadId = tokenData.launchpadId;
+            enableCycleOpps = tokenData.enableCycleOpps;
+        }).0;
         // Install code
         try {
+            let _args = if(target_canister != null) #Upgrade(?upgradeArgs) else args;
+            Debug.print("args: " # debug_show(target_canister) # debug_show(_args));
             await ic.install_code({
-                arg = to_candid (args);
+                arg = to_candid (_args);
                 wasm_module = SNS_WASM;
-                mode = #install;
-                canister_id;
+                mode = if(target_canister != null) #upgrade(null) else #install;
+                canister_id = canister_id;
                 sender_canister_version = null;
             });
         } catch (e) {
@@ -285,7 +336,7 @@ actor class Self() = this {
 
         //Transfer ownership
         try{
-            await transfer_ownership(canister_id, caller);
+            await transfer_ownership(canister_id, caller, tokenData.enableCycleOpps);
         }catch(e){
             return #err("Can not transfer ownership " # debug_show (Error.message(e)));
         };
@@ -298,16 +349,140 @@ actor class Self() = this {
             {
                 name = req_args.token_name;
                 symbol = req_args.token_symbol;
-                canister = Principal.toText(canister_id);
-                wasm_version = _version;
-                logo = req_args.logo;
+                canisterId = canister_id;
+                moduleHash = _version;
+                // logo = req_args.logo;
+                owner = caller;
+                launchpadId = tokenData.launchpadId;
+                createdAt = Time.now();
+                updatedAt = Time.now();
+                description = tokenData.description;
+                links = tokenData.links;
+                lockContracts = tokenData.lockContracts;
+                tokenProvider = ?"ICTO";
+                enableCycleOpps = tokenData.enableCycleOpps;
             },
         ).0;
         _owners := Trie.put(_owners, keyT(Principal.toText(canister_id)), Text.equal, Principal.toText(caller)).0;
-
+        //Remove pending canister
+        _pendingCanisters := Trie.remove(_pendingCanisters, keyT(Principal.toText(caller)), Text.equal).0;
         #ok(canister_id);
 
     };
+
+    //Get pending canisters by owner
+    public shared ({ caller }) func getPendingCanisters() : async ([TokenInfo]) {
+        var b : Buffer.Buffer<TokenInfo> = Buffer.Buffer<TokenInfo>(0);
+        for ((i, v) in Trie.iter(_pendingCanisters)) {
+            if (Principal.equal(v.owner, caller)) {
+                b.add(v);
+            };
+        };
+        let arr = Buffer.toArray(b);
+        return arr;
+    };
+
+    //Tokens Functions
+    public shared ({ caller }) func updateTokenData(canister_id: Text, tokenData: TokenInfo) : async Result.Result<Bool, Text> {
+        let token = Trie.find(_tokens, keyT(canister_id), Text.equal);
+        switch (token) {
+            case (?t) {
+                //Check owner is caller
+                if (t.owner != caller and not _isAdmin(Principal.toText(caller))) return #err("Only owner can update token data");
+                let updatedToken = {
+                    t with
+                    description = tokenData.description;
+                    links = tokenData.links;
+                    lockContracts = tokenData.lockContracts;
+                    tokenProvider = tokenData.tokenProvider;
+                    launchpadId = if(_isAdmin(Principal.toText(caller))) tokenData.launchpadId else t.launchpadId;
+                };
+                _tokens := Trie.put(_tokens, keyT(canister_id), Text.equal, updatedToken).0;
+                return #ok(true);
+            };
+            case (_) {
+                return #err("Token not found");
+            };
+        };
+    };
+
+    //Manual existed token to token list
+    public func isSupportedStandards(tokenCanisterId : Principal) : async Bool {
+        let tokenCanister : ICRCLedger.Self = actor(Principal.toText(tokenCanisterId));
+        let supportedStandards = await tokenCanister.icrc1_supported_standards();
+        for (standard in supportedStandards.vals()) {
+            if (Array.find(_supportedTokens, func (token : Text) : Bool { 
+                Text.equal(token, standard.name) 
+            }) != null) {
+                return true;
+            };
+        };
+        false
+    };
+    //Admin remove token
+    public shared ({ caller }) func removeToken(canister_id: Principal) : async Result.Result<Bool, Text> {
+        assert (_isAdmin(Principal.toText(caller)));
+        _tokens := Trie.remove(_tokens, keyT(Principal.toText(canister_id)), Text.equal).0;
+        return #ok(true);
+    };
+
+
+    public func getLedgerMeta(tokenId : Principal) : async LedgerMeta {
+        let ledger = actor (Principal.toText(tokenId)) : ICRCLedger.Self;
+        let meta = await ledger.icrc1_metadata();
+        let ? #Text(name) = findLedgerMetaVal("icrc1:name", meta) else Debug.trap("Can't find ledger name");
+        let ? #Text(symbol) = findLedgerMetaVal("icrc1:symbol", meta) else Debug.trap("Can't find ledger symbol");
+        let ? #Nat(fee) = findLedgerMetaVal("icrc1:fee", meta) else Debug.trap("Can't find ledger fee");
+        let ? #Nat(decimals) = findLedgerMetaVal("icrc1:decimals", meta) else Debug.trap("Can't find ledger decimals");
+        let ? #Text(logo) = findLedgerMetaVal("icrc1:logo", meta) else Debug.trap("Can't find ledger logo");
+        { name; symbol; decimals; fee; logo }
+    };
+    private func findLedgerMetaVal(key : Text, values : [(Text, ICRCLedger.MetadataValue)]) : ?ICRCLedger.MetadataValue {
+        let ?f = Array.find<(Text, ICRCLedger.MetadataValue)>(values, func((k : Text, d : ICRCLedger.MetadataValue)) = k == key) else return null;
+        ?f.1;
+    };
+    public shared ({ caller }) func addToken(canister_id: Principal, tokenData: TokenData) : async Result.Result<Bool, Text> {
+        //Admin always allow, user need to set ALLOW_CUSTOM_TOKEN to true
+        if(not _isAdmin(Principal.toText(caller)) and not ALLOW_CUSTOM_TOKEN) {
+            return #err("Custom token is not allowed");
+        };
+        //Check exist token
+        let token = Trie.find(_tokens, keyT(Principal.toText(canister_id)), Text.equal);
+        if (token != null) return #err("Token already exists");
+        //validate token id
+        let ledgerMeta = await getLedgerMeta(canister_id);
+        let isSupported = await isSupportedStandards(canister_id);
+        switch(isSupported) {
+            case (true) {
+                let _tokenData : TokenInfo = {
+                    canisterId = canister_id;
+                    standard = "ICRC-1";
+                    name = ledgerMeta.name;
+                    symbol = ledgerMeta.symbol;
+                    decimals = Nat8.fromNat(ledgerMeta.decimals);
+                    fee = ledgerMeta.fee;
+                    description = tokenData.description;
+                    launchpadId = null;
+                    links = tokenData.links;
+                    // logo = ledgerMeta.logo;
+                    lockContracts = tokenData.lockContracts;
+                    moduleHash = Hex.encode(Blob.toArray(SNS_WASM_VERSION));
+                    owner = caller;
+                    tokenProvider = null;
+                    createdAt = Time.now();
+                    updatedAt = Time.now();
+                    enableCycleOpps = tokenData.enableCycleOpps;
+                };
+                _tokens := Trie.put(_tokens, keyT(Principal.toText(canister_id)), Text.equal, _tokenData).0;
+                _owners := Trie.put(_owners, keyT(Principal.toText(canister_id)), Text.equal, Principal.toText(caller)).0;
+                return #ok(true);
+            };
+            case (false) {
+                return #err("Token not supported, please use supported token: " # debug_show(_supportedTokens));
+            };
+        };
+    };
+
     //Get deployer Cycles balance  
     public query func cycleBalance() : async Nat {
         Cycles.balance();
@@ -317,7 +492,7 @@ actor class Self() = this {
         Hex.encode(Blob.toArray(SNS_WASM_VERSION));
     };
     //Get deployer ICP balance
-    public shared ({ caller }) func balance() : async Nat {
+    public shared func balance() : async Nat {
         await icrcLedger.icrc1_balance_of({ owner = deployer(); subaccount = null });
     };
     //Upload chunk to deployer: For manual wasm upload
@@ -363,9 +538,10 @@ actor class Self() = this {
         };
     };
     //Update Initial cycles for new token canister
-    public shared ({ caller }) func updateInitCycles(i : Nat) : async () {
+    public shared ({ caller }) func updateInitCycles(install : Nat, archive : Nat64) : async () {
         assert (_isAdmin(Principal.toText(caller)));
-        CYCLES_FOR_INSTALL := i;
+        CYCLES_FOR_INSTALL := install;
+        CYCLES_FOR_ARCHIVE := archive;
     };
     //Update Initial cycles for new token canister
     public shared ({ caller }) func updateMinCycles(i : Nat) : async () {
@@ -376,6 +552,12 @@ actor class Self() = this {
     public shared ({ caller }) func updateCreationFee(i : Nat) : async () {
         assert (_isAdmin(Principal.toText(caller)));
         CREATION_FEE := i;
+    };
+
+    //Admin Functions - Update ALLOW_CUSTOM_TOKEN
+    public shared ({ caller }) func updateAllowCustomToken(allow : Bool) : async () {
+        assert (_isAdmin(Principal.toText(caller)));
+        ALLOW_CUSTOM_TOKEN := allow;
     };
     public shared ({ caller }) func addAdmin(p : Text) : async () {
         assert (_isAdmin(Principal.toText(caller)));
@@ -429,10 +611,10 @@ actor class Self() = this {
         return size;
     };
 
-    public query func getUserTokens(uid : Text, _page : Nat) : async ([Token]) {
+    public query func getUserTokens(uid : Text, _page : Nat) : async ([TokenInfo]) {
         var lower : Nat = _page * 9;
         var upper : Nat = lower + 9;
-        var b : Buffer.Buffer<Token> = Buffer.Buffer<Token>(0);
+        var b : Buffer.Buffer<TokenInfo> = Buffer.Buffer<TokenInfo>(0);
         for ((i, v) in Trie.iter(_owners)) {
             if (v == uid) {
                 switch (Trie.find(_tokens, keyT(i), Text.equal)) {
@@ -444,7 +626,7 @@ actor class Self() = this {
             };
         };
         let arr = Buffer.toArray(b);
-        b := Buffer.Buffer<Token>(0);
+        b := Buffer.Buffer<TokenInfo>(0);
         let size = arr.size();
         if (upper > size) {
             upper := size;
@@ -456,20 +638,26 @@ actor class Self() = this {
         return Buffer.toArray(b);
     };
 
-    public query func getTokens(_page : Nat) : async ([Token]) {
-        var lower : Nat = _page * 9;
-        var upper : Nat = lower + 9;
-        var b : Buffer.Buffer<Token> = Buffer.Buffer<Token>(0);
+    public query ({ caller }) func getTokens(_page : Nat, _myTokens : Bool) : async ([TokenInfo]) {
+        var lower : Nat = Nat.mul(_page, PAGE_SIZE);
+        var upper : Nat = Nat.add(lower, PAGE_SIZE);
+        var b : Buffer.Buffer<TokenInfo> = Buffer.Buffer<TokenInfo>(0);
         for ((i, v) in Trie.iter(_owners)) {
             switch (Trie.find(_tokens, keyT(i), Text.equal)) {
                 case (?t) {
-                    b.add(t);
+                    if (_myTokens == true) {
+                        if (Principal.equal(t.owner, caller)) {
+                            b.add(t);
+                        };
+                    } else {
+                        b.add(t);
+                    };
                 };
                 case _ {};
             };
         };
         let arr = Buffer.toArray(b);
-        b := Buffer.Buffer<Token>(0);
+        b := Buffer.Buffer<TokenInfo>(0);
         let size = arr.size();
         if (upper > size) {
             upper := size;
@@ -486,7 +674,7 @@ actor class Self() = this {
     };
 
     //Queries
-    public query func getTokenDetails(canister_id : Text) : async (?Token) {
+    public query func getTokenDetails(canister_id : Text) : async (?TokenInfo) {
         switch (Trie.find(_tokens, keyT(canister_id), Text.equal)) {
             case (?t) {
                 return ?t;
@@ -503,6 +691,52 @@ actor class Self() = this {
         if (caller != LAUNCHPAD_CANISTER_ID) return #err("Only launchpad can add to white list");
         WHITE_LIST_CANISTERS := Array.append(WHITE_LIST_CANISTERS, [canister_id]);
         return #ok(true);
+    };
+
+    //Moving all canister owner from _owners to _tokens field
+    public shared ({ caller }) func moveOwnerToToken() : async Result.Result<Bool, Text> {
+        assert (_isAdmin(Principal.toText(caller)));
+        for ((i, v) in Trie.iter(_tokens)) {
+            let owner = await getOwner(i);
+            switch (owner) {
+                case (?owner) {
+                    let _token : TokenInfo = {
+                        v with
+                        owner = Principal.fromText(owner);
+                    };
+                    _tokens := Trie.put(_tokens, keyT(i), Text.equal, _token).0;
+                };
+                case (_) {};
+            };
+        };
+        return #ok(true);
+    };
+
+    //Update token owner
+    public shared ({ caller }) func updateTokenOwner(canister_id : Text, owner : Principal) : async Result.Result<Bool, Text> {
+        assert (_isAdmin(Principal.toText(caller)));
+        let token = Trie.find(_tokens, keyT(canister_id), Text.equal);
+        switch (token) {
+            case (?t) {
+                let _token : TokenInfo = {
+                    t with
+                    owner = owner;
+                };
+                _tokens := Trie.put(_tokens, keyT(canister_id), Text.equal, _token).0;
+                return #ok(true);
+            };
+            case (_) {
+                return #err("Token not found");
+            };
+        };
+    };
+    //Show owner list
+    public query func getOwnerList() : async [(Text, Text)] {
+        let b : Buffer.Buffer<(Text, Text)> = Buffer.Buffer<(Text, Text)>(0);
+        for ((i, v) in Trie.iter(_owners)) {
+            b.add((i, v));
+        };
+        return Buffer.toArray(b);
     };
 
     private func get_wasm_version(): async () {
