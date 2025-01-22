@@ -39,10 +39,15 @@
                     </tr>
                     <tr>
                         <td>Pool share</td>
-                        <td class="text-end text-gray">{{poolShare}}%</td>
+                        <td class="text-end text-gray">{{isNaN(poolShare)?0:poolShare}}%</td>
                     </tr>
                     <tr>
-                        <td>Tokens to receive </td>
+                        <td>Tokens to receive (estimate)
+                            <HelpTooltip position="top">
+                                The exact amount of tokens received will depend on the ICP contributing to this pool. 
+                            </HelpTooltip>
+
+                        </td>
                         <td class="text-end text-primary">{{currencyFormat(parseTokenAmount(tokensToReceive, launchpadInfo?.saleToken?.decimals))}} {{launchpadInfo?.saleToken?.symbol}} </td>
                     </tr>
                 </tbody>
