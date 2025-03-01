@@ -523,12 +523,6 @@ Swap:
   maximum_direct_participation_icp: 165_000 tokens
   minimum_participant_icp: 1 tokens
   maximum_participant_icp: 20_000 tokens
-  restricted_countries:
-    - US
-    - VN
-    - SY
-    - KR
-    - JP
   VestingSchedule:
     events: 5
     interval: 3 months
