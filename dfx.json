@@ -23,6 +23,10 @@
 		"main": "canisters/lock_deployer/main.mo",
 		"type": "motoko"
 	},
+	"token_lock": {
+		"main": "canisters/token_lock/main.mo",
+		"type": "motoko"
+	},
 	"launchpad": {
 		"main": "canisters/launchpad/main.mo",
 		"type": "motoko"
@@ -40,7 +44,15 @@
 		"type": "motoko"
 	},
 	"launchpad_contract": {
-		"main": "canisters/launchpad/Contract.mo",
+		"main": "canisters/launchpad/LaunchpadContract.mo",
+		"type": "motoko"
+	},
+	"launchpad_quokka": {
+		"main": "canisters/launchpad/LaunchpadContract.mo",
+		"type": "motoko"
+	},
+	"launchpad_pixies": {
+		"main": "canisters/launchpad/LaunchpadContract.mo",
 		"type": "motoko"
 	},
 	"icrc1_token": {
@@ -64,16 +76,22 @@
 	}
 	},
 	"networks": {
-	"local": {
-		"bind": "127.0.0.1:8000",
-		"type": "ephemeral"
-	},
-	"ic": {
-		"providers": [
-		"https://mainnet.dfinity.network"
-		],
-		"type": "persistent"
-	}
+		"local": {
+			"bind": "127.0.0.1:8000",
+			"type": "ephemeral"
+		},
+		"staging": {
+			"providers": [
+				"https://icp0.io"
+			],
+			"type": "persistent"
+		},
+		"ic": {
+			"providers": [
+				"https://mainnet.dfinity.network"
+			],
+			"type": "persistent"
+		}
 	},
 	"version": 1
 }

@@ -4,6 +4,10 @@ import Principal "mo:base/Principal";
 import Bool "mo:base/Bool";
 
 module {
+    public type Account = {
+        owner: Principal;
+        subaccount: ?Blob;
+    };
     public type Participant = {
         commit : Nat;//Total times committed
         totalAmount : Nat;//in ICP E8S

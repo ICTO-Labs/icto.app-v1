@@ -7,7 +7,7 @@ import Buffer "mo:base/Buffer";
 import Text "mo:base/Text";
 import BackendUtils "../utils/Backend";
 import Option "mo:base/Option";
-import LaunchpadContract "./Contract";
+import LaunchpadContract "./LaunchpadContract";
 import Cycles "mo:base/ExperimentalCycles";
 import Debug "mo:base/Debug";
 import Time "mo:base/Time";
