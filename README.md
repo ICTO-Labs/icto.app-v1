@@ -1,5 +1,15 @@
 # ICTO - IC Token Operations
 
+> ⚠️ **Deprecated: This repository is now read-only.**
+>
+> This project (`icto_app-v1`) represents the initial version of the ICTO platform and is no longer maintained.
+>
+> The official and actively developed version is now available at [`icto_app`](https://github.com/ICTO-Labs/icto_app).
+>
+> Please refer to the new repository for updates, documentation, and continued development:
+> 👉 [ICTO V2 Official Repository](https://github.com/ICTO-Labs/icto_app)
+
+
 To get started, you might want to explore the project directory structure and the default configuration file. Working with this project in your development environment will not affect any production deployment or identity tokens.
 
 To learn more before you start working with icto.app, see the following documentation available online:
